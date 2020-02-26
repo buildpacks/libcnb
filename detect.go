@@ -143,18 +143,20 @@ func Detect(f DetectFunc, options ...Option) {
 		return
 	}
 
-	var plans BuildPlans
 	if len(result.Plans) > 0 {
-		plans.BuildPlan = result.Plans[0]
-	}
-	if len(result.Plans) > 1 {
-		plans.Or = result.Plans[1:]
-	}
+		var plans BuildPlans
+		if len(result.Plans) > 0 {
+			plans.BuildPlan = result.Plans[0]
+		}
+		if len(result.Plans) > 1 {
+			plans.Or = result.Plans[1:]
+		}
 
-	file = config.arguments[2]
-	logger.Debug("Writing build plans: %s <= %+v", file, plans)
-	if err := config.tomlWriter.Write(file, plans); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s: %w", file, err))
-		return
+		file = config.arguments[2]
+		logger.Debug("Writing build plans: %s <= %+v", file, plans)
+		if err := config.tomlWriter.Write(file, plans); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s: %w", file, err))
+			return
+		}
 	}
 }

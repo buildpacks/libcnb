@@ -225,31 +225,37 @@ func Build(f BuildFunc, options ...Option) {
 		}
 	}
 
-	launch := Launch{
-		Processes: result.Processes,
-		Slices:    result.Slices,
-	}
-	file = filepath.Join(ctx.Layers.Path, "launch.toml")
-	logger.Debug("Writing application metadata: %s <= %+v", file, launch)
-	if err = config.tomlWriter.Write(file, launch); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s: %w", file, err))
-		return
-	}
-
-	store = Store{
-		Metadata: result.PersistentMetadata,
-	}
-	file = filepath.Join(ctx.Layers.Path, "store.toml")
-	logger.Debug("Writing persistent metadata: %s <= %+v", file, store)
-	if err = config.tomlWriter.Write(file, store); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to write persistent metadata %s: %w", file, err))
-		return
+	if len(result.Processes) > 0 || len(result.Slices) > 0 {
+		launch := Launch{
+			Processes: result.Processes,
+			Slices:    result.Slices,
+		}
+		file = filepath.Join(ctx.Layers.Path, "launch.toml")
+		logger.Debug("Writing application metadata: %s <= %+v", file, launch)
+		if err = config.tomlWriter.Write(file, launch); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s: %w", file, err))
+			return
+		}
 	}
 
-	file = config.arguments[3]
-	logger.Debug("Writing buildpack plan: %s <= %+v", file, result.Plan)
-	if err = config.tomlWriter.Write(file, result.Plan); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to write buildpack plan %s: %w", file, err))
-		return
+	if len(result.PersistentMetadata) > 0 {
+		store = Store{
+			Metadata: result.PersistentMetadata,
+		}
+		file = filepath.Join(ctx.Layers.Path, "store.toml")
+		logger.Debug("Writing persistent metadata: %s <= %+v", file, store)
+		if err = config.tomlWriter.Write(file, store); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to write persistent metadata %s: %w", file, err))
+			return
+		}
+	}
+
+	if len(result.Plan.Entries) > 0 {
+		file = config.arguments[3]
+		logger.Debug("Writing buildpack plan: %s <= %+v", file, result.Plan)
+		if err = config.tomlWriter.Write(file, result.Plan); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to write buildpack plan %s: %w", file, err))
+			return
+		}
 	}
 }

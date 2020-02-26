@@ -441,8 +441,20 @@ test-key = "test-value"
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
 
-		Expect(tomlWriter.Calls[1].Arguments[0]).To(Equal(filepath.Join(layersPath, "store.toml")))
-		Expect(tomlWriter.Calls[1].Arguments[1]).To(Equal(libcnb.Store{Metadata: m}))
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "store.toml")))
+		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.Store{Metadata: m}))
+	})
+
+	it("does not write empty files", func() {
+		libcnb.Build(
+			func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+				return libcnb.BuildResult{}, nil
+			},
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+		)
+
+		Expect(tomlWriter.Calls).To(HaveLen(0))
 	})
 
 	it("writes buildpack plan", func() {
@@ -463,8 +475,8 @@ test-key = "test-value"
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
 
-		Expect(tomlWriter.Calls[2].Arguments[0]).To(Equal(buildpackPlanPath))
-		Expect(tomlWriter.Calls[2].Arguments[1]).To(Equal(libcnb.BuildpackPlan{
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(buildpackPlanPath))
+		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.BuildpackPlan{
 			Entries: []libcnb.BuildpackPlanEntry{
 				{
 					Name:     "test-name",

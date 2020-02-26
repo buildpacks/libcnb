@@ -229,7 +229,7 @@ test-key = "test-value"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("test-error"))
 	})
 
-	it("writes no build plans", func() {
+	it("does not write empty files", func() {
 		libcnb.Detect(
 			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
 				return libcnb.DetectResult{Pass: true}, nil
@@ -239,8 +239,7 @@ test-key = "test-value"
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
 
-		Expect(tomlWriter.Calls[0].Arguments.Get(0)).To(Equal(buildPlanPath))
-		Expect(tomlWriter.Calls[0].Arguments.Get(1)).To(Equal(libcnb.BuildPlans{}))
+		Expect(tomlWriter.Calls).To(HaveLen(0))
 	})
 
 	it("writes one build plan", func() {
