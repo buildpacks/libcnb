@@ -33,9 +33,13 @@ func (d DirectoryContents) Get() ([]string, error) {
 	var contents []string
 
 	if err := filepath.Walk(d.Path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
 		rel, err := filepath.Rel(d.Path, path)
 		if err != nil {
-			return fmt.Errorf("unable to caluclate relative path %s -> %s: %w", d.Path, path, err)
+			return fmt.Errorf("unable to calculate relative path %s -> %s: %w", d.Path, path, err)
 		}
 
 		contents = append(contents, rel)
