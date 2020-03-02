@@ -145,6 +145,6 @@ type Platform struct {
 	// Environment is the environment exposed by the platform.
 	Environment map[string]string
 
-	// Path is the path to the Platform
+	// Path is the path to the platform.
 	Path string
 }
