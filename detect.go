@@ -30,8 +30,8 @@ import (
 // DetectContext contains the inputs to detection.
 type DetectContext struct {
 
-	// ApplicationPath is the path to the application.
-	ApplicationPath string
+	// Application is the application to build.
+	Application Application
 
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
@@ -82,13 +82,13 @@ func Detect(f DetectFunc, options ...Option) {
 	ctx := DetectContext{}
 	logger := poet.NewLogger(os.Stdout)
 
-	ctx.ApplicationPath, err = os.Getwd()
+	ctx.Application.Path, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory: %w", err))
 		return
 	}
 	if logger.IsDebugEnabled() {
-		logger.Debug("%s", ApplicationPathFormatter(ctx.ApplicationPath))
+		logger.Debug("%s", ApplicationPathFormatter(ctx.Application.Path))
 	}
 
 	ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "detect")))

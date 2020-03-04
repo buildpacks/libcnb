@@ -200,7 +200,7 @@ test-key = "test-value"
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 		)
 
-		Expect(ctx.ApplicationPath).To(Equal(applicationPath))
+		Expect(ctx.Application).To(Equal(libcnb.Application{Path: applicationPath}))
 		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
 			API: "0.0.0",
 			Info: libcnb.BuildpackInfo{

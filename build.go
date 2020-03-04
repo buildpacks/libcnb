@@ -30,8 +30,8 @@ import (
 // BuildContext contains the inputs to build.
 type BuildContext struct {
 
-	// ApplicationPath is the path to the application.
-	ApplicationPath string
+	// Application is application to build.
+	Application Application
 
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
@@ -100,13 +100,13 @@ func Build(f BuildFunc, options ...Option) {
 	ctx := BuildContext{}
 	logger := poet.NewLogger(os.Stdout)
 
-	ctx.ApplicationPath, err = os.Getwd()
+	ctx.Application.Path, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory: %w", err))
 		return
 	}
 	if logger.IsDebugEnabled() {
-		logger.Debug("%s", ApplicationPathFormatter(ctx.ApplicationPath))
+		logger.Debug("%s", ApplicationPathFormatter(ctx.Application.Path))
 	}
 
 	ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "build")))

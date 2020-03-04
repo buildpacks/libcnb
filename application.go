@@ -16,6 +16,13 @@
 
 package libcnb
 
+// Application is the user contributed application to build.
+type Application struct {
+
+	// Path is the path to the application.
+	Path string
+}
+
 // Process represents metadata about a type of command that can be run.
 type Process struct {
 
