@@ -36,9 +36,6 @@ type BuildContext struct {
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
 
-	// BuildpackPath is the path to the buildpack.
-	BuildpackPath string
-
 	// Layers is the layers available to the buildpack.
 	Layers Layers
 
@@ -112,12 +109,12 @@ func Build(f BuildFunc, options ...Option) {
 		logger.Debug("%s", ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
-	ctx.BuildpackPath = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "build")))
+	ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "build")))
 	if logger.IsDebugEnabled() {
-		logger.Debug("%s", BuildpackPathFormatter(ctx.BuildpackPath))
+		logger.Debug("%s", BuildpackPathFormatter(ctx.Buildpack.Path))
 	}
 
-	file = filepath.Join(ctx.BuildpackPath, "buildpack.toml")
+	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
 	if _, err = toml.DecodeFile(file, &ctx.Buildpack); err != nil && !os.IsNotExist(err) {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s: %w", file, err))
 		return

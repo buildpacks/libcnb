@@ -191,6 +191,7 @@ test-key = "test-value"
 					},
 				},
 			},
+			Path: buildpackPath,
 			Stacks: []libcnb.BuildpackStack{
 				{
 					ID:     "test-id",
@@ -199,7 +200,6 @@ test-key = "test-value"
 			},
 			Metadata: map[string]interface{}{"test-key": "test-value"},
 		}))
-		Expect(ctx.BuildpackPath).To(Equal(buildpackPath))
 		Expect(ctx.Platform).To(Equal(libcnb.Platform{
 			Bindings: libcnb.Bindings{
 				"alpha": libcnb.Binding{

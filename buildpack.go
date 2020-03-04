@@ -69,6 +69,9 @@ type Buildpack struct {
 	// Orders is buildpack collection of order definitions in the buildpack.
 	Orders []BuildpackOrder `toml:"order"`
 
+	// Path is the path to the buildpack.
+	Path string
+
 	// Stacks is the collection of stacks supported by the buildpack.
 	Stacks []BuildpackStack `toml:"stacks"`
 

@@ -218,6 +218,7 @@ test-key = "test-value"
 					},
 				}},
 			},
+			Path: buildpackPath,
 			Stacks: []libcnb.BuildpackStack{
 				{
 					ID:     "test-id",
@@ -226,7 +227,6 @@ test-key = "test-value"
 			},
 			Metadata: map[string]interface{}{"test-key": "test-value"},
 		}))
-		Expect(ctx.BuildpackPath).To(Equal(buildpackPath))
 		Expect(ctx.Layers).To(Equal(libcnb.Layers{Path: layersPath}))
 		Expect(ctx.PersistentMetadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
 		Expect(ctx.Plan).To(Equal(libcnb.BuildpackPlan{
