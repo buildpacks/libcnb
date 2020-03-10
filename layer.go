@@ -72,7 +72,7 @@ type Layer struct {
 type LayerContributor interface {
 
 	// Contribute accepts a layer and transforms it, returning a layer.
-	Contribute(Layer) (Layer, error)
+	Contribute(layer Layer) (Layer, error)
 
 	// Name is the name of the layer.
 	Name() string
