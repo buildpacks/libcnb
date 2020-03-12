@@ -19,16 +19,16 @@ package libcnb
 // BuildpackInfo is information about the buildpack.
 type BuildpackInfo struct {
 	// ID is the ID of the buildpack.
-	ID string `toml:"id"`
+	ID string `mapstructure:"id" toml:"id"`
 
 	// Name is the name of the buildpack.
-	Name string `toml:"name"`
+	Name string `mapstructure:"name" toml:"name"`
 
 	// Version is the version of the buildpack.
-	Version string `toml:"version"`
+	Version string `mapstructure:"version" toml:"version"`
 
 	// ClearEnvironment is whether the environment should be clear of user-configured environment variables.
-	ClearEnvironment bool `toml:"clear-env"`
+	ClearEnvironment bool `mapstructure:"clear-env" toml:"clear-env"`
 }
 
 // BuildpackOrderBuildpack is a buildpack within in a buildpack order group.
