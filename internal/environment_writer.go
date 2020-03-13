@@ -33,13 +33,13 @@ func (w EnvironmentWriter) Write(path string, environment map[string]string) err
 	}
 
 	if err := os.MkdirAll(path, 0755); err != nil {
-		return fmt.Errorf("unable to mkdir %s: %w", path, err)
+		return fmt.Errorf("unable to mkdir %s\n%w", path, err)
 	}
 
 	for key, value := range environment {
 		f := filepath.Join(path, key)
 		if err := ioutil.WriteFile(f, []byte(value), 0644); err != nil {
-			return fmt.Errorf("unable to write file %s: %w", f, err)
+			return fmt.Errorf("unable to write file %s\n%w", f, err)
 		}
 	}
 

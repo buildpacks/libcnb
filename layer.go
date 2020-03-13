@@ -98,7 +98,7 @@ func (l *Layers) Layer(name string) (Layer, error) {
 
 	f := filepath.Join(l.Path, fmt.Sprintf("%s.toml", name))
 	if _, err := toml.DecodeFile(f, &layer); err != nil && !os.IsNotExist(err) {
-		return Layer{}, fmt.Errorf("unable to decode layer metadata %s: %w", f, err)
+		return Layer{}, fmt.Errorf("unable to decode layer metadata %s\n%w", f, err)
 	}
 
 	return layer, nil

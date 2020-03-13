@@ -36,12 +36,12 @@ func (TOMLWriter) Write(path string, value interface{}) error {
 
 	d := filepath.Dir(path)
 	if err := os.MkdirAll(d, 0755); err != nil {
-		return fmt.Errorf("unable to mkdir %s: %w", d, err)
+		return fmt.Errorf("unable to mkdir %s\n%w", d, err)
 	}
 
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("unable to open file %s: %w", path, err)
+		return fmt.Errorf("unable to open file %s\n%w", path, err)
 	}
 	defer file.Close()
 

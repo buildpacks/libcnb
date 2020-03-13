@@ -61,13 +61,13 @@ func NewBindingFromPath(path string) (Binding, error) {
 	f = filepath.Join(path, "metadata")
 	metadata, err := internal.NewConfigMapFromPath(f)
 	if err != nil {
-		return Binding{}, fmt.Errorf("unable to create new config map from %s: %w", f, err)
+		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
 	}
 
 	f = filepath.Join(path, "secret")
 	secret, err := internal.NewConfigMapFromPath(f)
 	if err != nil {
-		return Binding{}, fmt.Errorf("unable to create new config map from %s: %w", f, err)
+		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
 	}
 
 	return Binding{metadata, secret}, nil
@@ -100,14 +100,14 @@ func NewBindingsFromEnvironment() (Bindings, error) {
 func NewBindingsFromPath(path string) (Bindings, error) {
 	files, err := filepath.Glob(filepath.Join(path, "*"))
 	if err != nil {
-		return nil, fmt.Errorf("unable to glob %s: %w", path, err)
+		return nil, fmt.Errorf("unable to glob %s\n%w", path, err)
 	}
 
 	bindings := Bindings{}
 	for _, file := range files {
 		binding, err := NewBindingFromPath(file)
 		if err != nil {
-			return nil, fmt.Errorf("unable to create new binding from %s: %w", file, err)
+			return nil, fmt.Errorf("unable to create new binding from %s\n%w", file, err)
 		}
 
 		name := filepath.Base(file)

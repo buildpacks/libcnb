@@ -29,14 +29,14 @@ type ConfigMap map[string]string
 func NewConfigMapFromPath(path string) (ConfigMap, error) {
 	files, err := filepath.Glob(filepath.Join(path, "*"))
 	if err != nil {
-		return nil, fmt.Errorf("unable to glob %s: %w", path, err)
+		return nil, fmt.Errorf("unable to glob %s\n%w", path, err)
 	}
 
 	configMap := ConfigMap{}
 	for _, file := range files {
 		contents, err := ioutil.ReadFile(file)
 		if err != nil {
-			return nil, fmt.Errorf("unable to read file %s: %w", file, err)
+			return nil, fmt.Errorf("unable to read file %s\n%w", file, err)
 		}
 
 		configMap[filepath.Base(file)] = string(contents)

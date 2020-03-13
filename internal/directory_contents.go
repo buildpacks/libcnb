@@ -39,13 +39,13 @@ func (d DirectoryContents) Get() ([]string, error) {
 
 		rel, err := filepath.Rel(d.Path, path)
 		if err != nil {
-			return fmt.Errorf("unable to calculate relative path %s -> %s: %w", d.Path, path, err)
+			return fmt.Errorf("unable to calculate relative path %s -> %s\n%w", d.Path, path, err)
 		}
 
 		contents = append(contents, rel)
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("error walking path %s: %w", d.Path, err)
+		return nil, fmt.Errorf("error walking path %s\n%w", d.Path, err)
 	}
 
 	sort.Strings(contents)

@@ -90,7 +90,7 @@ func Detect(detector Detector, options ...Option) {
 
 	ctx.Application.Path, err = os.Getwd()
 	if err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to get working directory: %w", err))
+		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
 	if logger.IsDebugEnabled() {
@@ -104,7 +104,7 @@ func Detect(detector Detector, options ...Option) {
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
 	if _, err = toml.DecodeFile(file, &ctx.Buildpack); err != nil && !os.IsNotExist(err) {
-		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s: %w", file, err))
+		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s\n%w", file, err))
 		return
 	}
 	logger.Debug("Buildpack: %+v", ctx.Buildpack)
@@ -116,14 +116,14 @@ func Detect(detector Detector, options ...Option) {
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
 	if ctx.Platform.Bindings, err = NewBindingsFromPath(file); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s: %w", file, err))
+		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
 		return
 	}
 	logger.Debug("Platform Bindings: %+v", ctx.Platform.Bindings)
 
 	file = filepath.Join(ctx.Platform.Path, "env")
 	if ctx.Platform.Environment, err = internal.NewConfigMapFromPath(file); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to read platform environment %s: %w", file, err))
+		config.exitHandler.Error(fmt.Errorf("unable to read platform environment %s\n%w", file, err))
 		return
 	}
 	logger.Debug("Platform Environment: %s", ctx.Platform.Environment)
@@ -158,7 +158,7 @@ func Detect(detector Detector, options ...Option) {
 		file = config.arguments[2]
 		logger.Debug("Writing build plans: %s <= %+v", file, plans)
 		if err := config.tomlWriter.Write(file, plans); err != nil {
-			config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s: %w", file, err))
+			config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s\n%w", file, err))
 			return
 		}
 	}
