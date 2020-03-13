@@ -21,7 +21,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/BurntSushi/toml"
 	"github.com/buildpacks/libcnb/internal"
 )
 
@@ -86,32 +85,15 @@ func (b Binding) String() string {
 // Bindings is a collection of bindings keyed by their name.
 type Bindings map[string]Binding
 
-// NewBindingsFromEnvironment creates a new bindings from an environment variable containing TOML-encoded bindings.
-func NewBindingsFromEnvironment(name string) (Bindings, error) {
-	bindings := Bindings{}
-
-	v, ok := os.LookupEnv(name)
+// NewBindingsFromEnvironment creates a new bindings from all the bindings at the path defined by $CNB_BINDINGS.  If
+// $CNB_BINDINGS is not defined, returns an empty collection of Bindings.
+func NewBindingsFromEnvironment() (Bindings, error) {
+	path, ok := os.LookupEnv("CNB_BINDINGS")
 	if !ok {
 		return Bindings{}, nil
 	}
 
-	if _, err := toml.Decode(v, &bindings); err != nil {
-		return nil, fmt.Errorf("unable to create new binding from $%s: %w", name, err)
-	}
-
-	for name, binding := range bindings {
-		if binding.Metadata == nil {
-			binding.Metadata = map[string]string{}
-		}
-
-		if binding.Secret == nil {
-			binding.Secret = map[string]string{}
-		}
-
-		bindings[name] = binding
-	}
-
-	return bindings, nil
+	return NewBindingsFromPath(path)
 }
 
 // NewBindingsFromPath creates a new instance from all the bindings at a given path.
