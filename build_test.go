@@ -266,6 +266,28 @@ test-key = "test-value"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("test-error"))
 	})
 
+	it("removes stale layers", func() {
+		Expect(ioutil.WriteFile(filepath.Join(layersPath, "alpha.toml"), []byte(""), 0644)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(layersPath, "bravo.toml"), []byte(""), 0644)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(layersPath, "store.toml"), []byte(""), 0644)).To(Succeed())
+
+		layer := libcnb.Layer{Name: "alpha"}
+		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
+		layerContributor.On("Name").Return("alpha")
+
+		builder.On("Build", mock.Anything).
+			Return(libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}, nil)
+
+		libcnb.Build(builder,
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+		)
+
+		Expect(tomlWriter.Calls).To(HaveLen(1))
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "alpha.toml")))
+		Expect(filepath.Join(layersPath, "store.toml")).To(BeARegularFile())
+	})
+
 	it("calls layer contributor", func() {
 		layerContributor.On("Contribute", mock.Anything).Return(libcnb.Layer{}, nil)
 		layerContributor.On("Name").Return("test-name")

@@ -178,6 +178,24 @@ func Build(builder Builder, options ...Option) {
 	}
 	logger.Debug("Result: %+v", result)
 
+	file = filepath.Join(ctx.Layers.Path, "*.toml")
+	existing, err := filepath.Glob(file)
+	if err != nil {
+		config.exitHandler.Error(fmt.Errorf("unable to list files in %s: %w", file, err))
+		return
+	}
+
+	for _, e := range existing {
+		if !strings.HasSuffix(e, "store.toml") {
+			logger.Debug("Removing %s", e)
+
+			if err := os.RemoveAll(e); err != nil {
+				config.exitHandler.Error(fmt.Errorf("unable to remove %s: %w", e, err))
+				return
+			}
+		}
+	}
+
 	for _, creator := range result.Layers {
 		name := creator.Name()
 		layer, err := ctx.Layers.Layer(name)
