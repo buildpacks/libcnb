@@ -71,11 +71,17 @@ type BuildResult struct {
 	Slices []Slice
 }
 
-// BuildFunc is the callback function for buildpack build implementations.
-type BuildFunc func(BuildContext) (BuildResult, error)
+//go:generate mockery -name Builder -case=underscore
+
+// Builder describes an interface for types that can be used by the Build function.
+type Builder interface {
+
+	// Build takes a context and returns a result, performing buildpack build behaviors.
+	Build(context BuildContext) (BuildResult, error)
+}
 
 // Build is called by the main function of a buildpack, for build.
-func Build(f BuildFunc, options ...Option) {
+func Build(builder Builder, options ...Option) {
 	config := Config{
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
@@ -165,7 +171,7 @@ func Build(f BuildFunc, options ...Option) {
 	}
 	logger.Debug("Stack: %s", ctx.StackID)
 
-	result, err := f(ctx)
+	result, err := builder.Build(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return

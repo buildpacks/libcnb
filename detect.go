@@ -53,11 +53,17 @@ type DetectResult struct {
 	Plans []BuildPlan
 }
 
-// DetectFunc is the callback function for buildpack build implementations.
-type DetectFunc func(DetectContext) (DetectResult, error)
+//go:generate mockery -name Detector -case=underscore
+
+// Detector describes an interface for types that can be used by the Detect function.
+type Detector interface {
+
+	// Detect takes a context and returns a result, performing buildpack detect behaviors.
+	Detect(context DetectContext) (DetectResult, error)
+}
 
 // Detect is called by the main function of a buildpack, for detection.
-func Detect(f DetectFunc, options ...Option) {
+func Detect(detector Detector, options ...Option) {
 	config := Config{
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
@@ -128,7 +134,7 @@ func Detect(f DetectFunc, options ...Option) {
 	}
 	logger.Debug("Stack: %s", ctx.StackID)
 
-	result, err := f(ctx)
+	result, err := detector.Detect(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return

@@ -38,6 +38,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		buildpackPath   string
 		buildPlanPath   string
 		commandPath     string
+		detector        *mocks.Detector
 		exitHandler     *mocks.ExitHandler
 		platformPath    string
 		tomlWriter      *mocks.TOMLWriter
@@ -89,6 +90,8 @@ test-key = "test-value"
 
 		commandPath = filepath.Join(buildpackPath, "bin", "detect")
 
+		detector = &mocks.Detector{}
+
 		exitHandler = &mocks.ExitHandler{}
 		exitHandler.On("Error", mock.Anything)
 		exitHandler.On("Fail")
@@ -135,10 +138,9 @@ test-key = "test-value"
 	})
 
 	it("encounters the wrong number of Arguments", func() {
-		libcnb.Detect(
-			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				return libcnb.DetectResult{}, nil
-			},
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
+
+		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -148,11 +150,9 @@ test-key = "test-value"
 
 	it("doesn't receive CNB_STACK_ID", func() {
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
 
-		libcnb.Detect(
-			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				return libcnb.DetectResult{}, nil
-			},
+		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -161,16 +161,14 @@ test-key = "test-value"
 	})
 
 	it("creates context", func() {
-		var ctx libcnb.DetectContext
-		libcnb.Detect(
-			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				ctx = context
-				return libcnb.DetectResult{}, nil
-			},
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
+
+		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
 
+		ctx := detector.Calls[0].Arguments[0].(libcnb.DetectContext)
 		Expect(ctx.Application).To(Equal(libcnb.Application{Path: applicationPath}))
 		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
 			API: "0.0.0",
@@ -218,10 +216,9 @@ test-key = "test-value"
 	})
 
 	it("handles error from DetectFunc", func() {
-		libcnb.Detect(
-			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				return libcnb.DetectResult{}, fmt.Errorf("test-error")
-			},
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, fmt.Errorf("test-error"))
+
+		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -230,10 +227,9 @@ test-key = "test-value"
 	})
 
 	it("does not write empty files", func() {
-		libcnb.Detect(
-			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				return libcnb.DetectResult{Pass: true}, nil
-			},
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: true}, nil)
+
+		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithTOMLWriter(tomlWriter),
@@ -243,26 +239,25 @@ test-key = "test-value"
 	})
 
 	it("writes one build plan", func() {
-		libcnb.Detect(
-			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				return libcnb.DetectResult{
-					Pass: true,
-					Plans: []libcnb.BuildPlan{
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{
+			Pass: true,
+			Plans: []libcnb.BuildPlan{
+				{
+					Provides: []libcnb.BuildPlanProvide{
+						{Name: "test-name"},
+					},
+					Requires: []libcnb.BuildPlanRequire{
 						{
-							Provides: []libcnb.BuildPlanProvide{
-								{Name: "test-name"},
-							},
-							Requires: []libcnb.BuildPlanRequire{
-								{
-									Name:     "test-name",
-									Version:  "test-version",
-									Metadata: map[string]interface{}{"test-key": "test-value"},
-								},
-							},
+							Name:     "test-name",
+							Version:  "test-version",
+							Metadata: map[string]interface{}{"test-key": "test-value"},
 						},
 					},
-				}, nil
+				},
 			},
+		}, nil)
+
+		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithTOMLWriter(tomlWriter),
@@ -286,38 +281,37 @@ test-key = "test-value"
 	})
 
 	it("writes two build plans", func() {
-		libcnb.Detect(
-			func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				return libcnb.DetectResult{
-					Pass: true,
-					Plans: []libcnb.BuildPlan{
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{
+			Pass: true,
+			Plans: []libcnb.BuildPlan{
+				{
+					Provides: []libcnb.BuildPlanProvide{
+						{Name: "test-name-1"},
+					},
+					Requires: []libcnb.BuildPlanRequire{
 						{
-							Provides: []libcnb.BuildPlanProvide{
-								{Name: "test-name-1"},
-							},
-							Requires: []libcnb.BuildPlanRequire{
-								{
-									Name:     "test-name-1",
-									Version:  "test-version-1",
-									Metadata: map[string]interface{}{"test-key-1": "test-value-1"},
-								},
-							},
-						},
-						{
-							Provides: []libcnb.BuildPlanProvide{
-								{Name: "test-name-2"},
-							},
-							Requires: []libcnb.BuildPlanRequire{
-								{
-									Name:     "test-name-2",
-									Version:  "test-version-2",
-									Metadata: map[string]interface{}{"test-key-2": "test-value-2"},
-								},
-							},
+							Name:     "test-name-1",
+							Version:  "test-version-1",
+							Metadata: map[string]interface{}{"test-key-1": "test-value-1"},
 						},
 					},
-				}, nil
+				},
+				{
+					Provides: []libcnb.BuildPlanProvide{
+						{Name: "test-name-2"},
+					},
+					Requires: []libcnb.BuildPlanRequire{
+						{
+							Name:     "test-name-2",
+							Version:  "test-version-2",
+							Metadata: map[string]interface{}{"test-key-2": "test-value-2"},
+						},
+					},
+				},
 			},
+		}, nil)
+
+		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithTOMLWriter(tomlWriter),
