@@ -194,17 +194,7 @@ func Build(builder Builder, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("unable to list files in %s\n%w", file, err))
 		return
 	}
-
-	for _, e := range existing {
-		if !strings.HasSuffix(e, "store.toml") {
-			logger.Debug("Removing %s", e)
-
-			if err := os.RemoveAll(e); err != nil {
-				config.exitHandler.Error(fmt.Errorf("unable to remove %s\n%w", e, err))
-				return
-			}
-		}
-	}
+	var contributed []string
 
 	for _, creator := range result.Layers {
 		name := creator.Name()
@@ -254,6 +244,20 @@ func Build(builder Builder, options ...Option) {
 			config.exitHandler.Error(fmt.Errorf("unable to write layer metadata %s\n%w", file, err))
 			return
 		}
+		contributed = append(contributed, file)
+	}
+
+	for _, e := range existing {
+		if strings.HasSuffix(e, "store.toml") || contains(contributed, e) {
+			continue
+		}
+
+		logger.Debug("Removing %s", e)
+
+		if err := os.RemoveAll(e); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to remove %s\n%w", e, err))
+			return
+		}
 	}
 
 	if len(result.Processes) > 0 || len(result.Slices) > 0 {
@@ -289,4 +293,14 @@ func Build(builder Builder, options ...Option) {
 			return
 		}
 	}
+}
+
+func contains(candidates []string, s string) bool {
+	for _, c := range candidates {
+		if s == c {
+			return true
+		}
+	}
+
+	return false
 }
