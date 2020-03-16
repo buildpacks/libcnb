@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 // ConfigMap represents a file-based projection of a collection of key-value pairs.
@@ -39,7 +40,7 @@ func NewConfigMapFromPath(path string) (ConfigMap, error) {
 			return nil, fmt.Errorf("unable to read file %s\n%w", file, err)
 		}
 
-		configMap[filepath.Base(file)] = string(contents)
+		configMap[filepath.Base(file)] = strings.TrimSpace(string(contents))
 	}
 
 	return configMap, nil

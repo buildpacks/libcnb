@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -69,6 +70,15 @@ type BuildResult struct {
 
 	// Slices are the application slices contributed by the buildpack.
 	Slices []Slice
+}
+
+func (b BuildResult) String() string {
+	var l []string
+	for _, c := range b.Layers {
+		l = append(l, reflect.TypeOf(c).Name())
+	}
+
+	return fmt.Sprintf("{Layers:%s PersistentMetadata:%+v Plan:%+v Processes:%+v Slices:%+v}", l, b.PersistentMetadata, b.Plan, b.PersistentMetadata, b.Slices)
 }
 
 //go:generate mockery -name Builder -case=underscore
