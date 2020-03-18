@@ -240,7 +240,8 @@ test-key = "test-value"
 		}))
 		Expect(ctx.Platform).To(Equal(libcnb.Platform{
 			Bindings: libcnb.Bindings{
-				"alpha": libcnb.Binding{
+				libcnb.Binding{
+					Name: "alpha",
 					Metadata: map[string]string{
 						"test-metadata-key": "test-metadata-value",
 					},

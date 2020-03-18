@@ -46,7 +46,8 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 	context("Binding", func() {
 		it("creates an empty binding", func() {
-			Expect(libcnb.NewBinding()).To(Equal(libcnb.Binding{
+			Expect(libcnb.NewBinding("test-name")).To(Equal(libcnb.Binding{
+				Name:     "test-name",
 				Metadata: map[string]string{},
 				Secret:   map[string]string{},
 			}))
@@ -59,6 +60,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(ioutil.WriteFile(filepath.Join(path, "secret", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
 
 			Expect(libcnb.NewBindingFromPath(path)).To(Equal(libcnb.Binding{
+				Name: filepath.Base(path),
 				Metadata: map[string]string{
 					"test-metadata-key": "test-metadata-value",
 				},
@@ -78,7 +80,24 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(b.String()).To(Equal("{Metadata: map[test-metadata-key:test-metadata-value] Secret: [test-secret-key]}"))
+		})
 
+		it("returns kind", func() {
+			b := libcnb.Binding{Metadata: map[string]string{libcnb.BindingKind: "test-kind"}}
+
+			Expect(b.Kind()).To(Equal("test-kind"))
+		})
+
+		it("returns provider", func() {
+			b := libcnb.Binding{Metadata: map[string]string{libcnb.BindingProvider: "test-provider"}}
+
+			Expect(b.Provider()).To(Equal("test-provider"))
+		})
+
+		it("returns tags", func() {
+			b := libcnb.Binding{Metadata: map[string]string{libcnb.BindingTags: "test-tag-1\ntest-tag-2"}}
+
+			Expect(b.Tags()).To(Equal([]string{"test-tag-1", "test-tag-2"}))
 		})
 	})
 
@@ -88,8 +107,8 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(os.MkdirAll(filepath.Join(path, "bravo"), 0755)).To(Succeed())
 
 			Expect(libcnb.NewBindingsFromPath(path)).To(Equal(libcnb.Bindings{
-				"alpha": libcnb.NewBinding(),
-				"bravo": libcnb.NewBinding(),
+				libcnb.NewBinding("alpha"),
+				libcnb.NewBinding("bravo"),
 			}))
 		})
 
@@ -111,8 +130,8 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 			it("creates bindings from path in $CNB_BINDINGS", func() {
 				Expect(libcnb.NewBindingsFromEnvironment()).To(Equal(libcnb.Bindings{
-					"alpha": libcnb.NewBinding(),
-					"bravo": libcnb.NewBinding(),
+					libcnb.NewBinding("alpha"),
+					libcnb.NewBinding("bravo"),
 				}))
 			})
 		})

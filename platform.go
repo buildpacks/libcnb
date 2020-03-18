@@ -20,12 +20,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/buildpacks/libcnb/internal"
 )
 
 const (
-
 	// BindingKind is the metadata key for a binding's kind.
 	BindingKind = "kind"
 
@@ -39,16 +39,20 @@ const (
 // Binding is a projection of metadata about an external entity to be bound to.
 type Binding struct {
 
+	// Name is the name of the binding
+	Name string
+
 	// Metadata is the metadata of the binding.
-	Metadata map[string]string `toml:"metadata"`
+	Metadata map[string]string
 
 	// Secrete is the secret of the binding.
-	Secret map[string]string `toml:"secret"`
+	Secret map[string]string
 }
 
 // NewBinding creates a new Binding initialized with no metadata or secret.
-func NewBinding() Binding {
+func NewBinding(name string) Binding {
 	return Binding{
+		Name:     name,
 		Metadata: map[string]string{},
 		Secret:   map[string]string{},
 	}
@@ -70,7 +74,22 @@ func NewBindingFromPath(path string) (Binding, error) {
 		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
 	}
 
-	return Binding{metadata, secret}, nil
+	return Binding{Name: filepath.Base(path), Metadata: metadata, Secret: secret}, nil
+}
+
+// Kind returns the kind of the binding.
+func (b Binding) Kind() string {
+	return b.Metadata[BindingKind]
+}
+
+// Provider returns the provider of the binding.
+func (b Binding) Provider() string {
+	return b.Metadata[BindingProvider]
+}
+
+// Tags returns the tags of the binding.
+func (b Binding) Tags() []string {
+	return strings.Split(b.Metadata[BindingTags], "\n")
 }
 
 func (b Binding) String() string {
@@ -83,7 +102,7 @@ func (b Binding) String() string {
 }
 
 // Bindings is a collection of bindings keyed by their name.
-type Bindings map[string]Binding
+type Bindings []Binding
 
 // NewBindingsFromEnvironment creates a new bindings from all the bindings at the path defined by $CNB_BINDINGS.  If
 // $CNB_BINDINGS is not defined, returns an empty collection of Bindings.
@@ -110,9 +129,7 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 			return nil, fmt.Errorf("unable to create new binding from %s\n%w", file, err)
 		}
 
-		name := filepath.Base(file)
-
-		bindings[name] = binding
+		bindings = append(bindings, binding)
 	}
 
 	return bindings, nil
