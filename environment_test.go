@@ -36,12 +36,22 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("adds append value", func() {
-		environment.Append("TEST_NAME", "test-%s", "value")
+		environment.Append("TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.append": "test-value"}))
+	})
+
+	it("adds append formatted value", func() {
+		environment.Appendf("TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.append": "test-value"}))
 	})
 
 	it("adds default value", func() {
-		environment.Default("TEST_NAME", "test-%s", "value")
+		environment.Default("TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.default": "test-value"}))
+	})
+
+	it("adds default formatted value", func() {
+		environment.Defaultf("TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.default": "test-value"}))
 	})
 
@@ -51,17 +61,32 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("adds override value", func() {
-		environment.Override("TEST_NAME", "test-%s", "value")
+		environment.Override("TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.override": "test-value"}))
+	})
+
+	it("adds override formatted value", func() {
+		environment.Overridef("TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.override": "test-value"}))
 	})
 
 	it("adds prepend value", func() {
-		environment.Prepend("TEST_NAME", "test-%s", "value")
+		environment.Prepend("TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.prepend": "test-value"}))
+	})
+
+	it("adds prepend formatted value", func() {
+		environment.Prependf("TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.prepend": "test-value"}))
 	})
 
 	it("adds prepend path value", func() {
-		environment.PrependPath("TEST_NAME", "test-%s", "value")
+		environment.PrependPath("TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME": "test-value"}))
+	})
+
+	it("adds prepend path formatted value", func() {
+		environment.PrependPathf("TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME": "test-value"}))
 	})
 

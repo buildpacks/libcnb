@@ -43,7 +43,12 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("adds content", func() {
-			profile.Add("test-name", "test-%s", "value")
+			profile.Add("test-name", "test-value")
+			Expect(profile).To(Equal(libcnb.Profile{"test-name": "test-value"}))
+		})
+
+		it("adds formatted content", func() {
+			profile.Addf("test-name", "test-%s", "value")
 			Expect(profile).To(Equal(libcnb.Profile{"test-name": "test-value"}))
 		})
 	})

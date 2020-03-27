@@ -94,12 +94,12 @@ func Detect(detector Detector, options ...Option) {
 		return
 	}
 	if logger.IsDebugEnabled() {
-		logger.Debug("%s", ApplicationPathFormatter(ctx.Application.Path))
+		logger.Debug(ApplicationPathFormatter(ctx.Application.Path))
 	}
 
 	ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "detect")))
 	if logger.IsDebugEnabled() {
-		logger.Debug("%s", BuildpackPathFormatter(ctx.Buildpack.Path))
+		logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
@@ -107,11 +107,11 @@ func Detect(detector Detector, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s\n%w", file, err))
 		return
 	}
-	logger.Debug("Buildpack: %+v", ctx.Buildpack)
+	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
 	ctx.Platform.Path = config.arguments[1]
 	if logger.IsDebugEnabled() {
-		logger.Debug("%s", PlatformFormatter(ctx.Platform))
+		logger.Debug(PlatformFormatter(ctx.Platform))
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
@@ -119,27 +119,27 @@ func Detect(detector Detector, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
 		return
 	}
-	logger.Debug("Platform Bindings: %+v", ctx.Platform.Bindings)
+	logger.Debugf("Platform Bindings: %+v", ctx.Platform.Bindings)
 
 	file = filepath.Join(ctx.Platform.Path, "env")
 	if ctx.Platform.Environment, err = internal.NewConfigMapFromPath(file); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform environment %s\n%w", file, err))
 		return
 	}
-	logger.Debug("Platform Environment: %s", ctx.Platform.Environment)
+	logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
 	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
 		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
 		return
 	}
-	logger.Debug("Stack: %s", ctx.StackID)
+	logger.Debugf("Stack: %s", ctx.StackID)
 
 	result, err := detector.Detect(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return
 	}
-	logger.Debug("Result: %+v", result)
+	logger.Debugf("Result: %+v", result)
 
 	if !result.Pass {
 		config.exitHandler.Fail()
@@ -156,7 +156,7 @@ func Detect(detector Detector, options ...Option) {
 		}
 
 		file = config.arguments[2]
-		logger.Debug("Writing build plans: %s <= %+v", file, plans)
+		logger.Debugf("Writing build plans: %s <= %+v", file, plans)
 		if err := config.tomlWriter.Write(file, plans); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s\n%w", file, err))
 			return

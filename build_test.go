@@ -283,7 +283,7 @@ test-key = "test-value"
 
 	it("writes env.build", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), BuildEnvironment: libcnb.Environment{}}
-		layer.BuildEnvironment.PrependPath("test-build", "test-%s", "value")
+		layer.BuildEnvironment.PrependPathf("test-build", "test-%s", "value")
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
 		layerContributor.On("Name").Return("test-name")
 		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
@@ -300,7 +300,7 @@ test-key = "test-value"
 
 	it("writes env.launch", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), LaunchEnvironment: libcnb.Environment{}}
-		layer.LaunchEnvironment.PrependPath("test-launch", "test-%s", "value")
+		layer.LaunchEnvironment.PrependPathf("test-launch", "test-%s", "value")
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
 		layerContributor.On("Name").Return("test-name")
 		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
@@ -317,7 +317,7 @@ test-key = "test-value"
 
 	it("writes env", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), SharedEnvironment: libcnb.Environment{}}
-		layer.SharedEnvironment.PrependPath("test-shared", "test-%s", "value")
+		layer.SharedEnvironment.PrependPathf("test-shared", "test-%s", "value")
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
 		layerContributor.On("Name").Return("test-name")
 		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
@@ -335,7 +335,7 @@ test-key = "test-value"
 
 	it("writes profile.d", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), Profile: libcnb.Profile{}}
-		layer.Profile.Add("test-profile", "test-%s", "value")
+		layer.Profile.Addf("test-profile", "test-%s", "value")
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
 		layerContributor.On("Name").Return("test-name")
 		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}

@@ -27,8 +27,14 @@ import (
 // Profile is the collection of values to be written into profile.d
 type Profile map[string]string
 
-// Add an entry for a .profile.d file.
-func (p Profile) Add(name string, format string, a ...interface{}) {
+// Add formats using the default formats for its operands and adds an entry for a .profile.d file. Spaces are added
+// between operands when neither is a string.
+func (p Profile) Add(name string, a ...interface{}) {
+	p[name] = fmt.Sprint(a...)
+}
+
+// Addf formats according to a format specifier and adds an entry for a .profile.d file.
+func (p Profile) Addf(name string, format string, a ...interface{}) {
 	p[name] = fmt.Sprintf(format, a...)
 }
 

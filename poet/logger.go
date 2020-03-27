@@ -64,8 +64,18 @@ func NewLogger(writer io.Writer) Logger {
 	return NewLoggerWithOptions(writer, options...)
 }
 
-// Debug logs a message to the configured debug writer.
-func (l Logger) Debug(format string, a ...interface{}) {
+// Debug formats using the default formats for its operands and writes to the configured debug writer. Spaces are added
+// between operands when neither is a string.
+func (l Logger) Debug(a ...interface{}) {
+	if !l.IsDebugEnabled() {
+		return
+	}
+
+	l.print(l.debug, a...)
+}
+
+// Debugf formats according to a format specifier and writes to the configured debug writer.
+func (l Logger) Debugf(format string, a ...interface{}) {
 	if !l.IsDebugEnabled() {
 		return
 	}
@@ -83,8 +93,18 @@ func (l Logger) IsDebugEnabled() bool {
 	return l.debug != nil
 }
 
-// Info logs a message to the configured info writer.
-func (l Logger) Info(format string, a ...interface{}) {
+// Info formats using the default formats for its operands and writes to the configured info writer. Spaces are added
+// between operands when neither is a string.
+func (l Logger) Info(a ...interface{}) {
+	if !l.IsInfoEnabled() {
+		return
+	}
+
+	l.print(l.info, a...)
+}
+
+// Infof formats according to a format specifier and writes to the configured info writer.
+func (l Logger) Infof(format string, a ...interface{}) {
 	if !l.IsInfoEnabled() {
 		return
 	}
@@ -100,6 +120,16 @@ func (l Logger) InfoWriter() io.Writer {
 // IsInfoEnabled indicates whether info logging is enabled.
 func (l Logger) IsInfoEnabled() bool {
 	return l.info != nil
+}
+
+func (Logger) print(writer io.Writer, a ...interface{}) {
+	s := fmt.Sprint(a...)
+
+	if !strings.HasSuffix(s, "\n") {
+		s = s + "\n"
+	}
+
+	_, _ = fmt.Fprint(writer, s)
 }
 
 func (Logger) printf(writer io.Writer, format string, a ...interface{}) {

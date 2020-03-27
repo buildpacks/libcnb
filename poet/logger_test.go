@@ -69,7 +69,12 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("does not write debug log", func() {
-			l.Debug("test-%s", "message")
+			l.Debug("test-message")
+			Expect(b.String()).To(Equal(""))
+		})
+
+		it("does not write debugf log", func() {
+			l.Debugf("test-%s", "message")
 			Expect(b.String()).To(Equal(""))
 		})
 
@@ -82,7 +87,12 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("writes info log", func() {
-			l.Info("test-%s", "message")
+			l.Info("test-message")
+			Expect(b.String()).To(Equal("test-message\n"))
+		})
+
+		it("writes infof log", func() {
+			l.Infof("test-%s", "message")
 			Expect(b.String()).To(Equal("test-message\n"))
 		})
 
@@ -101,7 +111,12 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("writes debug log", func() {
-			l.Debug("test-%s", "message")
+			l.Debug("test-message")
+			Expect(b.String()).To(Equal("test-message\n"))
+		})
+
+		it("writes debugf log", func() {
+			l.Debugf("test-%s", "message")
 			Expect(b.String()).To(Equal("test-message\n"))
 		})
 
@@ -114,7 +129,12 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("writes info log", func() {
-			l.Info("test-%s", "message")
+			l.Info("test-message")
+			Expect(b.String()).To(Equal("test-message\n"))
+		})
+
+		it("writes infof log", func() {
+			l.Infof("test-%s", "message")
 			Expect(b.String()).To(Equal("test-message\n"))
 		})
 
