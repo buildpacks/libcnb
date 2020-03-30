@@ -43,6 +43,10 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		it.After(func() {
+			Expect(os.RemoveAll(app)).To(Succeed())
+		})
+
 		it("lists empty directory contents", func() {
 			Expect(libcnb.ApplicationPathFormatter(app).String()).To(Equal("Application contents: [.]"))
 		})
@@ -67,6 +71,10 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		it.After(func() {
+			Expect(os.RemoveAll(bp)).To(Succeed())
+		})
+
 		it("lists empty directory contents", func() {
 			Expect(libcnb.BuildpackPathFormatter(bp).String()).To(Equal("Buildpack contents: [.]"))
 		})
@@ -89,6 +97,10 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 			var err error
 			plat.Path, err = ioutil.TempDir("", "platform-formatter")
 			Expect(err).NotTo(HaveOccurred())
+		})
+
+		it.After(func() {
+			Expect(os.RemoveAll(plat.Path)).To(Succeed())
 		})
 
 		it("lists empty directory contents", func() {
