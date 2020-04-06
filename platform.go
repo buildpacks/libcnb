@@ -93,12 +93,17 @@ func (b Binding) Tags() []string {
 }
 
 func (b Binding) String() string {
+	m := make(map[string]string, len(b.Metadata))
+	for k, v := range b.Metadata {
+		m[k] = strings.ReplaceAll(v, "\n", " ")
+	}
+	
 	var s []string
 	for k, _ := range b.Secret {
 		s = append(s, k)
 	}
 
-	return fmt.Sprintf("{Metadata: %s Secret: %s}", b.Metadata, s)
+	return fmt.Sprintf("{Metadata: %s Secret: %s}", m, s)
 }
 
 // Bindings is a collection of bindings keyed by their name.
