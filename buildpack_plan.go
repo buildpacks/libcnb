@@ -31,6 +31,6 @@ type BuildpackPlanEntry struct {
 // BuildpackPlan represents a buildpack plan.
 type BuildpackPlan struct {
 
-	// Entries represents all of the buildpack plan entries.
+	// Entries represents all the buildpack plan entries.
 	Entries []BuildpackPlanEntry `toml:"entries,omitempty"`
 }

@@ -97,7 +97,7 @@ func (b Binding) String() string {
 	for k, v := range b.Metadata {
 		m[k] = strings.ReplaceAll(v, "\n", " ")
 	}
-	
+
 	var s []string
 	for k, _ := range b.Secret {
 		s = append(s, k)
