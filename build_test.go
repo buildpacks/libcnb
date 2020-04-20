@@ -168,7 +168,7 @@ test-key = "test-value"
 	})
 
 	it("encounters the wrong number of arguments", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{}, nil)
+		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
 			libcnb.WithArguments([]string{commandPath}),
@@ -180,7 +180,7 @@ test-key = "test-value"
 
 	it("doesn't receive CNB_STACK_ID", func() {
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{}, nil)
+		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
@@ -191,7 +191,7 @@ test-key = "test-value"
 	})
 
 	it("creates context", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{}, nil)
+		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
@@ -257,7 +257,7 @@ test-key = "test-value"
 	})
 
 	it("handles error from BuildFunc", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{}, fmt.Errorf("test-error"))
+		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), fmt.Errorf("test-error"))
 
 		libcnb.Build(builder,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
@@ -430,7 +430,7 @@ test-key = "test-value"
 	})
 
 	it("does not write empty files", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{}, nil)
+		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
