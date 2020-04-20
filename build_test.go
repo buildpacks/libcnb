@@ -442,7 +442,7 @@ test-key = "test-value"
 
 	it("writes buildpack plan", func() {
 		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
-			Plan: libcnb.BuildpackPlan{
+			Plan: &libcnb.BuildpackPlan{
 				Entries: []libcnb.BuildpackPlanEntry{
 					{
 						Name:     "test-name",
@@ -458,7 +458,7 @@ test-key = "test-value"
 		)
 
 		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(buildpackPlanPath))
-		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.BuildpackPlan{
+		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(&libcnb.BuildpackPlan{
 			Entries: []libcnb.BuildpackPlanEntry{
 				{
 					Name:     "test-name",

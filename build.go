@@ -63,13 +63,21 @@ type BuildResult struct {
 	PersistentMetadata map[string]interface{}
 
 	// Plan is the buildpack plan contributed by the buildpack.
-	Plan BuildpackPlan
+	Plan *BuildpackPlan
 
 	// Processes are the process types contributed by the buildpack.
 	Processes []Process
 
 	// Slices are the application slices contributed by the buildpack.
 	Slices []Slice
+}
+
+// NewBuildResult creates a new BuildResult instance, initializing empty fields.
+func NewBuildResult() BuildResult {
+	return BuildResult{
+		PersistentMetadata: make(map[string]interface{}),
+		Plan:               &BuildpackPlan{},
+	}
 }
 
 func (b BuildResult) String() string {
@@ -285,7 +293,7 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
-	if len(result.Plan.Entries) > 0 {
+	if result.Plan != nil && len(result.Plan.Entries) > 0 {
 		file = config.arguments[3]
 		logger.Debugf("Writing buildpack plan: %s <= %+v", file, result.Plan)
 		if err = config.tomlWriter.Write(file, result.Plan); err != nil {
