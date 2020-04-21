@@ -1,4 +1,4 @@
-# `libcnb`
+# `github.com/buildpacks/libcnb`
 `libcnb` is a Go language binding of the Cloud Native Buildpack API.  It is a non-opinionated implementation adding language constructs and convenience methods for working with the API.
 
 ## Usage
