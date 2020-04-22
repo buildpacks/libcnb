@@ -397,6 +397,12 @@ test-key = "test-value"
 
 	it("writes application metadata", func() {
 		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
+			Labels: []libcnb.Label{
+				{
+					Key:   "test-key",
+					Value: "test-value",
+				},
+			},
 			Processes: []libcnb.Process{
 				{
 					Type:    "test-type",
@@ -417,6 +423,12 @@ test-key = "test-value"
 
 		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "launch.toml")))
 		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.Launch{
+			Labels: []libcnb.Label{
+				{
+					Key:   "test-key",
+					Value: "test-value",
+				},
+			},
 			Processes: []libcnb.Process{
 				{
 					Type:    "test-type",

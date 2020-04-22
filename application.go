@@ -23,6 +23,16 @@ type Application struct {
 	Path string
 }
 
+// Label represents an image label.
+type Label struct {
+
+	// Key is the key of the label.
+	Key string `toml:"key"`
+
+	// Value is the value of the label.
+	Value string `toml:"value"`
+}
+
 // Process represents metadata about a type of command that can be run.
 type Process struct {
 
@@ -48,6 +58,9 @@ type Slice struct {
 
 // Launch represents the contents of launch.toml.
 type Launch struct {
+
+	// Labels is the collection of image labels contributed by the buildpack.
+	Labels []Label `toml:"labels"`
 
 	// Processes is the collection of process types contributed by the buildpack.
 	Processes []Process `toml:"processes"`

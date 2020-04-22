@@ -56,6 +56,9 @@ type BuildContext struct {
 // BuildResult contains the results of detection.
 type BuildResult struct {
 
+	// Labels are the image labels contributed by the buildpack.
+	Labels []Label
+
 	// Layers is the collection of LayerCreators contributed by the buildpack.
 	Layers []LayerContributor
 
@@ -86,7 +89,8 @@ func (b BuildResult) String() string {
 		l = append(l, reflect.TypeOf(c).Name())
 	}
 
-	return fmt.Sprintf("{Layers:%s PersistentMetadata:%+v Plan:%+v Processes:%+v Slices:%+v}", l, b.PersistentMetadata, b.Plan, b.PersistentMetadata, b.Slices)
+	return fmt.Sprintf("{Labels:%+v Layers:%s PersistentMetadata:%+v Plan:%+v Processes:%+v Slices:%+v}",
+		b.Labels, l, b.PersistentMetadata, b.Plan, b.PersistentMetadata, b.Slices)
 }
 
 //go:generate mockery -name Builder -case=underscore
@@ -135,7 +139,7 @@ func Build(builder Builder, options ...Option) {
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
 		ctx.Buildpack.Path = filepath.Clean(s)
-	} else {  // TODO: Remove branch once lifecycle has been updated to support this
+	} else { // TODO: Remove branch once lifecycle has been updated to support this
 		ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "build")))
 	}
 	if logger.IsDebugEnabled() {
@@ -272,8 +276,9 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
-	if len(result.Processes) > 0 || len(result.Slices) > 0 {
+	if len(result.Labels) > 0 || len(result.Processes) > 0 || len(result.Slices) > 0 {
 		launch := Launch{
+			Labels:    result.Labels,
 			Processes: result.Processes,
 			Slices:    result.Slices,
 		}
