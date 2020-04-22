@@ -56,6 +56,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		buildpackPath, err = ioutil.TempDir("", "detect-buildpack-path")
 		Expect(err).NotTo(HaveOccurred())
+		Expect(os.Setenv("CNB_BUILDPACK_DIR", buildpackPath)).To(Succeed())
 
 		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
@@ -88,7 +89,7 @@ test-key = "test-value"
 		Expect(f.Close()).NotTo(HaveOccurred())
 		buildPlanPath = f.Name()
 
-		commandPath = filepath.Join(buildpackPath, "bin", "detect")
+		commandPath = filepath.Join("bin", "detect")
 
 		detector = &mocks.Detector{}
 
@@ -129,6 +130,7 @@ test-key = "test-value"
 
 	it.After(func() {
 		Expect(os.Chdir(workingDir)).To(Succeed())
+		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
 
 		Expect(os.RemoveAll(applicationPath)).To(Succeed())
@@ -214,6 +216,21 @@ test-key = "test-value"
 			Path:        platformPath,
 		}))
 		Expect(ctx.StackID).To(Equal("test-stack-id"))
+	})
+
+	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
+		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
+
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
+
+		libcnb.Detect(detector,
+			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), platformPath, buildPlanPath}),
+			libcnb.WithExitHandler(exitHandler),
+		)
+
+		ctx := detector.Calls[0].Arguments[0].(libcnb.DetectContext)
+
+		Expect(ctx.Buildpack.Path).To(Equal(buildpackPath))
 	})
 
 	it("handles error from DetectFunc", func() {

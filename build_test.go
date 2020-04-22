@@ -61,6 +61,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		buildpackPath, err = ioutil.TempDir("", "build-buildpack-path")
 		Expect(err).NotTo(HaveOccurred())
+		Expect(os.Setenv("CNB_BUILDPACK_DIR", buildpackPath)).To(Succeed())
 
 		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
@@ -105,7 +106,7 @@ test-key = "test-value"
 			0644),
 		).To(Succeed())
 
-		commandPath = filepath.Join(buildpackPath, "bin", "build")
+		commandPath = filepath.Join("bin", "build")
 
 		environmentWriter = &mocks.EnvironmentWriter{}
 		environmentWriter.On("Write", mock.Anything, mock.Anything).Return(nil)
@@ -158,6 +159,7 @@ test-key = "test-value"
 
 	it.After(func() {
 		Expect(os.Chdir(workingDir)).To(Succeed())
+		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
 
 		Expect(os.RemoveAll(applicationPath)).To(Succeed())
@@ -254,6 +256,20 @@ test-key = "test-value"
 			Path:        platformPath,
 		}))
 		Expect(ctx.StackID).To(Equal("test-stack-id"))
+	})
+
+	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
+		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
+
+		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
+
+		libcnb.Build(builder,
+			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), layersPath, platformPath, buildpackPlanPath}),
+		)
+
+		ctx := builder.Calls[0].Arguments[0].(libcnb.BuildContext)
+
+		Expect(ctx.Buildpack.Path).To(Equal(buildpackPath))
 	})
 
 	it("handles error from BuildFunc", func() {
