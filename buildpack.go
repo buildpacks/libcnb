@@ -27,6 +27,9 @@ type BuildpackInfo struct {
 	// Version is the version of the buildpack.
 	Version string `mapstructure:"version" toml:"version"`
 
+	// Homepage is the homepage of the buildpack.
+	Homepage string `mapstructure:"homepage" toml:"homepage"`
+
 	// ClearEnvironment is whether the environment should be clear of user-configured environment variables.
 	ClearEnvironment bool `mapstructure:"clear-env" toml:"clear-env"`
 }
