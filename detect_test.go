@@ -163,7 +163,7 @@ test-key = "test-value"
 	})
 
 	it("creates context", func() {
-		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: true}, nil)
 
 		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
@@ -221,7 +221,7 @@ test-key = "test-value"
 	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 
-		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: true}, nil)
 
 		libcnb.Detect(detector,
 			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), platformPath, buildPlanPath}),

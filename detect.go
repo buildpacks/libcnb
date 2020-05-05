@@ -99,7 +99,7 @@ func Detect(detector Detector, options ...Option) {
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
 		ctx.Buildpack.Path = filepath.Clean(s)
-	} else {  // TODO: Remove branch once lifecycle has been updated to support this
+	} else { // TODO: Remove branch once lifecycle has been updated to support this
 		ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "detect")))
 	}
 	if logger.IsDebugEnabled() {
