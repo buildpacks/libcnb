@@ -204,6 +204,7 @@ test-key = "test-value"
 			Bindings: libcnb.Bindings{
 				libcnb.Binding{
 					Name: "alpha",
+					Path: filepath.Join(platformPath, "bindings", "alpha"),
 					Metadata: map[string]string{
 						"test-metadata-key": "test-metadata-value",
 					},
