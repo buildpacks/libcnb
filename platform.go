@@ -42,8 +42,11 @@ type Binding struct {
 	// Metadata is the metadata of the binding.
 	Metadata map[string]string
 
-	// Secrete is the secret of the binding.
+	// Secret is the secret of the binding.
 	Secret map[string]string
+
+	// Path is the path to the binding directory.
+	Path   string
 }
 
 // NewBinding creates a new Binding initialized with no metadata or secret.
@@ -71,7 +74,12 @@ func NewBindingFromPath(path string) (Binding, error) {
 		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
 	}
 
-	return Binding{Name: filepath.Base(path), Metadata: metadata, Secret: secret}, nil
+	return Binding{
+		Name: filepath.Base(path),
+		Path: path,
+		Metadata: metadata,
+		Secret: secret,
+	}, nil
 }
 
 // Kind returns the kind of the binding.
@@ -95,7 +103,23 @@ func (b Binding) String() string {
 		s = append(s, k)
 	}
 
-	return fmt.Sprintf("{Metadata: %s Secret: %s}", m, s)
+	return fmt.Sprintf("{Metadata: %s Path: %s Secret: %s}", m, b.Path, s)
+}
+
+// SecretFilePath return the path to a secret file with the given name.
+func (b Binding) SecretFilePath(name string) (string, bool) {
+	if _, ok := b.Secret[name]; !ok {
+		return "", false
+	}
+	return filepath.Join(b.Path, "secret", name), true
+}
+
+// MetadataFilePath return the path to a metadata file with the given name.
+func (b Binding) MetadataFilePath(name string) (string, bool) {
+	if _, ok := b.Metadata[name]; !ok {
+		return "", false
+	}
+	return filepath.Join(b.Path, "metadata", name), true
 }
 
 // Bindings is a collection of bindings keyed by their name.

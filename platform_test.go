@@ -17,6 +17,7 @@
 package libcnb_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -59,8 +60,10 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(os.MkdirAll(filepath.Join(path, "secret"), 0755)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "secret", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
 
-			Expect(libcnb.NewBindingFromPath(path)).To(Equal(libcnb.Binding{
+			binding, err := libcnb.NewBindingFromPath(path)
+			Expect(binding, err).To(Equal(libcnb.Binding{
 				Name: filepath.Base(path),
+				Path: path,
 				Metadata: map[string]string{
 					"test-metadata-key": "test-metadata-value",
 				},
@@ -68,6 +71,14 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 					"test-secret-key": "test-secret-value",
 				},
 			}))
+
+			secretFilePath, ok := binding.SecretFilePath("test-secret-key")
+			Expect(ok).To(BeTrue())
+			Expect(secretFilePath).To(Equal(filepath.Join(path, "secret", "test-secret-key")))
+
+			metadataFilePath, ok := binding.MetadataFilePath("test-metadata-key")
+			Expect(ok).To(BeTrue())
+			Expect(metadataFilePath).To(Equal(filepath.Join(path, "metadata", "test-metadata-key")))
 		})
 
 		it("sanitizes secrets", func() {
@@ -79,7 +90,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			b, err := libcnb.NewBindingFromPath(path)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(b.String()).To(Equal("{Metadata: map[test-metadata-key:test-metadata-value] Secret: [test-secret-key]}"))
+			Expect(b.String()).To(Equal(fmt.Sprintf("{Metadata: map[test-metadata-key:test-metadata-value] Path: %s Secret: [test-secret-key]}", path)))
 		})
 
 		it("returns kind", func() {
@@ -101,8 +112,18 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(os.MkdirAll(filepath.Join(path, "bravo"), 0755)).To(Succeed())
 
 			Expect(libcnb.NewBindingsFromPath(path)).To(Equal(libcnb.Bindings{
-				libcnb.NewBinding("alpha"),
-				libcnb.NewBinding("bravo"),
+				libcnb.Binding{
+					Name:     "alpha",
+					Metadata: map[string]string{},
+					Secret:   map[string]string{},
+					Path:     filepath.Join(path, "alpha"),
+				},
+				libcnb.Binding{
+					Name:     "bravo",
+					Metadata: map[string]string{},
+					Secret:   map[string]string{},
+					Path:     filepath.Join(path, "bravo"),
+				},
 			}))
 		})
 
@@ -124,8 +145,18 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 			it("creates bindings from path in $CNB_BINDINGS", func() {
 				Expect(libcnb.NewBindingsFromEnvironment()).To(Equal(libcnb.Bindings{
-					libcnb.NewBinding("alpha"),
-					libcnb.NewBinding("bravo"),
+					libcnb.Binding{
+						Name:     "alpha",
+						Metadata: map[string]string{},
+						Secret:   map[string]string{},
+						Path:     filepath.Join(path, "alpha"),
+					},
+					libcnb.Binding{
+						Name:     "bravo",
+						Metadata: map[string]string{},
+						Secret:   map[string]string{},
+						Path:     filepath.Join(path, "bravo"),
+					},
 				}))
 			})
 		})
