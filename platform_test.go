@@ -93,12 +93,6 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(b.Provider()).To(Equal("test-provider"))
 		})
-
-		it("returns tags", func() {
-			b := libcnb.Binding{Metadata: map[string]string{libcnb.BindingTags: "test-tag-1\ntest-tag-2"}}
-
-			Expect(b.Tags()).To(Equal([]string{"test-tag-1", "test-tag-2"}))
-		})
 	})
 
 	context("Bindings", func() {

@@ -31,9 +31,6 @@ const (
 
 	// BindingProvider is the metadata key for a binding's provider.
 	BindingProvider = "provider"
-
-	// BindingTags is the metadata key for a binding's tags.
-	BindingTags = "tags"
 )
 
 // Binding is a projection of metadata about an external entity to be bound to.
@@ -85,11 +82,6 @@ func (b Binding) Kind() string {
 // Provider returns the provider of the binding.
 func (b Binding) Provider() string {
 	return b.Metadata[BindingProvider]
-}
-
-// Tags returns the tags of the binding.
-func (b Binding) Tags() []string {
-	return strings.Split(b.Metadata[BindingTags], "\n")
 }
 
 func (b Binding) String() string {
