@@ -46,7 +46,7 @@ type Binding struct {
 	Secret map[string]string
 
 	// Path is the path to the binding directory.
-	Path   string
+	Path string
 }
 
 // NewBinding creates a new Binding initialized with no metadata or secret.
@@ -75,10 +75,10 @@ func NewBindingFromPath(path string) (Binding, error) {
 	}
 
 	return Binding{
-		Name: filepath.Base(path),
-		Path: path,
+		Name:     filepath.Base(path),
+		Path:     path,
 		Metadata: metadata,
-		Secret: secret,
+		Secret:   secret,
 	}, nil
 }
 

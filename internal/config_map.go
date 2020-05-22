@@ -19,6 +19,7 @@ package internal
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -35,6 +36,15 @@ func NewConfigMapFromPath(path string) (ConfigMap, error) {
 
 	configMap := ConfigMap{}
 	for _, file := range files {
+		if strings.HasPrefix(filepath.Base(file), ".") {
+			//ignore hidden files
+			continue
+		}
+		if stat, err := os.Stat(file); err != nil {
+			return nil, fmt.Errorf("failed to stat file %s\n%w", file, err)
+		} else if stat.IsDir() {
+			continue
+		}
 		contents, err := ioutil.ReadFile(file)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read file %s\n%w", file, err)
