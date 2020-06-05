@@ -268,7 +268,6 @@ test-key = "test-value"
 					Requires: []libcnb.BuildPlanRequire{
 						{
 							Name:     "test-name",
-							Version:  "test-version",
 							Metadata: map[string]interface{}{"test-key": "test-value"},
 						},
 					},
@@ -291,7 +290,6 @@ test-key = "test-value"
 				Requires: []libcnb.BuildPlanRequire{
 					{
 						Name:     "test-name",
-						Version:  "test-version",
 						Metadata: map[string]interface{}{"test-key": "test-value"},
 					},
 				},
@@ -310,7 +308,6 @@ test-key = "test-value"
 					Requires: []libcnb.BuildPlanRequire{
 						{
 							Name:     "test-name-1",
-							Version:  "test-version-1",
 							Metadata: map[string]interface{}{"test-key-1": "test-value-1"},
 						},
 					},
@@ -322,7 +319,6 @@ test-key = "test-value"
 					Requires: []libcnb.BuildPlanRequire{
 						{
 							Name:     "test-name-2",
-							Version:  "test-version-2",
 							Metadata: map[string]interface{}{"test-key-2": "test-value-2"},
 						},
 					},
@@ -345,7 +341,6 @@ test-key = "test-value"
 				Requires: []libcnb.BuildPlanRequire{
 					{
 						Name:     "test-name-1",
-						Version:  "test-version-1",
 						Metadata: map[string]interface{}{"test-key-1": "test-value-1"},
 					},
 				},
@@ -358,7 +353,6 @@ test-key = "test-value"
 					Requires: []libcnb.BuildPlanRequire{
 						{
 							Name:     "test-name-2",
-							Version:  "test-version-2",
 							Metadata: map[string]interface{}{"test-key-2": "test-value-2"},
 						},
 					},

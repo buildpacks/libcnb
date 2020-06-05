@@ -21,9 +21,6 @@ type BuildpackPlanEntry struct {
 	// Name represents the name of the entry.
 	Name string `toml:"name"`
 
-	// Version represents the version of the entry.  Optional.
-	Version string `toml:"version,omitempty"`
-
 	// Metadata is the metadata of the entry.  Optional.
 	Metadata map[string]interface{} `toml:"metadata,omitempty"`
 }

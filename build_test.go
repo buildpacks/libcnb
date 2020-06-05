@@ -233,7 +233,6 @@ test-key = "test-value"
 			Entries: []libcnb.BuildpackPlanEntry{
 				{
 					Name:    "test-name",
-					Version: "test-version",
 					Metadata: map[string]interface{}{
 						"test-key": "test-value",
 					},

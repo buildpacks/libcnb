@@ -27,9 +27,6 @@ type BuildPlanRequire struct {
 	// Name is the name of the dependency.
 	Name string `toml:"name"`
 
-	// Version is the version of the dependency.  Optional.
-	Version string `toml:"version,omitempty"`
-
 	// Metadata is the metadata for the dependency. Optional.
 	Metadata map[string]interface{} `toml:"metadata,omitempty"`
 }
