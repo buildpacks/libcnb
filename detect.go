@@ -166,4 +166,6 @@ func Detect(detector Detector, options ...Option) {
 			return
 		}
 	}
+
+	config.exitHandler.Pass()
 }

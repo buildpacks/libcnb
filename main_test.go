@@ -117,6 +117,8 @@ test-key = "test-value"
 
 		exitHandler = &mocks.ExitHandler{}
 		exitHandler.On("Error", mock.Anything)
+		exitHandler.On("Pass", mock.Anything)
+		exitHandler.On("Fail", mock.Anything)
 
 		layersPath, err = ioutil.TempDir("", "main-layers-path")
 		Expect(err).NotTo(HaveOccurred())
@@ -200,9 +202,30 @@ test-key = "test-value"
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
+	})
 
-		Expect(exitHandler.Calls).To(BeEmpty())
+	it("calls exitHandler.Pass() on detection pass", func() {
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: true}, nil)
+		commandPath := filepath.Join("bin", "detect")
 
+		libcnb.Main(detector, builder,
+			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
+			libcnb.WithExitHandler(exitHandler),
+		)
+
+		Expect(exitHandler.Calls[0].Method).To(BeIdenticalTo("Pass"))
+	})
+
+	it("calls exitHandler.Fail() on detection fail", func() {
+		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: false}, nil)
+		commandPath := filepath.Join("bin", "detect")
+
+		libcnb.Main(detector, builder,
+			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
+			libcnb.WithExitHandler(exitHandler),
+		)
+
+		Expect(exitHandler.Calls[0].Method).To(BeIdenticalTo("Fail"))
 	})
 
 	it("encounters an unknown command", func() {
