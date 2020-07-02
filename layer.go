@@ -38,6 +38,17 @@ func (p Profile) Addf(name string, format string, a ...interface{}) {
 	p[name] = fmt.Sprintf(format, a...)
 }
 
+// ProcessAdd formats using the default formats for its operands and adds an entry for a .profile.d file. Spaces are
+// added between operands when neither is a string.
+func (p Profile) ProcessAdd(processType string, name string, a ...interface{}) {
+	p.Add(filepath.Join(processType, name), a...)
+}
+
+// ProcessAddf formats according to a format specifier and adds an entry for a .profile.d file.
+func (p Profile) ProcessAddf(processType string, name string, format string, a ...interface{}) {
+	p.Addf(filepath.Join(processType, name), format, a...)
+}
+
 // Contribute represents a layer managed by the buildpack.
 type Layer struct {
 
