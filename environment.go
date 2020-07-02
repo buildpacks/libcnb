@@ -18,6 +18,7 @@ package libcnb
 
 import (
 	"fmt"
+	"path/filepath"
 )
 
 // Environment represents the file-based environment variable specification.
@@ -90,4 +91,74 @@ func (e Environment) PrependPath(name string, a ...interface{}) {
 // previous declarations of the value using the OS path delimiter.
 func (e Environment) PrependPathf(name string, format string, a ...interface{}) {
 	e[name] = fmt.Sprintf(format, a...)
+}
+
+// ProcessAppend formats using the default formats for its operands and appends the value of this environment variable
+// to any previous declarations of the value without any delimitation. Spaces are added between operands when neither is
+// a string. If delimitation is important during concatenation, callers are required to add it.
+func (e Environment) ProcessAppend(processType string, name string, a ...interface{}) {
+	e.Append(filepath.Join(processType, name), a...)
+}
+
+// ProcessAppendf formats according to a format specifier and appends the value of this environment variable to any
+// previous declarations of the value without any delimitation.  If delimitation is important during concatenation,
+// callers are required to add it.
+func (e Environment) ProcessAppendf(processType string, name string, format string, a ...interface{}) {
+	e.Appendf(filepath.Join(processType, name), format, a...)
+}
+
+// ProcessDefault formats using the default formats for its operands and sets a default for an environment variable with
+// this value. Spaces are added between operands when neither is a string.
+func (e Environment) ProcessDefault(processType string, name string, a ...interface{}) {
+	e.Default(filepath.Join(processType, name), a...)
+}
+
+// ProcessDefaultf formats according to a format specifier and sets a default for an environment variable with this
+// value.
+func (e Environment) ProcessDefaultf(processType string, name string, format string, a ...interface{}) {
+	e.Defaultf(filepath.Join(processType, name), format, a...)
+}
+
+// ProcessDelimiter sets a delimiter for an environment variable with this value.
+func (e Environment) ProcessDelimiter(processType string, name string, delimiter string) {
+	e.Delimiter(filepath.Join(processType, name), delimiter)
+}
+
+// ProcessOverride formats using the default formats for its operands and overrides any existing value for an
+// environment variable with this value. Spaces are added between operands when neither is a string.
+func (e Environment) ProcessOverride(processType string, name string, a ...interface{}) {
+	e.Override(filepath.Join(processType, name), a...)
+}
+
+// ProcessOverridef formats according to a format specifier and overrides any existing value for an environment variable
+// with this value.
+func (e Environment) ProcessOverridef(processType string, name string, format string, a ...interface{}) {
+	e.Overridef(filepath.Join(processType, name), format, a...)
+}
+
+// ProcessPrepend formats using the default formats for its operands and prepends the value of this environment variable
+// to any previous declarations of the value without any delimitation.  Spaces are added between operands when neither
+// is a string. If delimitation is important during concatenation, callers are required to add it.
+func (e Environment) ProcessPrepend(processType string, name string, a ...interface{}) {
+	e.Prepend(filepath.Join(processType, name), a...)
+}
+
+// ProcessPrependf formats using the default formats for its operands and prepends the value of this environment
+// variable to any previous declarations of the value without any delimitation.  If delimitation is important during
+// concatenation, callers are required to add it.
+func (e Environment) ProcessPrependf(processType string, name string, format string, a ...interface{}) {
+	e.Prependf(filepath.Join(processType, name), format, a...)
+}
+
+// ProcessPrependPath formats using the default formats for its operands and prepends the value of this environment
+// variable to any previous declarations of the value using the OS path delimiter. Spaces are added between operands
+// when neither is a string.
+func (e Environment) ProcessPrependPath(processType string, name string, a ...interface{}) {
+	e.PrependPath(filepath.Join(processType, name), a...)
+}
+
+// ProcessPrependPathf formats according to a format specifier and prepends the value of this environment variable to
+// any previous declarations of the value using the OS path delimiter.
+func (e Environment) ProcessPrependPathf(processType string, name string, format string, a ...interface{}) {
+	e.PrependPathf(filepath.Join(processType, name), format, a...)
 }

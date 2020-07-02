@@ -51,6 +51,16 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			profile.Addf("test-name", "test-%s", "value")
 			Expect(profile).To(Equal(libcnb.Profile{"test-name": "test-value"}))
 		})
+
+		it("adds process-specific content", func() {
+			profile.ProcessAdd("test-process", "test-name", "test-value")
+			Expect(profile).To(Equal(libcnb.Profile{filepath.Join("test-process", "test-name"): "test-value"}))
+		})
+
+		it("adds process-specific formatted content", func() {
+			profile.ProcessAddf("test-process", "test-name", "test-%s", "value")
+			Expect(profile).To(Equal(libcnb.Profile{filepath.Join("test-process", "test-name"): "test-value"}))
+		})
 	})
 
 	context("Layers", func() {

@@ -17,6 +17,7 @@
 package libcnb_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/buildpacks/libcnb"
@@ -88,6 +89,61 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	it("adds prepend path formatted value", func() {
 		environment.PrependPathf("TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME": "test-value"}))
+	})
+
+	it("adds process-specific append value", func() {
+		environment.ProcessAppend("test-process", "TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.append"): "test-value"}))
+	})
+
+	it("adds process-specific append formatted value", func() {
+		environment.ProcessAppendf("test-process", "TEST_NAME", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.append"): "test-value"}))
+	})
+
+	it("adds process-specific default value", func() {
+		environment.ProcessDefault("test-process", "TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.default"): "test-value"}))
+	})
+
+	it("adds process-specific default formatted value", func() {
+		environment.ProcessDefaultf("test-process", "TEST_NAME", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.default"): "test-value"}))
+	})
+
+	it("adds process-specific delimiter value", func() {
+		environment.ProcessDelimiter("test-process", "TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.delim"): "test-value"}))
+	})
+
+	it("adds process-specific override value", func() {
+		environment.ProcessOverride("test-process", "TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.override"): "test-value"}))
+	})
+
+	it("adds process-specific override formatted value", func() {
+		environment.ProcessOverridef("test-process", "TEST_NAME", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.override"): "test-value"}))
+	})
+
+	it("adds process-specific prepend value", func() {
+		environment.ProcessPrepend("test-process", "TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.prepend"): "test-value"}))
+	})
+
+	it("adds process-specific prepend formatted value", func() {
+		environment.ProcessPrependf("test-process", "TEST_NAME", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.prepend"): "test-value"}))
+	})
+
+	it("adds process-specific prepend path value", func() {
+		environment.ProcessPrependPath("test-process", "TEST_NAME", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME"): "test-value"}))
+	})
+
+	it("adds process-specific prepend path formatted value", func() {
+		environment.ProcessPrependPathf("test-process", "TEST_NAME", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME"): "test-value"}))
 	})
 
 }
