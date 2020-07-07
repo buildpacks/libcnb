@@ -21,9 +21,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/buildpacks/libcnb/internal"
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
+
+	"github.com/buildpacks/libcnb/internal"
 )
 
 func testExitHandler(t *testing.T, context spec.G, it spec.S) {

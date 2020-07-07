@@ -21,9 +21,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/buildpacks/libcnb/poet"
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
+
+	"github.com/buildpacks/libcnb/poet"
 )
 
 func testLogger(t *testing.T, context spec.G, it spec.S) {
