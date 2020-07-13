@@ -37,7 +37,7 @@ func NewConfigMapFromPath(path string) (ConfigMap, error) {
 	configMap := ConfigMap{}
 	for _, file := range files {
 		if strings.HasPrefix(filepath.Base(file), ".") {
-			//ignore hidden files
+			// ignore hidden files
 			continue
 		}
 		if stat, err := os.Stat(file); err != nil {
