@@ -102,18 +102,9 @@ test-key = "test-value"
 		platformPath, err = ioutil.TempDir("", "detect-platform-path")
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha", "metadata"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(
-			filepath.Join(platformPath, "bindings", "alpha", "metadata", "test-metadata-key"),
-			[]byte("test-metadata-value"),
-			0644,
-		)).To(Succeed())
-		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha", "secret"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(
-			filepath.Join(platformPath, "bindings", "alpha", "secret", "test-secret-key"),
-			[]byte("test-secret-value"),
-			0644,
-		)).To(Succeed())
+		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha"), 0755)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(platformPath, "bindings", "alpha", "test-secret-key"),
+			[]byte("test-secret-value"), 0644)).To(Succeed())
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "env"), 0755)).To(Succeed())
 		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0644)).
@@ -206,9 +197,6 @@ test-key = "test-value"
 				libcnb.Binding{
 					Name: "alpha",
 					Path: filepath.Join(platformPath, "bindings", "alpha"),
-					Metadata: map[string]string{
-						"test-metadata-key": "test-metadata-value",
-					},
 					Secret: map[string]string{
 						"test-secret-key": "test-secret-value",
 					},

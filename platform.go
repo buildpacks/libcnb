@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"sort"
 
 	"github.com/buildpacks/libcnb/internal"
 )
@@ -31,6 +31,9 @@ const (
 
 	// BindingProvider is the metadata key for a binding's provider.
 	BindingProvider = "provider"
+
+	// BindingType is the metadata key for a binding's type.
+	BindingType = "type"
 )
 
 // Binding is a projection of metadata about an external entity to be bound to.
@@ -38,9 +41,6 @@ type Binding struct {
 
 	// Name is the name of the binding
 	Name string
-
-	// Metadata is the metadata of the binding.
-	Metadata map[string]string
 
 	// Secret is the secret of the binding.
 	Secret map[string]string
@@ -52,58 +52,59 @@ type Binding struct {
 // NewBinding creates a new Binding initialized with no metadata or secret.
 func NewBinding(name string) Binding {
 	return Binding{
-		Name:     name,
-		Metadata: map[string]string{},
-		Secret:   map[string]string{},
+		Name:   name,
+		Secret: map[string]string{},
 	}
 }
 
 // NewBindingFromPath creates a new binding from the files located at a path.
 func NewBindingFromPath(path string) (Binding, error) {
-	var f string
-
-	f = filepath.Join(path, "metadata")
-	metadata, err := internal.NewConfigMapFromPath(f)
+	secret, err := internal.NewConfigMapFromPath(path)
 	if err != nil {
-		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
+		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", path, err)
 	}
 
-	f = filepath.Join(path, "secret")
-	secret, err := internal.NewConfigMapFromPath(f)
-	if err != nil {
-		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
+	// TODO: Remove as CNB_BINDINGS ages out
+	for _, f := range []string{filepath.Join(path, "metadata"), filepath.Join(path, "secret")} {
+		cm, err := internal.NewConfigMapFromPath(f)
+		if err != nil {
+			return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
+		}
+
+		for k, v := range cm {
+			secret[k] = v
+		}
 	}
 
 	return Binding{
-		Name:     filepath.Base(path),
-		Path:     path,
-		Metadata: metadata,
-		Secret:   secret,
+		Name:   filepath.Base(path),
+		Path:   path,
+		Secret: secret,
 	}, nil
 }
 
-// Kind returns the kind of the binding.
-func (b Binding) Kind() string {
-	return b.Metadata[BindingKind]
+// Type returns the type of the binding.
+func (b Binding) Type() string {
+	if s, ok := b.Secret[BindingType]; ok {
+		return s
+	}
+
+	return b.Secret[BindingKind]
 }
 
 // Provider returns the provider of the binding.
 func (b Binding) Provider() string {
-	return b.Metadata[BindingProvider]
+	return b.Secret[BindingProvider]
 }
 
 func (b Binding) String() string {
-	m := make(map[string]string, len(b.Metadata))
-	for k, v := range b.Metadata {
-		m[k] = strings.ReplaceAll(v, "\n", " ")
-	}
-
 	var s []string
 	for k, _ := range b.Secret {
 		s = append(s, k)
 	}
+	sort.Strings(s)
 
-	return fmt.Sprintf("{Metadata: %s Path: %s Secret: %s}", m, b.Path, s)
+	return fmt.Sprintf("{Path: %s Secret: %s}", b.Path, s)
 }
 
 // SecretFilePath return the path to a secret file with the given name.
@@ -111,29 +112,34 @@ func (b Binding) SecretFilePath(name string) (string, bool) {
 	if _, ok := b.Secret[name]; !ok {
 		return "", false
 	}
-	return filepath.Join(b.Path, "secret", name), true
-}
 
-// MetadataFilePath return the path to a metadata file with the given name.
-func (b Binding) MetadataFilePath(name string) (string, bool) {
-	if _, ok := b.Metadata[name]; !ok {
-		return "", false
+	// TODO: Remove as CNB_BINDINGS ages out
+	for _, d := range []string{"metadata", "secret"} {
+		f := filepath.Join(b.Path, d, name)
+		if _, err := os.Stat(f); err == nil {
+			return f, true
+		}
 	}
-	return filepath.Join(b.Path, "metadata", name), true
+
+	return filepath.Join(b.Path, name), true
 }
 
 // Bindings is a collection of bindings keyed by their name.
 type Bindings []Binding
 
-// NewBindingsFromEnvironment creates a new bindings from all the bindings at the path defined by $CNB_BINDINGS.  If
-// $CNB_BINDINGS is not defined, returns an empty collection of Bindings.
+// NewBindingsFromEnvironment creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
+// or $CNB_BINDINGS if it does not exist.  If neither is defined, returns an empty collection of Bindings.
 func NewBindingsFromEnvironment() (Bindings, error) {
-	path, ok := os.LookupEnv("CNB_BINDINGS")
-	if !ok {
-		return Bindings{}, nil
+	if path, ok := os.LookupEnv("SERVICE_BINDING_ROOT"); ok {
+		return NewBindingsFromPath(path)
 	}
 
-	return NewBindingsFromPath(path)
+	// TODO: Remove as CNB_BINDINGS ages out
+	if path, ok := os.LookupEnv("CNB_BINDINGS"); ok {
+		return NewBindingsFromPath(path)
+	}
+
+	return Bindings{}, nil
 }
 
 // NewBindingsFromPath creates a new instance from all the bindings at a given path.
