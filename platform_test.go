@@ -62,9 +62,16 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 		context("Binding", func() {
 			it("creates an empty binding", func() {
-				Expect(libcnb.NewBinding("test-name")).To(Equal(libcnb.Binding{
-					Name:   "test-name",
-					Secret: map[string]string{},
+				Expect(libcnb.NewBinding("test-name", "test-path", map[string]string{
+					libcnb.BindingKind:     "test-kind",
+					libcnb.BindingProvider: "test-provider",
+					"test-key":             "test-value",
+				})).To(Equal(libcnb.Binding{
+					Name:     "test-name",
+					Path:     "test-path",
+					Type:     "test-kind",
+					Provider: "test-provider",
+					Secret:   map[string]string{"test-key": "test-value"},
 				}))
 			})
 
@@ -97,18 +104,6 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(b.String()).To(Equal(fmt.Sprintf("{Path: %s Secret: [test-metadata-key test-secret-key]}", path)))
-			})
-
-			it("returns type", func() {
-				b := libcnb.Binding{Secret: map[string]string{libcnb.BindingKind: "test-kind"}}
-
-				Expect(b.Type()).To(Equal("test-kind"))
-			})
-
-			it("returns provider", func() {
-				b := libcnb.Binding{Secret: map[string]string{libcnb.BindingProvider: "test-provider"}}
-
-				Expect(b.Provider()).To(Equal("test-provider"))
 			})
 		})
 
@@ -183,9 +178,18 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 		context("Binding", func() {
 			it("creates an empty binding", func() {
-				Expect(libcnb.NewBinding("test-name")).To(Equal(libcnb.Binding{
-					Name:   "test-name",
-					Secret: map[string]string{},
+				Expect(libcnb.NewBinding("test-name", "test-path", map[string]string{
+					libcnb.BindingType:     "test-type",
+					libcnb.BindingProvider: "test-provider",
+					"test-key":             "test-value",
+				})).To(Equal(libcnb.Binding{
+					Name:     "test-name",
+					Path:     "test-path",
+					Type:     "test-type",
+					Provider: "test-provider",
+					Secret: map[string]string{
+						"test-key": "test-value",
+					},
 				}))
 			})
 
@@ -211,18 +215,6 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(b.String()).To(Equal(fmt.Sprintf("{Path: %s Secret: [test-secret-key]}", path)))
-			})
-
-			it("returns type", func() {
-				b := libcnb.Binding{Secret: map[string]string{libcnb.BindingType: "test-type"}}
-
-				Expect(b.Type()).To(Equal("test-type"))
-			})
-
-			it("returns provider", func() {
-				b := libcnb.Binding{Secret: map[string]string{libcnb.BindingProvider: "test-provider"}}
-
-				Expect(b.Provider()).To(Equal("test-provider"))
 			})
 		})
 

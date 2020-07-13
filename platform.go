@@ -29,10 +29,10 @@ const (
 	// BindingKind is the metadata key for a binding's kind.
 	BindingKind = "kind"
 
-	// BindingProvider is the metadata key for a binding's provider.
+	// BindingProvider is the key for a binding's provider.
 	BindingProvider = "provider"
 
-	// BindingType is the metadata key for a binding's type.
+	// BindingType is the key for a binding's type.
 	BindingType = "type"
 )
 
@@ -42,19 +42,49 @@ type Binding struct {
 	// Name is the name of the binding
 	Name string
 
-	// Secret is the secret of the binding.
-	Secret map[string]string
-
 	// Path is the path to the binding directory.
 	Path string
+
+	// Type is the type of the binding.
+	Type string
+
+	// Provider is the optional provider of the binding.
+	Provider string
+
+	// Secret is the secret of the binding.
+	Secret map[string]string
 }
 
-// NewBinding creates a new Binding initialized with no metadata or secret.
-func NewBinding(name string) Binding {
-	return Binding{
-		Name:   name,
-		Secret: map[string]string{},
+// NewBinding creates a new Binding initialized with a secret.
+func NewBinding(name string, path string, secret map[string]string) Binding {
+	s := make(map[string]string, len(secret))
+	for k, v := range secret {
+		s[k] = v
 	}
+
+	b := Binding{
+		Name:   name,
+		Path:   path,
+		Secret: s,
+	}
+
+	if t, ok := s[BindingType]; ok {
+		b.Type = t
+		delete(s, BindingType)
+	}
+
+	if p, ok := s[BindingProvider]; ok {
+		b.Provider = p
+		delete(s, BindingProvider)
+	}
+
+	// TODO: Remove as CNB_BINDINGS ages out
+	if k, ok := s[BindingKind]; ok {
+		b.Type = k
+		delete(s, BindingKind)
+	}
+
+	return b
 }
 
 // NewBindingFromPath creates a new binding from the files located at a path.
@@ -76,25 +106,7 @@ func NewBindingFromPath(path string) (Binding, error) {
 		}
 	}
 
-	return Binding{
-		Name:   filepath.Base(path),
-		Path:   path,
-		Secret: secret,
-	}, nil
-}
-
-// Type returns the type of the binding.
-func (b Binding) Type() string {
-	if s, ok := b.Secret[BindingType]; ok {
-		return s
-	}
-
-	return b.Secret[BindingKind]
-}
-
-// Provider returns the provider of the binding.
-func (b Binding) Provider() string {
-	return b.Secret[BindingProvider]
+	return NewBinding(filepath.Base(path), path, secret), nil
 }
 
 func (b Binding) String() string {
