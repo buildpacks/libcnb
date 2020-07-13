@@ -57,31 +57,22 @@ type Binding struct {
 
 // NewBinding creates a new Binding initialized with a secret.
 func NewBinding(name string, path string, secret map[string]string) Binding {
-	s := make(map[string]string, len(secret))
-	for k, v := range secret {
-		s[k] = v
-	}
-
 	b := Binding{
 		Name:   name,
 		Path:   path,
-		Secret: s,
+		Secret: make(map[string]string),
 	}
 
-	if t, ok := s[BindingType]; ok {
-		b.Type = t
-		delete(s, BindingType)
-	}
-
-	if p, ok := s[BindingProvider]; ok {
-		b.Provider = p
-		delete(s, BindingProvider)
-	}
-
-	// TODO: Remove as CNB_BINDINGS ages out
-	if k, ok := s[BindingKind]; ok {
-		b.Type = k
-		delete(s, BindingKind)
+	for k, v := range secret {
+		if k == BindingType {
+			b.Type = v
+		} else if k == BindingProvider {
+			b.Provider = v
+		} else if k == BindingKind { // TODO: Remove as CNB_BINDINGS ages out
+			b.Type = v
+		} else {
+			b.Secret[k] = v
+		}
 	}
 
 	return b
