@@ -50,11 +50,15 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 		it.Before(func() {
 			Expect(os.MkdirAll(filepath.Join(path, "alpha", "metadata"), 0755)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "metadata", "kind"), []byte("test-kind"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "metadata", "provider"), []byte("test-provider"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "metadata", "test-metadata-key"), []byte("test-metadata-value"), 0644)).To(Succeed())
 			Expect(os.MkdirAll(filepath.Join(path, "alpha", "secret"), 0755)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "secret", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
 
 			Expect(os.MkdirAll(filepath.Join(path, "bravo", "metadata"), 0755)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "metadata", "kind"), []byte("test-kind"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "metadata", "provider"), []byte("test-provider"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "metadata", "test-metadata-key"), []byte("test-metadata-value"), 0644)).To(Succeed())
 			Expect(os.MkdirAll(filepath.Join(path, "bravo", "secret"), 0755)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "secret", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
@@ -80,12 +84,14 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 				binding, err := libcnb.NewBindingFromPath(path)
 				Expect(binding, err).To(Equal(libcnb.Binding{
-					Name: filepath.Base(path),
+					Name:     filepath.Base(path),
+					Path:     path,
+					Type:     "test-kind",
+					Provider: "test-provider",
 					Secret: map[string]string{
 						"test-metadata-key": "test-metadata-value",
 						"test-secret-key":   "test-secret-value",
 					},
-					Path: path,
 				}))
 
 				metadataFilePath, ok := binding.SecretFilePath("test-metadata-key")
@@ -103,7 +109,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				b, err := libcnb.NewBindingFromPath(path)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(b.String()).To(Equal(fmt.Sprintf("{Path: %s Secret: [test-metadata-key test-secret-key]}", path)))
+				Expect(b.String()).To(Equal(fmt.Sprintf("{Name: alpha Path: %s Type: test-kind Provider: test-provider Secret: [test-metadata-key test-secret-key]}", path)))
 			})
 		})
 
@@ -111,20 +117,24 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			it("creates a bindings from a path", func() {
 				Expect(libcnb.NewBindingsFromPath(path)).To(Equal(libcnb.Bindings{
 					libcnb.Binding{
-						Name: "alpha",
+						Name:     "alpha",
+						Path:     filepath.Join(path, "alpha"),
+						Type:     "test-kind",
+						Provider: "test-provider",
 						Secret: map[string]string{
 							"test-metadata-key": "test-metadata-value",
 							"test-secret-key":   "test-secret-value",
 						},
-						Path: filepath.Join(path, "alpha"),
 					},
 					libcnb.Binding{
-						Name: "bravo",
+						Name:     "bravo",
+						Path:     filepath.Join(path, "bravo"),
+						Type:     "test-kind",
+						Provider: "test-provider",
 						Secret: map[string]string{
 							"test-metadata-key": "test-metadata-value",
 							"test-secret-key":   "test-secret-value",
 						},
-						Path: filepath.Join(path, "bravo"),
 					},
 				}))
 			})
@@ -145,20 +155,24 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				it("creates bindings from path in $CNB_BINDINGS", func() {
 					Expect(libcnb.NewBindingsFromEnvironment()).To(Equal(libcnb.Bindings{
 						libcnb.Binding{
-							Name: "alpha",
+							Name:     "alpha",
+							Path:     filepath.Join(path, "alpha"),
+							Type:     "test-kind",
+							Provider: "test-provider",
 							Secret: map[string]string{
 								"test-metadata-key": "test-metadata-value",
 								"test-secret-key":   "test-secret-value",
 							},
-							Path: filepath.Join(path, "alpha"),
 						},
 						libcnb.Binding{
-							Name: "bravo",
+							Name:     "bravo",
+							Path:     filepath.Join(path, "bravo"),
+							Type:     "test-kind",
+							Provider: "test-provider",
 							Secret: map[string]string{
 								"test-metadata-key": "test-metadata-value",
 								"test-secret-key":   "test-secret-value",
 							},
-							Path: filepath.Join(path, "bravo"),
 						},
 					}))
 				})
@@ -170,9 +184,13 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 		it.Before(func() {
 			Expect(os.MkdirAll(filepath.Join(path, "alpha"), 0755)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "type"), []byte("test-type"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "provider"), []byte("test-provider"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
 
 			Expect(os.MkdirAll(filepath.Join(path, "bravo"), 0755)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "type"), []byte("test-type"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "provider"), []byte("test-provider"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
 		})
 
@@ -198,9 +216,11 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 				binding, err := libcnb.NewBindingFromPath(path)
 				Expect(binding, err).To(Equal(libcnb.Binding{
-					Name:   filepath.Base(path),
-					Secret: map[string]string{"test-secret-key": "test-secret-value"},
-					Path:   path,
+					Name:     filepath.Base(path),
+					Path:     path,
+					Type:     "test-type",
+					Provider: "test-provider",
+					Secret:   map[string]string{"test-secret-key": "test-secret-value"},
 				}))
 
 				secretFilePath, ok := binding.SecretFilePath("test-secret-key")
@@ -214,7 +234,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				b, err := libcnb.NewBindingFromPath(path)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(b.String()).To(Equal(fmt.Sprintf("{Path: %s Secret: [test-secret-key]}", path)))
+				Expect(b.String()).To(Equal(fmt.Sprintf("{Name: alpha Path: %s Type: test-type Provider: test-provider Secret: [test-secret-key]}", path)))
 			})
 		})
 
@@ -222,14 +242,18 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			it("creates a bindings from a path", func() {
 				Expect(libcnb.NewBindingsFromPath(path)).To(Equal(libcnb.Bindings{
 					libcnb.Binding{
-						Name:   "alpha",
-						Secret: map[string]string{"test-secret-key": "test-secret-value"},
-						Path:   filepath.Join(path, "alpha"),
+						Name:     "alpha",
+						Path:     filepath.Join(path, "alpha"),
+						Type:     "test-type",
+						Provider: "test-provider",
+						Secret:   map[string]string{"test-secret-key": "test-secret-value"},
 					},
 					libcnb.Binding{
-						Name:   "bravo",
-						Secret: map[string]string{"test-secret-key": "test-secret-value"},
-						Path:   filepath.Join(path, "bravo"),
+						Name:     "bravo",
+						Path:     filepath.Join(path, "bravo"),
+						Type:     "test-type",
+						Provider: "test-provider",
+						Secret:   map[string]string{"test-secret-key": "test-secret-value"},
 					},
 				}))
 			})
@@ -250,14 +274,18 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				it("creates bindings from path in SERVICE_BINDING_ROOT", func() {
 					Expect(libcnb.NewBindingsFromEnvironment()).To(Equal(libcnb.Bindings{
 						libcnb.Binding{
-							Name:   "alpha",
-							Secret: map[string]string{"test-secret-key": "test-secret-value"},
-							Path:   filepath.Join(path, "alpha"),
+							Name:     "alpha",
+							Path:     filepath.Join(path, "alpha"),
+							Type:     "test-type",
+							Provider: "test-provider",
+							Secret:   map[string]string{"test-secret-key": "test-secret-value"},
 						},
 						libcnb.Binding{
-							Name:   "bravo",
-							Secret: map[string]string{"test-secret-key": "test-secret-value"},
-							Path:   filepath.Join(path, "bravo"),
+							Name:     "bravo",
+							Path:     filepath.Join(path, "bravo"),
+							Type:     "test-type",
+							Provider: "test-provider",
+							Secret:   map[string]string{"test-secret-key": "test-secret-value"},
 						},
 					}))
 				})

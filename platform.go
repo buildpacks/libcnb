@@ -64,13 +64,12 @@ func NewBinding(name string, path string, secret map[string]string) Binding {
 	}
 
 	for k, v := range secret {
-		if k == BindingType {
+		switch k {
+		case BindingType, BindingKind:  // TODO: Remove as CNB_BINDINGS ages out
 			b.Type = v
-		} else if k == BindingProvider {
+		case BindingProvider:
 			b.Provider = v
-		} else if k == BindingKind { // TODO: Remove as CNB_BINDINGS ages out
-			b.Type = v
-		} else {
+		default:
 			b.Secret[k] = v
 		}
 	}
@@ -86,10 +85,11 @@ func NewBindingFromPath(path string) (Binding, error) {
 	}
 
 	// TODO: Remove as CNB_BINDINGS ages out
-	for _, f := range []string{filepath.Join(path, "metadata"), filepath.Join(path, "secret")} {
-		cm, err := internal.NewConfigMapFromPath(f)
+	for _, d := range []string{"metadata", "secret"} {
+		file := filepath.Join(path, d)
+		cm, err := internal.NewConfigMapFromPath(file)
 		if err != nil {
-			return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", f, err)
+			return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", file, err)
 		}
 
 		for k, v := range cm {
@@ -107,7 +107,8 @@ func (b Binding) String() string {
 	}
 	sort.Strings(s)
 
-	return fmt.Sprintf("{Path: %s Secret: %s}", b.Path, s)
+	return fmt.Sprintf("{Name: %s Path: %s Type: %s Provider: %s Secret: %s}",
+		b.Name, b.Path, b.Type, b.Provider, s)
 }
 
 // SecretFilePath return the path to a secret file with the given name.
@@ -118,9 +119,9 @@ func (b Binding) SecretFilePath(name string) (string, bool) {
 
 	// TODO: Remove as CNB_BINDINGS ages out
 	for _, d := range []string{"metadata", "secret"} {
-		f := filepath.Join(b.Path, d, name)
-		if _, err := os.Stat(f); err == nil {
-			return f, true
+		file := filepath.Join(b.Path, d, name)
+		if _, err := os.Stat(file); err == nil {
+			return file, true
 		}
 	}
 
