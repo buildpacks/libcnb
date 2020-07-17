@@ -53,15 +53,19 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "metadata", "kind"), []byte("test-kind"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "metadata", "provider"), []byte("test-provider"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "metadata", "test-metadata-key"), []byte("test-metadata-value"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "metadata", "test-metadata-key-trimmed"), []byte(" test-metadata-value-trimmed \n"), 0644)).To(Succeed())
 			Expect(os.MkdirAll(filepath.Join(path, "alpha", "secret"), 0755)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "secret", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "secret", "test-secret-key-trimmed"), []byte(" test-secret-value-trimmed \n"), 0644)).To(Succeed())
 
 			Expect(os.MkdirAll(filepath.Join(path, "bravo", "metadata"), 0755)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "metadata", "kind"), []byte("test-kind"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "metadata", "provider"), []byte("test-provider"), 0644)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "metadata", "test-metadata-key"), []byte("test-metadata-value"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "metadata", "test-metadata-key-trimmed"), []byte(" test-metadata-value-trimmed \n"), 0644)).To(Succeed())
 			Expect(os.MkdirAll(filepath.Join(path, "bravo", "secret"), 0755)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "secret", "test-secret-key"), []byte("test-secret-value"), 0644)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "secret", "test-secret-key-trimmed"), []byte(" test-secret-value-trimmed \n"), 0644)).To(Succeed())
 		})
 
 		context("Binding", func() {
@@ -89,8 +93,10 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 					Type:     "test-kind",
 					Provider: "test-provider",
 					Secret: map[string]string{
-						"test-metadata-key": "test-metadata-value",
-						"test-secret-key":   "test-secret-value",
+						"test-metadata-key":         "test-metadata-value",
+						"test-metadata-key-trimmed": "test-metadata-value-trimmed",
+						"test-secret-key":           "test-secret-value",
+						"test-secret-key-trimmed":   "test-secret-value-trimmed",
 					},
 				}))
 
@@ -109,7 +115,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				b, err := libcnb.NewBindingFromPath(path)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(b.String()).To(Equal(fmt.Sprintf("{Name: alpha Path: %s Type: test-kind Provider: test-provider Secret: [test-metadata-key test-secret-key]}", path)))
+				Expect(b.String()).To(Equal(fmt.Sprintf("{Name: alpha Path: %s Type: test-kind Provider: test-provider Secret: [test-metadata-key test-metadata-key-trimmed test-secret-key test-secret-key-trimmed]}", path)))
 			})
 		})
 
@@ -122,8 +128,10 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 						Type:     "test-kind",
 						Provider: "test-provider",
 						Secret: map[string]string{
-							"test-metadata-key": "test-metadata-value",
-							"test-secret-key":   "test-secret-value",
+							"test-metadata-key":         "test-metadata-value",
+							"test-metadata-key-trimmed": "test-metadata-value-trimmed",
+							"test-secret-key":           "test-secret-value",
+							"test-secret-key-trimmed":   "test-secret-value-trimmed",
 						},
 					},
 					libcnb.Binding{
@@ -132,8 +140,10 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 						Type:     "test-kind",
 						Provider: "test-provider",
 						Secret: map[string]string{
-							"test-metadata-key": "test-metadata-value",
-							"test-secret-key":   "test-secret-value",
+							"test-metadata-key":         "test-metadata-value",
+							"test-metadata-key-trimmed": "test-metadata-value-trimmed",
+							"test-secret-key":           "test-secret-value",
+							"test-secret-key-trimmed":   "test-secret-value-trimmed",
 						},
 					},
 				}))
@@ -160,8 +170,10 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 							Type:     "test-kind",
 							Provider: "test-provider",
 							Secret: map[string]string{
-								"test-metadata-key": "test-metadata-value",
-								"test-secret-key":   "test-secret-value",
+								"test-metadata-key":         "test-metadata-value",
+								"test-metadata-key-trimmed": "test-metadata-value-trimmed",
+								"test-secret-key":           "test-secret-value",
+								"test-secret-key-trimmed":   "test-secret-value-trimmed",
 							},
 						},
 						libcnb.Binding{
@@ -170,8 +182,10 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 							Type:     "test-kind",
 							Provider: "test-provider",
 							Secret: map[string]string{
-								"test-metadata-key": "test-metadata-value",
-								"test-secret-key":   "test-secret-value",
+								"test-metadata-key":         "test-metadata-value",
+								"test-metadata-key-trimmed": "test-metadata-value-trimmed",
+								"test-secret-key":           "test-secret-value",
+								"test-secret-key-trimmed":   "test-secret-value-trimmed",
 							},
 						},
 					}))

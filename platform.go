@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/buildpacks/libcnb/internal"
 )
@@ -66,11 +67,11 @@ func NewBinding(name string, path string, secret map[string]string) Binding {
 	for k, v := range secret {
 		switch k {
 		case BindingType, BindingKind:  // TODO: Remove as CNB_BINDINGS ages out
-			b.Type = v
+			b.Type = strings.TrimSpace(v)
 		case BindingProvider:
-			b.Provider = v
+			b.Provider = strings.TrimSpace(v)
 		default:
-			b.Secret[k] = v
+			b.Secret[k] = strings.TrimSpace(v)
 		}
 	}
 

@@ -50,7 +50,7 @@ func NewConfigMapFromPath(path string) (ConfigMap, error) {
 			return nil, fmt.Errorf("unable to read file %s\n%w", file, err)
 		}
 
-		configMap[filepath.Base(file)] = strings.TrimSpace(string(contents))
+		configMap[filepath.Base(file)] = string(contents)
 	}
 
 	return configMap, nil
