@@ -24,6 +24,23 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+// Exec represents the exec.d layer location
+type Exec struct {
+
+	// Path is the path to the exec.d directory.
+	Path string
+}
+
+// FilePath returns the fully qualified file path for a given name.
+func (e Exec) FilePath(name string) string {
+	return filepath.Join(e.Path, name)
+}
+
+// ProcessFilePath returns the fully qualified file path for a given name.
+func (e Exec) ProcessFilePath(processType string, name string) string {
+	return filepath.Join(e.Path, processType, name)
+}
+
 // Profile is the collection of values to be written into profile.d
 type Profile map[string]string
 
@@ -81,6 +98,9 @@ type Layer struct {
 
 	// Profile is the profile.d scripts set in the layer.
 	Profile Profile `toml:"-"`
+
+	// Exec is the exec.d executables set in the layer.
+	Exec Exec `toml:"-"`
 }
 
 //go:generate mockery -name LayerContributor -case=underscore
@@ -111,6 +131,7 @@ func (l *Layers) Layer(name string) (Layer, error) {
 		LaunchEnvironment: Environment{},
 		SharedEnvironment: Environment{},
 		Profile:           Profile{},
+		Exec:              Exec{Path: filepath.Join(l.Path, name, "exec.d")},
 	}
 
 	f := filepath.Join(l.Path, fmt.Sprintf("%s.toml", name))
