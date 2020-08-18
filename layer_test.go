@@ -36,6 +36,23 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 		path   string
 	)
 
+	context("Exec", func() {
+		var exec libcnb.Exec
+
+		it.Before(func() {
+			exec = libcnb.Exec{Path: "test-path"}
+		})
+
+		it("returns filename", func() {
+			Expect(exec.FilePath("test-name")).To(Equal(filepath.Join("test-path", "test-name")))
+		})
+
+		it("returns process-specific filename", func() {
+			Expect(exec.ProcessFilePath("test-process", "test-name")).
+				To(Equal(filepath.Join("test-path", "test-process", "test-name")))
+		})
+	})
+
 	context("Profile", func() {
 		var profile libcnb.Profile
 
