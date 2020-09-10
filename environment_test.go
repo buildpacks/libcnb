@@ -38,13 +38,19 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("adds append value", func() {
-		environment.Append("TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.append": "test-value"}))
+		environment.Append("TEST_NAME", "test-delimiter", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			"TEST_NAME.delim":  "test-delimiter",
+			"TEST_NAME.append": "test-value",
+		}))
 	})
 
 	it("adds append formatted value", func() {
-		environment.Appendf("TEST_NAME", "test-%s", "value")
-		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.append": "test-value"}))
+		environment.Appendf("TEST_NAME", "test-delimiter", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			"TEST_NAME.delim":  "test-delimiter",
+			"TEST_NAME.append": "test-value",
+		}))
 	})
 
 	it("adds default value", func() {
@@ -55,11 +61,6 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	it("adds default formatted value", func() {
 		environment.Defaultf("TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.default": "test-value"}))
-	})
-
-	it("adds delimiter value", func() {
-		environment.Delimiter("TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.delim": "test-value"}))
 	})
 
 	it("adds override value", func() {
@@ -73,33 +74,35 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("adds prepend value", func() {
-		environment.Prepend("TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.prepend": "test-value"}))
+		environment.Prepend("TEST_NAME", "test-delimiter", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			"TEST_NAME.delim":   "test-delimiter",
+			"TEST_NAME.prepend": "test-value",
+		}))
 	})
 
 	it("adds prepend formatted value", func() {
-		environment.Prependf("TEST_NAME", "test-%s", "value")
-		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME.prepend": "test-value"}))
-	})
-
-	it("adds prepend path value", func() {
-		environment.PrependPath("TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME": "test-value"}))
-	})
-
-	it("adds prepend path formatted value", func() {
-		environment.PrependPathf("TEST_NAME", "test-%s", "value")
-		Expect(environment).To(Equal(libcnb.Environment{"TEST_NAME": "test-value"}))
+		environment.Prependf("TEST_NAME", "test-delimiter", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			"TEST_NAME.delim":   "test-delimiter",
+			"TEST_NAME.prepend": "test-value",
+		}))
 	})
 
 	it("adds process-specific append value", func() {
-		environment.ProcessAppend("test-process", "TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.append"): "test-value"}))
+		environment.ProcessAppend("test-process", "TEST_NAME", "test-delimiter", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			filepath.Join("test-process", "TEST_NAME.delim"):  "test-delimiter",
+			filepath.Join("test-process", "TEST_NAME.append"): "test-value",
+		}))
 	})
 
 	it("adds process-specific append formatted value", func() {
-		environment.ProcessAppendf("test-process", "TEST_NAME", "test-%s", "value")
-		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.append"): "test-value"}))
+		environment.ProcessAppendf("test-process", "TEST_NAME", "test-delimiter", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			filepath.Join("test-process", "TEST_NAME.delim"):  "test-delimiter",
+			filepath.Join("test-process", "TEST_NAME.append"): "test-value",
+		}))
 	})
 
 	it("adds process-specific default value", func() {
@@ -110,11 +113,6 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	it("adds process-specific default formatted value", func() {
 		environment.ProcessDefaultf("test-process", "TEST_NAME", "test-%s", "value")
 		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.default"): "test-value"}))
-	})
-
-	it("adds process-specific delimiter value", func() {
-		environment.ProcessDelimiter("test-process", "TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.delim"): "test-value"}))
 	})
 
 	it("adds process-specific override value", func() {
@@ -128,23 +126,19 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("adds process-specific prepend value", func() {
-		environment.ProcessPrepend("test-process", "TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.prepend"): "test-value"}))
+		environment.ProcessPrepend("test-process", "TEST_NAME", "test-delimiter", "test-value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			filepath.Join("test-process", "TEST_NAME.delim"):   "test-delimiter",
+			filepath.Join("test-process", "TEST_NAME.prepend"): "test-value",
+		}))
 	})
 
 	it("adds process-specific prepend formatted value", func() {
-		environment.ProcessPrependf("test-process", "TEST_NAME", "test-%s", "value")
-		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME.prepend"): "test-value"}))
-	})
-
-	it("adds process-specific prepend path value", func() {
-		environment.ProcessPrependPath("test-process", "TEST_NAME", "test-value")
-		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME"): "test-value"}))
-	})
-
-	it("adds process-specific prepend path formatted value", func() {
-		environment.ProcessPrependPathf("test-process", "TEST_NAME", "test-%s", "value")
-		Expect(environment).To(Equal(libcnb.Environment{filepath.Join("test-process", "TEST_NAME"): "test-value"}))
+		environment.ProcessPrependf("test-process", "TEST_NAME", "test-delimiter", "test-%s", "value")
+		Expect(environment).To(Equal(libcnb.Environment{
+			filepath.Join("test-process", "TEST_NAME.delim"):   "test-delimiter",
+			filepath.Join("test-process", "TEST_NAME.prepend"): "test-value",
+		}))
 	})
 
 }

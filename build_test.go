@@ -288,7 +288,7 @@ test-key = "test-value"
 
 	it("writes env.build", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), BuildEnvironment: libcnb.Environment{}}
-		layer.BuildEnvironment.PrependPathf("test-build", "test-%s", "value")
+		layer.BuildEnvironment.Defaultf("test-build", "test-%s", "value")
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
 		layerContributor.On("Name").Return("test-name")
 		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
@@ -300,12 +300,12 @@ test-key = "test-value"
 		)
 
 		Expect(environmentWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "test-name", "env.build")))
-		Expect(environmentWriter.Calls[0].Arguments[1]).To(Equal(map[string]string{"test-build": "test-value"}))
+		Expect(environmentWriter.Calls[0].Arguments[1]).To(Equal(map[string]string{"test-build.default": "test-value"}))
 	})
 
 	it("writes env.launch", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), LaunchEnvironment: libcnb.Environment{}}
-		layer.LaunchEnvironment.PrependPathf("test-launch", "test-%s", "value")
+		layer.LaunchEnvironment.Defaultf("test-launch", "test-%s", "value")
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
 		layerContributor.On("Name").Return("test-name")
 		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
@@ -317,12 +317,12 @@ test-key = "test-value"
 		)
 
 		Expect(environmentWriter.Calls[1].Arguments[0]).To(Equal(filepath.Join(layersPath, "test-name", "env.launch")))
-		Expect(environmentWriter.Calls[1].Arguments[1]).To(Equal(map[string]string{"test-launch": "test-value"}))
+		Expect(environmentWriter.Calls[1].Arguments[1]).To(Equal(map[string]string{"test-launch.default": "test-value"}))
 	})
 
 	it("writes env", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), SharedEnvironment: libcnb.Environment{}}
-		layer.SharedEnvironment.PrependPathf("test-shared", "test-%s", "value")
+		layer.SharedEnvironment.Defaultf("test-shared", "test-%s", "value")
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
 		layerContributor.On("Name").Return("test-name")
 		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
@@ -335,7 +335,7 @@ test-key = "test-value"
 		)
 
 		Expect(environmentWriter.Calls[2].Arguments[0]).To(Equal(filepath.Join(layersPath, "test-name", "env")))
-		Expect(environmentWriter.Calls[2].Arguments[1]).To(Equal(map[string]string{"test-shared": "test-value"}))
+		Expect(environmentWriter.Calls[2].Arguments[1]).To(Equal(map[string]string{"test-shared.default": "test-value"}))
 	})
 
 	it("writes profile.d", func() {
