@@ -4,8 +4,6 @@ updates:
       directory: /
       schedule:
         interval: daily
-      commit-message:
-        include: scope
       labels:
         - 'semver: patch'
         - 'type: dependency-upgrade'
@@ -13,8 +11,6 @@ updates:
       directory: /
       schedule:
         interval: daily
-      commit-message:
-        include: scope
       labels:
         - 'semver: patch'
         - 'type: dependency-upgrade'
