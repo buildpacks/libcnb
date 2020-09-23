@@ -19,6 +19,9 @@
 - name: 'type: enhancement'
   description: A general enhancement
   color: e3d9fc
+- name: 'type: question'
+  description: A user question
+  color: e3d9fc
 - name: 'type: task'
   description: A general task
   color: e3d9fc
