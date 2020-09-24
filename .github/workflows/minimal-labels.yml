@@ -3,23 +3,21 @@ name: Minimal Labels
     pull_request: {}
 jobs:
     semver:
-        name: SemVer
+        name: Minimal Semver Labels
         runs-on:
             - ubuntu-latest
         steps:
-            - name: Require Labels
-              uses: mheap/github-action-required-labels@v1
+            - uses: mheap/github-action-required-labels@v1
               with:
                 count: 1
                 labels: 'semver: major,semver: minor,semver: patch'
                 mode: exactly
     type:
-        name: Type
+        name: Minimal Type Labels
         runs-on:
             - ubuntu-latest
         steps:
-            - name: Require Labels
-              uses: mheap/github-action-required-labels@v1
+            - uses: mheap/github-action-required-labels@v1
               with:
                 count: 1
                 labels: 'type: bug,type: dependency-upgrade,type: documentation,type: enhancement,type: question,type: task'
