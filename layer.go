@@ -18,10 +18,11 @@ package libcnb
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 )
 
 // Exec represents the exec.d layer location
@@ -134,9 +135,13 @@ func (l *Layers) Layer(name string) (Layer, error) {
 		Exec:              Exec{Path: filepath.Join(l.Path, name, "exec.d")},
 	}
 
-	f := filepath.Join(l.Path, fmt.Sprintf("%s.toml", name))
-	if _, err := toml.DecodeFile(f, &layer); err != nil && !os.IsNotExist(err) {
-		return Layer{}, fmt.Errorf("unable to decode layer metadata %s\n%w", f, err)
+	file := filepath.Join(l.Path, fmt.Sprintf("%s.toml", name))
+	b, err := ioutil.ReadFile(file)
+	if err != nil && !os.IsNotExist(err) {
+		return Layer{}, fmt.Errorf("unable to read %s\n%w", file, err)
+	}
+	if err := toml.Unmarshal(b, &layer); err != nil {
+		return Layer{}, fmt.Errorf("unable to decode layer metadata %s\n%w", file, err)
 	}
 
 	return layer, nil
