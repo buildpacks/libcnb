@@ -18,11 +18,12 @@ package libcnb
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 
 	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/poet"
@@ -108,7 +109,12 @@ func Detect(detector Detector, options ...Option) {
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
-	if _, err = toml.DecodeFile(file, &ctx.Buildpack); err != nil && !os.IsNotExist(err) {
+	b, err := ioutil.ReadFile(file)
+	if err != nil && !os.IsNotExist(err) {
+		config.exitHandler.Error(fmt.Errorf("unable to read %s\n%w", file, err))
+		return
+	}
+	if err := toml.Unmarshal(b, &ctx.Buildpack); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s\n%w", file, err))
 		return
 	}

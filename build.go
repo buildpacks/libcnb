@@ -18,12 +18,13 @@ package libcnb
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 
 	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/poet"
@@ -148,7 +149,12 @@ func Build(builder Builder, options ...Option) {
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
-	if _, err = toml.DecodeFile(file, &ctx.Buildpack); err != nil && !os.IsNotExist(err) {
+	b, err := ioutil.ReadFile(file)
+	if err != nil && !os.IsNotExist(err) {
+		config.exitHandler.Error(fmt.Errorf("unable to read %s\n%w", file, err))
+		return
+	}
+	if err := toml.Unmarshal(b, &ctx.Buildpack); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s\n%w", file, err))
 		return
 	}
@@ -176,9 +182,14 @@ func Build(builder Builder, options ...Option) {
 	}
 	logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
-	var store Store
 	file = filepath.Join(ctx.Layers.Path, "store.toml")
-	if _, err = toml.DecodeFile(file, &store); err != nil && !os.IsNotExist(err) {
+	b, err = ioutil.ReadFile(file)
+	if err != nil && !os.IsNotExist(err) {
+		config.exitHandler.Error(fmt.Errorf("unable to read %s\n%w", file, err))
+		return
+	}
+	var store Store
+	if err := toml.Unmarshal(b, &store); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to decode persistent metadata %s\n%w", file, err))
 		return
 	}
@@ -186,7 +197,12 @@ func Build(builder Builder, options ...Option) {
 	logger.Debugf("Persistent Metadata: %+v", ctx.PersistentMetadata)
 
 	file = config.arguments[3]
-	if _, err = toml.DecodeFile(file, &ctx.Plan); err != nil && !os.IsNotExist(err) {
+	b, err = ioutil.ReadFile(file)
+	if err != nil && !os.IsNotExist(err) {
+		config.exitHandler.Error(fmt.Errorf("unable to read %s\n%w", file, err))
+		return
+	}
+	if err := toml.Unmarshal(b, &ctx.Plan); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack plan %s\n%w", file, err))
 		return
 	}

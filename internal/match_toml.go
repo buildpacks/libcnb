@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/BurntSushi/toml"
 	"github.com/onsi/gomega/types"
+	"github.com/pelletier/go-toml"
 )
 
 func MatchTOML(expected interface{}) types.GomegaMatcher {
@@ -35,35 +35,33 @@ type matchTOML struct {
 }
 
 func (matcher *matchTOML) Match(actual interface{}) (success bool, err error) {
-	var e, a string
+	var e, a []byte
 
 	switch eType := matcher.expected.(type) {
 	case string:
-		e = eType
+		e = []byte(eType)
 	case []byte:
-		e = string(eType)
+		e = eType
 	default:
 		return false, fmt.Errorf("expected value must be []byte or string, received %T", matcher.expected)
 	}
 
 	switch aType := actual.(type) {
 	case string:
-		a = aType
+		a = []byte(aType)
 	case []byte:
-		a = string(aType)
+		a = aType
 	default:
 		return false, fmt.Errorf("actual value must be []byte or string, received %T", matcher.expected)
 	}
 
 	var eValue map[string]interface{}
-	_, err = toml.Decode(e, &eValue)
-	if err != nil {
+	if err := toml.Unmarshal(e, &eValue); err != nil {
 		return false, err
 	}
 
 	var aValue map[string]interface{}
-	_, err = toml.Decode(a, &aValue)
-	if err != nil {
+	if err := toml.Unmarshal(a, &aValue); err != nil {
 		return false, err
 	}
 
