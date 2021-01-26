@@ -17,6 +17,7 @@
 package libcnb
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -113,6 +114,11 @@ func Detect(detector Detector, options ...Option) {
 		return
 	}
 	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
+
+	if strings.TrimSpace(ctx.Buildpack.API) != "0.5" {
+		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack API 0.5"))
+		return
+	}
 
 	ctx.Platform.Path = config.arguments[1]
 	if logger.IsDebugEnabled() {

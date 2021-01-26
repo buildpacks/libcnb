@@ -99,9 +99,9 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			l, err := layers.Layer("test-name")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(l.Build).To(BeFalse())
-			Expect(l.Cache).To(BeFalse())
-			Expect(l.Launch).To(BeFalse())
+			Expect(l.LayerTypes.Build).To(BeFalse())
+			Expect(l.LayerTypes.Cache).To(BeFalse())
+			Expect(l.LayerTypes.Launch).To(BeFalse())
 			Expect(l.Metadata).To(BeNil())
 			Expect(l.Name).To(Equal("test-name"))
 			Expect(l.Path).To(Equal(filepath.Join(path, "test-name")))

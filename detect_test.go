@@ -61,19 +61,13 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
-api = "0.0.0"
+api = "0.5"
 
 [buildpack]
 id = "test-id"
 name = "test-name"
 version = "1.1.1"
 clear-env = true
-
-[[order]]
-[[order.group]]
-id = "test-id"
-version = "2.2.2"
-optional = true
 
 [[stacks]]
 id = "test-id"
@@ -131,6 +125,33 @@ test-key = "test-value"
 		Expect(os.RemoveAll(platformPath)).To(Succeed())
 	})
 
+	context("buildpack API is not 0.5", func() {
+		it.Before(func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "0.4"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+`),
+				0644),
+			).To(Succeed())
+		})
+
+		it("fails", func() {
+			libcnb.Detect(detector,
+				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+				"this version of libcnb is only compatible with buildpack API 0.5",
+			))
+		})
+	})
+
 	it("encounters the wrong number of Arguments", func() {
 		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
 
@@ -165,23 +186,12 @@ test-key = "test-value"
 		ctx := detector.Calls[0].Arguments[0].(libcnb.DetectContext)
 		Expect(ctx.Application).To(Equal(libcnb.Application{Path: applicationPath}))
 		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
-			API: "0.0.0",
+			API: "0.5",
 			Info: libcnb.BuildpackInfo{
 				ID:               "test-id",
 				Name:             "test-name",
 				Version:          "1.1.1",
 				ClearEnvironment: true,
-			},
-			Orders: []libcnb.BuildpackOrder{
-				{
-					Groups: []libcnb.BuildpackOrderBuildpack{
-						{
-							ID:       "test-id",
-							Version:  "2.2.2",
-							Optional: true,
-						},
-					},
-				},
 			},
 			Path: buildpackPath,
 			Stacks: []libcnb.BuildpackStack{

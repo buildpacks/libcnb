@@ -65,7 +65,7 @@ func testMain(t *testing.T, context spec.G, it spec.S) {
 
 		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
-api = "0.0.0"
+api = "0.5"
 
 [buildpack]
 id = "test-id"
