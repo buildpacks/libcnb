@@ -69,14 +69,8 @@ func (p Profile) ProcessAddf(processType string, name string, format string, a .
 // Contribute represents a layer managed by the buildpack.
 type Layer struct {
 
-	// Build indicates that a layer should be used for builds.
-	Build bool `toml:"build"`
-
-	// Cache indicates that a layer should be cached.
-	Cache bool `toml:"cache"`
-
-	// Launch indicates that a layer should be used for launch.
-	Launch bool `toml:"launch"`
+	// LayerTypes indicates the type of layer
+	LayerTypes
 
 	// Metadata is the metadata associated with the layer.
 	Metadata map[string]interface{} `toml:"metadata"`
@@ -101,6 +95,19 @@ type Layer struct {
 
 	// Exec is the exec.d executables set in the layer.
 	Exec Exec `toml:"-"`
+}
+
+// LayerTypes describes which types apply to a given layer. A layer may have any combination of Launch, Build, and
+// Cache types.
+type LayerTypes struct {
+	// Build indicates that a layer should be used for builds.
+	Build bool `toml:"build"`
+
+	// Cache indicates that a layer should be cached.
+	Cache bool `toml:"cache"`
+
+	// Launch indicates that a layer should be used for launch.
+	Launch bool `toml:"launch"`
 }
 
 //go:generate mockery -name LayerContributor -case=underscore

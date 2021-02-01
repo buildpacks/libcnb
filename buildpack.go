@@ -69,9 +69,6 @@ type Buildpack struct {
 	// Info is information about the buildpack.
 	Info BuildpackInfo `toml:"buildpack"`
 
-	// Orders is buildpack collection of order definitions in the buildpack.
-	Orders []BuildpackOrder `toml:"order"`
-
 	// Path is the path to the buildpack.
 	Path string
 

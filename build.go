@@ -17,6 +17,7 @@
 package libcnb
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -56,6 +57,8 @@ type BuildContext struct {
 
 // BuildResult contains the results of detection.
 type BuildResult struct {
+	// BOM contains entries to be appended to the app image Bill of Materials and/or build Bill of Materials.
+	BOM *BOM
 
 	// Labels are the image labels contributed by the buildpack.
 	Labels []Label
@@ -66,21 +69,27 @@ type BuildResult struct {
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
 	PersistentMetadata map[string]interface{}
 
-	// Plan is the buildpack plan contributed by the buildpack.
-	Plan *BuildpackPlan
-
 	// Processes are the process types contributed by the buildpack.
 	Processes []Process
 
 	// Slices are the application slices contributed by the buildpack.
 	Slices []Slice
+
+	// Unmet contains buildpack plan entries that were not satisfied by the buildpack and therefore should be
+	// passed to subsequent providers.
+	Unmet []UnmetPlanEntry
+}
+
+// BOM contains all Bill of Materials entries
+type BOM struct {
+	Entries []BOMEntry
 }
 
 // NewBuildResult creates a new BuildResult instance, initializing empty fields.
 func NewBuildResult() BuildResult {
 	return BuildResult{
 		PersistentMetadata: make(map[string]interface{}),
-		Plan:               &BuildpackPlan{},
+		BOM:                &BOM{},
 	}
 }
 
@@ -90,8 +99,10 @@ func (b BuildResult) String() string {
 		l = append(l, reflect.TypeOf(c).Name())
 	}
 
-	return fmt.Sprintf("{Labels:%+v Layers:%s PersistentMetadata:%+v Plan:%+v Processes:%+v Slices:%+v}",
-		b.Labels, l, b.PersistentMetadata, b.Plan, b.PersistentMetadata, b.Slices)
+	return fmt.Sprintf(
+		"{BOM: %+v, Labels:%+v Layers:%s PersistentMetadata:%+v Processes:%+v Slices:%+v, Unmet:%+v}",
+		b.BOM, b.Labels, l, b.PersistentMetadata, b.PersistentMetadata, b.Slices, b.Unmet,
+	)
 }
 
 //go:generate mockery -name Builder -case=underscore
@@ -153,6 +164,11 @@ func Build(builder Builder, options ...Option) {
 		return
 	}
 	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
+
+	if strings.TrimSpace(ctx.Buildpack.API) != "0.5" {
+		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack API 0.5"))
+		return
+	}
 
 	ctx.Layers = Layers{config.arguments[1]}
 	logger.Debugf("Layers: %+v", ctx.Layers)
@@ -277,16 +293,44 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
-	if len(result.Labels) > 0 || len(result.Processes) > 0 || len(result.Slices) > 0 {
-		launch := Launch{
-			Labels:    result.Labels,
-			Processes: result.Processes,
-			Slices:    result.Slices,
+	var launchBOM, buildBOM []BOMEntry
+	if result.BOM != nil {
+		for _, entry := range result.BOM.Entries {
+			if entry.Launch {
+				launchBOM = append(launchBOM, entry)
+			}
+			if entry.Build {
+				buildBOM = append(buildBOM, entry)
+			}
 		}
+	}
+
+	launch := LaunchTOML{
+		Labels:    result.Labels,
+		Processes: result.Processes,
+		Slices:    result.Slices,
+		BOM:       launchBOM,
+	}
+
+	if !launch.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "launch.toml")
 		logger.Debugf("Writing application metadata: %s <= %+v", file, launch)
 		if err = config.tomlWriter.Write(file, launch); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s\n%w", file, err))
+			return
+		}
+	}
+
+	build := BuildTOML{
+		Unmet: result.Unmet,
+		BOM:   buildBOM,
+	}
+
+	if !build.isEmpty() {
+		file = filepath.Join(ctx.Layers.Path, "build.toml")
+		logger.Debugf("Writing build metadata: %s <= %+v", file, build)
+		if err = config.tomlWriter.Write(file, build); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to write build metadata %s\n%w", file, err))
 			return
 		}
 	}
@@ -299,15 +343,6 @@ func Build(builder Builder, options ...Option) {
 		logger.Debugf("Writing persistent metadata: %s <= %+v", file, store)
 		if err = config.tomlWriter.Write(file, store); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write persistent metadata %s\n%w", file, err))
-			return
-		}
-	}
-
-	if result.Plan != nil && len(result.Plan.Entries) > 0 {
-		file = config.arguments[3]
-		logger.Debugf("Writing buildpack plan: %s <= %+v", file, result.Plan)
-		if err = config.tomlWriter.Write(file, result.Plan); err != nil {
-			config.exitHandler.Error(fmt.Errorf("unable to write buildpack plan %s\n%w", file, err))
 			return
 		}
 	}

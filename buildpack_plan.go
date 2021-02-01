@@ -16,6 +16,13 @@
 
 package libcnb
 
+// BuildpackPlan represents a buildpack plan.
+type BuildpackPlan struct {
+
+	// Entries represents all the buildpack plan entries.
+	Entries []BuildpackPlanEntry `toml:"entries,omitempty"`
+}
+
 // BuildpackPlanEntry represents an entry in the buildpack plan.
 type BuildpackPlanEntry struct {
 	// Name represents the name of the entry.
@@ -25,9 +32,10 @@ type BuildpackPlanEntry struct {
 	Metadata map[string]interface{} `toml:"metadata,omitempty"`
 }
 
-// BuildpackPlan represents a buildpack plan.
-type BuildpackPlan struct {
-
-	// Entries represents all the buildpack plan entries.
-	Entries []BuildpackPlanEntry `toml:"entries,omitempty"`
+// UnmetPlanEntry denotes an unmet buildpack plan entry. When a buildpack returns an UnmetPlanEntry
+// in the BuildResult, any BuildpackPlanEntry with a matching Name will be provided to subsequent
+// providers.
+type UnmetPlanEntry struct {
+	// Name represents the name of the entry.
+	Name string `toml:"name"`
 }

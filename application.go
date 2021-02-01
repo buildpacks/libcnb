@@ -56,8 +56,8 @@ type Slice struct {
 	Paths []string `toml:"paths"`
 }
 
-// Launch represents the contents of launch.toml.
-type Launch struct {
+// LaunchTOML represents the contents of launch.toml.
+type LaunchTOML struct {
 
 	// Labels is the collection of image labels contributed by the buildpack.
 	Labels []Label `toml:"labels"`
@@ -67,6 +67,44 @@ type Launch struct {
 
 	// Slices is the collection of slices contributed by the buildpack.
 	Slices []Slice `toml:"slices"`
+
+	// BOM is a collection of entries for the bill of materials.
+	BOM []BOMEntry `toml:"bom"`
+}
+
+func (l LaunchTOML) isEmpty() bool {
+	return len(l.Labels) == 0 && len(l.Processes) == 0 && len(l.Slices) == 0 && len(l.BOM) == 0
+}
+
+// BuildTOML represents the contents of build.toml.
+type BuildTOML struct {
+	// BOM contains the build-time bill of materials.
+	BOM []BOMEntry `toml:"bom"`
+
+	// Unmet is a collection of buildpack plan entries that should be passed through to subsequent providers.
+	Unmet []UnmetPlanEntry
+}
+
+func (b BuildTOML) isEmpty() bool {
+	return len(b.Unmet) == 0
+}
+
+// BOMEntry contains a bill of materials entry.
+type BOMEntry struct {
+	// Name represents the name of the entry.
+	Name string `toml:"name"`
+
+	// Metadata is the metadata of the entry.  Optional.
+	Metadata map[string]interface{} `toml:"metadata,omitempty"`
+
+	// Launch indicates whether the given entry is included in app image. If launch is true the entry
+	// will be added to the app image Bill of Materials. Launch should be true if the entry describes
+	// the contents of a launch layer or app layer.
+	Launch bool `toml:"-"`
+
+	// Build indicates whether the given entry is available at build time. If build is true the entry
+	// will be added to the build Bill of Materials.
+	Build bool `toml:"-"`
 }
 
 // Store represents the contents of store.toml
