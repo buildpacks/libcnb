@@ -47,6 +47,10 @@ type Process struct {
 
 	// Command is exec'd directly by the os (no profile.d scripts run)
 	Direct bool `toml:"direct,omitempty"`
+
+	// Default can be set to true to indicate that the process
+	// type being defined should be the default process type for the app image.
+	Default bool `toml:"default,omitempty"`
 }
 
 // Slice represents metadata about a slice.

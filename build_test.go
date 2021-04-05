@@ -427,6 +427,7 @@ version = "1.1.1"
 				{
 					Type:    "test-type",
 					Command: "test-command",
+					Default: true,
 				},
 			},
 			Slices: []libcnb.Slice{
@@ -453,6 +454,7 @@ version = "1.1.1"
 				{
 					Type:    "test-type",
 					Command: "test-command",
+					Default: true,
 				},
 			},
 			Slices: []libcnb.Slice{
