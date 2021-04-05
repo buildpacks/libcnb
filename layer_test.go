@@ -115,6 +115,10 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			Expect(ioutil.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`
+[types]
+launch = true
+build = false
+
 [metadata]
 test-key = "test-value"
 		`),
@@ -125,6 +129,8 @@ test-key = "test-value"
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(l.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(l.Launch).To(BeTrue())
+			Expect(l.Build).To(BeFalse())
 		})
 	})
 }

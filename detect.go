@@ -115,8 +115,8 @@ func Detect(detector Detector, options ...Option) {
 	}
 	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
-	if strings.TrimSpace(ctx.Buildpack.API) != "0.5" {
-		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack API 0.5"))
+	if strings.TrimSpace(ctx.Buildpack.API) != "0.6" {
+		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack API 0.6"))
 		return
 	}
 

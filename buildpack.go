@@ -32,6 +32,27 @@ type BuildpackInfo struct {
 
 	// ClearEnvironment is whether the environment should be clear of user-configured environment variables.
 	ClearEnvironment bool `toml:"clear-env"`
+
+	// Description is a string describing the buildpack.
+	Description string `toml:"description"`
+
+	// Keywords is a list of words that are associated with the buildpack.
+	Keywords []string `toml:"keywords"`
+
+	// Licenses a list of buildpack licenses.
+	Licenses []License `toml:"licenses"`
+}
+
+// License contains information about a Software License
+// governing the use or redistribution of a buildpack
+type License struct {
+	// Type is the identifier for the license.
+	// It MAY use the SPDX 2.1 license expression, but is not limited to identifiers in the SPDX Licenses List.
+	Type string `toml:"type"`
+
+	// URI may be specified in lieu of or in addition to type to point to the license
+	// if this buildpack is using a nonstandard license.
+	URI string `toml:"uri"`
 }
 
 // BuildpackOrderBuildpack is a buildpack within in a buildpack order group.
