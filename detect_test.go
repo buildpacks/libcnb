@@ -61,13 +61,23 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
-api = "0.5"
+api = "0.6"
 
 [buildpack]
 id = "test-id"
 name = "test-name"
 version = "1.1.1"
 clear-env = true
+description = "A test buildpack"
+keywords = ["test", "buildpack"]
+
+[[buildpack.licenses]]
+type = "Apache-2.0"
+uri = "https://spdx.org/licenses/Apache-2.0.html"
+
+[[buildpack.licenses]]
+type = "Apache-1.1"
+uri = "https://spdx.org/licenses/Apache-1.1.html"
 
 [[stacks]]
 id = "test-id"
@@ -125,7 +135,7 @@ test-key = "test-value"
 		Expect(os.RemoveAll(platformPath)).To(Succeed())
 	})
 
-	context("buildpack API is not 0.5", func() {
+	context("buildpack API is not 0.6", func() {
 		it.Before(func() {
 			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
@@ -147,7 +157,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack API 0.5",
+				"this version of libcnb is only compatible with buildpack API 0.6",
 			))
 		})
 	})
@@ -186,12 +196,18 @@ version = "1.1.1"
 		ctx := detector.Calls[0].Arguments[0].(libcnb.DetectContext)
 		Expect(ctx.Application).To(Equal(libcnb.Application{Path: applicationPath}))
 		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
-			API: "0.5",
+			API: "0.6",
 			Info: libcnb.BuildpackInfo{
 				ID:               "test-id",
 				Name:             "test-name",
 				Version:          "1.1.1",
 				ClearEnvironment: true,
+				Description:      "A test buildpack",
+				Keywords:         []string{"test", "buildpack"},
+				Licenses: []libcnb.License{
+					{Type: "Apache-2.0", URI: "https://spdx.org/licenses/Apache-2.0.html"},
+					{Type: "Apache-1.1", URI: "https://spdx.org/licenses/Apache-1.1.html"},
+				},
 			},
 			Path: buildpackPath,
 			Stacks: []libcnb.BuildpackStack{

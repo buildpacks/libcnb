@@ -70,7 +70,7 @@ func (p Profile) ProcessAddf(processType string, name string, format string, a .
 type Layer struct {
 
 	// LayerTypes indicates the type of layer
-	LayerTypes
+	LayerTypes `toml:"types"`
 
 	// Metadata is the metadata associated with the layer.
 	Metadata map[string]interface{} `toml:"metadata"`
