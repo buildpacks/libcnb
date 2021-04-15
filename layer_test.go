@@ -111,7 +111,28 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			Expect(l.Profile).To(Equal(libcnb.Profile{}))
 		})
 
-		it("reads existing metadata", func() {
+		it("reads existing 0.5 metadata", func() {
+			Expect(ioutil.WriteFile(
+				filepath.Join(path, "test-name.toml"),
+				[]byte(`
+launch = true
+build = false
+
+[metadata]
+test-key = "test-value"
+		`),
+				0644),
+			).To(Succeed())
+
+			l, err := layers.Layer("test-name")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(l.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(l.Launch).To(BeTrue())
+			Expect(l.Build).To(BeFalse())
+		})
+
+		it("reads existing 0.6 metadata", func() {
 			Expect(ioutil.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`
@@ -131,6 +152,30 @@ test-key = "test-value"
 			Expect(l.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
 			Expect(l.Launch).To(BeTrue())
 			Expect(l.Build).To(BeFalse())
+		})
+
+		it("reads existing 0.6 metadata with launch, build and cache all false", func() {
+			Expect(ioutil.WriteFile(
+				filepath.Join(path, "test-name.toml"),
+				[]byte(`
+[types]
+launch = false
+build = false
+cache = false
+
+[metadata]
+test-key = "test-value"
+		`),
+				0644),
+			).To(Succeed())
+
+			l, err := layers.Layer("test-name")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(l.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(l.Launch).To(BeFalse())
+			Expect(l.Build).To(BeFalse())
+			Expect(l.Cache).To(BeFalse())
 		})
 	})
 }

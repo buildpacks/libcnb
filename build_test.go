@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -28,6 +29,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/buildpacks/libcnb"
+	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/mocks"
 )
 
@@ -39,6 +41,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		builder           *mocks.Builder
 		buildpackPath     string
 		buildpackPlanPath string
+		bpTOMLContents    string
 		commandPath       string
 		environmentWriter *mocks.EnvironmentWriter
 		exitHandler       *mocks.ExitHandler
@@ -64,9 +67,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.Setenv("CNB_BUILDPACK_DIR", buildpackPath)).To(Succeed())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
-			[]byte(`
-api = "0.6"
+		bpTOMLContents = `
+api = "##API_VERSION##"
 
 [buildpack]
 id = "test-id"
@@ -96,7 +98,9 @@ mixins = ["test-name"]
 
 [metadata]
 test-key = "test-value"
-`),
+`
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			[]byte(strings.Replace(bpTOMLContents, "##API_VERSION##", "0.6", 1)),
 			0644),
 		).To(Succeed())
 
@@ -171,11 +175,11 @@ test-key = "test-value"
 		Expect(os.RemoveAll(platformPath)).To(Succeed())
 	})
 
-	context("buildpack API is not 0.6", func() {
+	context("buildpack API is not 0.5 or 0.6", func() {
 		it.Before(func() {
 			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
-api = "0.5"
+api = "0.4"
 
 [buildpack]
 id = "test-id"
@@ -193,7 +197,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack API 0.6",
+				"this version of libcnb is only compatible with buildpack API 0.5 and 0.6",
 			))
 		})
 	})
@@ -389,7 +393,43 @@ version = "1.1.1"
 		Expect(environmentWriter.Calls[3].Arguments[1]).To(Equal(map[string]string{"test-profile": "test-value"}))
 	})
 
-	it("writes layer metadata", func() {
+	it("writes 0.5 layer metadata", func() {
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			[]byte(strings.Replace(bpTOMLContents, "##API_VERSION##", "0.5", 1)),
+			0644),
+		).To(Succeed())
+
+		layer := libcnb.Layer{
+			Name: "test-name",
+			Path: filepath.Join(layersPath, "test-name"),
+			LayerTypes: libcnb.LayerTypes{
+				Build:  true,
+				Cache:  true,
+				Launch: true,
+			},
+			Metadata: map[string]interface{}{"test-key": "test-value"},
+		}
+		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
+		layerContributor.On("Name").Return("test-name")
+		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
+		builder.On("Build", mock.Anything).Return(result, nil)
+
+		libcnb.Build(builder,
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+		)
+
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "test-name.toml")))
+
+		layer5, ok := tomlWriter.Calls[0].Arguments[1].(internal.LayerAPI5)
+		Expect(ok).To(BeTrue())
+		Expect(layer5.Build).To(BeTrue())
+		Expect(layer5.Cache).To(BeTrue())
+		Expect(layer5.Launch).To(BeTrue())
+		Expect(layer5.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+	})
+
+	it("writes 0.6 layer metadata", func() {
 		layer := libcnb.Layer{
 			Name: "test-name",
 			Path: filepath.Join(layersPath, "test-name"),
