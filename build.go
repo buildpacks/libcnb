@@ -325,6 +325,15 @@ func Build(builder Builder, options ...Option) {
 	if !launch.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "launch.toml")
 		logger.Debugf("Writing application metadata: %s <= %+v", file, launch)
+
+		if API == "0.5" {
+			for _, process := range launch.Processes {
+				if process.Default {
+					logger.Info("WARNING: Launch layer is setting default=true, but that is not supported until API version 0.6. This setting will be ignored.")
+				}
+			}
+		}
+
 		if err = config.tomlWriter.Write(file, launch); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s\n%w", file, err))
 			return
