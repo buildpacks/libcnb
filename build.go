@@ -167,7 +167,7 @@ func Build(builder Builder, options ...Option) {
 
 	API := strings.TrimSpace(ctx.Buildpack.API)
 	if API != "0.5" && API != "0.6" {
-		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack API 0.5 and 0.6"))
+		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack APIs 0.5 and 0.6"))
 		return
 	}
 
