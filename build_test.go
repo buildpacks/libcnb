@@ -17,12 +17,13 @@
 package libcnb_test
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+	"text/template"
 
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
@@ -49,6 +50,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		layersPath        string
 		platformPath      string
 		tomlWriter        *mocks.TOMLWriter
+		buildpackTOML     *template.Template
 
 		workingDir string
 	)
@@ -68,7 +70,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.Setenv("CNB_BUILDPACK_DIR", buildpackPath)).To(Succeed())
 
 		bpTOMLContents = `
-api = "##API_VERSION##"
+api = "{{.APIVersion}}"
 
 [buildpack]
 id = "test-id"
@@ -99,10 +101,14 @@ mixins = ["test-name"]
 [metadata]
 test-key = "test-value"
 `
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
-			[]byte(strings.Replace(bpTOMLContents, "##API_VERSION##", "0.6", 1)),
-			0644),
-		).To(Succeed())
+		buildpackTOML, err = template.New("buildpack.toml").Parse(bpTOMLContents)
+		Expect(err).ToNot(HaveOccurred())
+
+		var b bytes.Buffer
+		err = buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.6"})
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0644)).To(Succeed())
 
 		f, err := ioutil.TempFile("", "build-buildpackplan-path")
 		Expect(err).NotTo(HaveOccurred())
@@ -197,7 +203,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack API 0.5 and 0.6",
+				"this version of libcnb is only compatible with buildpack APIs 0.5 and 0.6",
 			))
 		})
 	})
@@ -394,10 +400,11 @@ version = "1.1.1"
 	})
 
 	it("writes 0.5 layer metadata", func() {
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
-			[]byte(strings.Replace(bpTOMLContents, "##API_VERSION##", "0.5", 1)),
-			0644),
-		).To(Succeed())
+		var b bytes.Buffer
+		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.5"})
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0644)).To(Succeed())
 
 		layer := libcnb.Layer{
 			Name: "test-name",
