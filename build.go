@@ -165,8 +165,9 @@ func Build(builder Builder, options ...Option) {
 	}
 	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
-	if strings.TrimSpace(ctx.Buildpack.API) != "0.6" {
-		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack API 0.6"))
+	API := strings.TrimSpace(ctx.Buildpack.API)
+	if API != "0.5" && API != "0.6" {
+		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack APIs 0.5 and 0.6"))
 		return
 	}
 
@@ -273,7 +274,16 @@ func Build(builder Builder, options ...Option) {
 
 		file = filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.toml", layer.Name))
 		logger.Debugf("Writing layer metadata: %s <= %+v", file, layer)
-		if err = config.tomlWriter.Write(file, layer); err != nil {
+		var toWrite interface{} = layer
+		if API == "0.5" {
+			toWrite = internal.LayerAPI5{
+				Build:    layer.LayerTypes.Build,
+				Cache:    layer.LayerTypes.Cache,
+				Launch:   layer.LayerTypes.Launch,
+				Metadata: layer.Metadata,
+			}
+		}
+		if err = config.tomlWriter.Write(file, toWrite); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write layer metadata %s\n%w", file, err))
 			return
 		}
@@ -315,6 +325,15 @@ func Build(builder Builder, options ...Option) {
 	if !launch.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "launch.toml")
 		logger.Debugf("Writing application metadata: %s <= %+v", file, launch)
+
+		if API == "0.5" {
+			for _, process := range launch.Processes {
+				if process.Default {
+					logger.Info("WARNING: Launch layer is setting default=true, but that is not supported until API version 0.6. This setting will be ignored.")
+				}
+			}
+		}
+
 		if err = config.tomlWriter.Write(file, launch); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s\n%w", file, err))
 			return
