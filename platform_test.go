@@ -304,6 +304,96 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 					}))
 				})
 			})
+
+			context("from environment or path", func() {
+				context("when SERVICE_BINDING_ROOT is defined but CNB_BINDINGS or the passed path does not exist", func() {
+					it.Before(func() {
+						Expect(os.Setenv("SERVICE_BINDING_ROOT", path))
+						Expect(os.Setenv("CNB_BINDINGS", "does not exist"))
+					})
+
+					it.After(func() {
+						Expect(os.Unsetenv("SERVICE_BINDING_ROOT"))
+						Expect(os.Unsetenv("CNB_BINDINGS"))
+					})
+
+					it("creates bindings from path in SERVICE_BINDING_ROOT", func() {
+						Expect(libcnb.NewBindingsFromEnvOrPath("random-path-that-does-not-exist")).To(Equal(libcnb.Bindings{
+							libcnb.Binding{
+								Name:     "alpha",
+								Path:     filepath.Join(path, "alpha"),
+								Type:     "test-type",
+								Provider: "test-provider",
+								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+							},
+							libcnb.Binding{
+								Name:     "bravo",
+								Path:     filepath.Join(path, "bravo"),
+								Type:     "test-type",
+								Provider: "test-provider",
+								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+							},
+						}))
+					})
+				})
+
+				context("when CNB_BINDINGS is defined but the path does not exist", func() {
+					it.Before(func() {
+						Expect(os.Setenv("CNB_BINDINGS", path))
+					})
+
+					it.After(func() {
+						Expect(os.Unsetenv("CNB_BINDINGS"))
+					})
+
+					it("creates bindings from path in CNB_BINDINGS", func() {
+						Expect(libcnb.NewBindingsFromEnvOrPath("random-path-that-does-not-exist")).To(Equal(libcnb.Bindings{
+							libcnb.Binding{
+								Name:     "alpha",
+								Path:     filepath.Join(path, "alpha"),
+								Type:     "test-type",
+								Provider: "test-provider",
+								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+							},
+							libcnb.Binding{
+								Name:     "bravo",
+								Path:     filepath.Join(path, "bravo"),
+								Type:     "test-type",
+								Provider: "test-provider",
+								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+							},
+						}))
+					})
+				})
+
+				context("when SERVICE_BINDING_ROOT and CNB_BINDINGS is not defined but the path exists", func() {
+					it("creates bindings from the given path", func() {
+						Expect(libcnb.NewBindingsFromEnvOrPath(path)).To(Equal(libcnb.Bindings{
+							libcnb.Binding{
+								Name:     "alpha",
+								Path:     filepath.Join(path, "alpha"),
+								Type:     "test-type",
+								Provider: "test-provider",
+								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+							},
+							libcnb.Binding{
+								Name:     "bravo",
+								Path:     filepath.Join(path, "bravo"),
+								Type:     "test-type",
+								Provider: "test-provider",
+								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+							},
+						}))
+					})
+				})
+
+				context("when no valid binding variable is set", func() {
+					it("returns an an empty binding", func() {
+						Expect(libcnb.NewBindingsFromEnvOrPath("does-not-exist")).To(Equal(libcnb.Bindings{}))
+					})
+				})
+
+			})
 		})
 	})
 

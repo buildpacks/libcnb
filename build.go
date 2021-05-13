@@ -180,7 +180,7 @@ func Build(builder Builder, options ...Option) {
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
-	if ctx.Platform.Bindings, err = NewBindingsFromPath(file); err != nil {
+	if ctx.Platform.Bindings, err = NewBindingsFromEnvOrPath(file); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
 		return
 	}

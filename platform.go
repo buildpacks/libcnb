@@ -167,6 +167,21 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 	return bindings, nil
 }
 
+// NewBindingsFromEnvOrPath creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
+// or $CNB_BINDINGS if it does not exist.  If neither is defined, it defaults to using the given path.
+func NewBindingsFromEnvOrPath(path string) (Bindings, error) {
+	if path, ok := os.LookupEnv("SERVICE_BINDING_ROOT"); ok {
+		return NewBindingsFromPath(path)
+	}
+
+	// TODO: Remove as CNB_BINDINGS ages out
+	if path, ok := os.LookupEnv("CNB_BINDINGS"); ok {
+		return NewBindingsFromPath(path)
+	}
+
+	return NewBindingsFromPath(path)
+}
+
 // Platform is the contents of the platform directory.
 type Platform struct {
 
