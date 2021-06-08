@@ -33,12 +33,13 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
-		path string
+		path, platformPath string
 	)
 
 	it.Before(func() {
 		var err error
-		path, err = ioutil.TempDir("", "bindings")
+		platformPath, err = ioutil.TempDir("", "platform")
+		path = filepath.Join(platformPath, "bindings")
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -155,11 +156,11 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 			context("from environment", func() {
 				it.Before(func() {
-					Expect(os.Setenv("CNB_BINDINGS", path))
+					Expect(os.Setenv(libcnb.EnvCNBBindings, path))
 				})
 
 				it.After(func() {
-					Expect(os.Unsetenv("CNB_BINDINGS"))
+					Expect(os.Unsetenv(libcnb.EnvCNBBindings))
 				})
 
 				it("creates bindings from path in $CNB_BINDINGS", func() {
@@ -278,11 +279,11 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 			context("from environment", func() {
 				it.Before(func() {
-					Expect(os.Setenv("SERVICE_BINDING_ROOT", path))
+					Expect(os.Setenv(libcnb.EnvServiceBindings, path))
 				})
 
 				it.After(func() {
-					Expect(os.Unsetenv("SERVICE_BINDING_ROOT"))
+					Expect(os.Unsetenv(libcnb.EnvServiceBindings))
 				})
 
 				it("creates bindings from path in SERVICE_BINDING_ROOT", func() {
@@ -308,17 +309,17 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			context("from environment or path", func() {
 				context("when SERVICE_BINDING_ROOT is defined but CNB_BINDINGS or the passed path does not exist", func() {
 					it.Before(func() {
-						Expect(os.Setenv("SERVICE_BINDING_ROOT", path))
-						Expect(os.Setenv("CNB_BINDINGS", "does not exist"))
+						Expect(os.Setenv(libcnb.EnvServiceBindings, path))
+						Expect(os.Setenv(libcnb.EnvCNBBindings, "does not exist"))
 					})
 
 					it.After(func() {
-						Expect(os.Unsetenv("SERVICE_BINDING_ROOT"))
-						Expect(os.Unsetenv("CNB_BINDINGS"))
+						Expect(os.Unsetenv(libcnb.EnvServiceBindings))
+						Expect(os.Unsetenv(libcnb.EnvCNBBindings))
 					})
 
 					it("creates bindings from path in SERVICE_BINDING_ROOT", func() {
-						Expect(libcnb.NewBindingsFromEnvOrPath("random-path-that-does-not-exist")).To(Equal(libcnb.Bindings{
+						Expect(libcnb.NewBindingsForBuild("random-path-that-does-not-exist")).To(Equal(libcnb.Bindings{
 							libcnb.Binding{
 								Name:     "alpha",
 								Path:     filepath.Join(path, "alpha"),
@@ -339,15 +340,15 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 				context("when CNB_BINDINGS is defined but the path does not exist", func() {
 					it.Before(func() {
-						Expect(os.Setenv("CNB_BINDINGS", path))
+						Expect(os.Setenv(libcnb.EnvCNBBindings, path))
 					})
 
 					it.After(func() {
-						Expect(os.Unsetenv("CNB_BINDINGS"))
+						Expect(os.Unsetenv(libcnb.EnvCNBBindings))
 					})
 
 					it("creates bindings from path in CNB_BINDINGS", func() {
-						Expect(libcnb.NewBindingsFromEnvOrPath("random-path-that-does-not-exist")).To(Equal(libcnb.Bindings{
+						Expect(libcnb.NewBindingsForBuild("random-path-that-does-not-exist")).To(Equal(libcnb.Bindings{
 							libcnb.Binding{
 								Name:     "alpha",
 								Path:     filepath.Join(path, "alpha"),
@@ -368,7 +369,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 				context("when SERVICE_BINDING_ROOT and CNB_BINDINGS is not defined but the path exists", func() {
 					it("creates bindings from the given path", func() {
-						Expect(libcnb.NewBindingsFromEnvOrPath(path)).To(Equal(libcnb.Bindings{
+						Expect(libcnb.NewBindingsForBuild(platformPath)).To(Equal(libcnb.Bindings{
 							libcnb.Binding{
 								Name:     "alpha",
 								Path:     filepath.Join(path, "alpha"),
@@ -389,7 +390,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 				context("when no valid binding variable is set", func() {
 					it("returns an an empty binding", func() {
-						Expect(libcnb.NewBindingsFromEnvOrPath("does-not-exist")).To(Equal(libcnb.Bindings{}))
+						Expect(libcnb.NewBindingsForBuild("does-not-exist")).To(Equal(libcnb.Bindings{}))
 					})
 				})
 

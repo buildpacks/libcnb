@@ -35,6 +35,18 @@ const (
 
 	// BindingType is the key for a binding's type.
 	BindingType = "type"
+
+	// EnvServiceBindings is the name of the environment variable that contains the path to service bindings directory.
+	//
+	// See the Service Binding Specification for Kubernetes for more details - https://k8s-service-bindings.github.io/spec/
+	EnvServiceBindings = "SERVICE_BINDING_ROOT"
+
+	// EnvCNBBindings is the name of the environment variable that contains the path to the CNB bindings directory. The CNB
+	// bindings spec will eventually by deprecated in favor of the Service Binding Specification for Kubernetes -
+	// https://github.com/buildpacks/rfcs/blob/main/text/0055-deprecate-service-bindings.md.
+	//
+	// See the CNB bindings extension spec for more details - https://github.com/buildpacks/spec/blob/main/extensions/bindings.md
+	EnvCNBBindings = "CNB_BINDINGS"
 )
 
 // Binding is a projection of metadata about an external entity to be bound to.
@@ -134,13 +146,20 @@ type Bindings []Binding
 
 // NewBindingsFromEnvironment creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
 // or $CNB_BINDINGS if it does not exist.  If neither is defined, returns an empty collection of Bindings.
+// Note - This API is deprecated. Please use NewBindingsForLaunch instead.
 func NewBindingsFromEnvironment() (Bindings, error) {
-	if path, ok := os.LookupEnv("SERVICE_BINDING_ROOT"); ok {
+	return NewBindingsForLaunch()
+}
+
+// NewBindingsForLaunch creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
+// or $CNB_BINDINGS if it does not exist.  If neither is defined, returns an empty collection of Bindings.
+func NewBindingsForLaunch() (Bindings, error) {
+	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
 		return NewBindingsFromPath(path)
 	}
 
 	// TODO: Remove as CNB_BINDINGS ages out
-	if path, ok := os.LookupEnv("CNB_BINDINGS"); ok {
+	if path, ok := os.LookupEnv(EnvCNBBindings); ok {
 		return NewBindingsFromPath(path)
 	}
 
@@ -167,19 +186,18 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 	return bindings, nil
 }
 
-// NewBindingsFromEnvOrPath creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
-// or $CNB_BINDINGS if it does not exist.  If neither is defined, it defaults to using the given path.
-func NewBindingsFromEnvOrPath(path string) (Bindings, error) {
-	if path, ok := os.LookupEnv("SERVICE_BINDING_ROOT"); ok {
+// NewBindingsForBuild creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
+// or $CNB_BINDINGS if it does not exist.  If neither is defined, bindings are read from <platform>/bindings, the default
+// path defined in the CNB Binding extension specification.
+func NewBindingsForBuild(platformDir string) (Bindings, error) {
+	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
 		return NewBindingsFromPath(path)
 	}
-
 	// TODO: Remove as CNB_BINDINGS ages out
-	if path, ok := os.LookupEnv("CNB_BINDINGS"); ok {
+	if path, ok := os.LookupEnv(EnvCNBBindings); ok {
 		return NewBindingsFromPath(path)
 	}
-
-	return NewBindingsFromPath(path)
+	return NewBindingsFromPath(filepath.Join(platformDir, "bindings"))
 }
 
 // Platform is the contents of the platform directory.
