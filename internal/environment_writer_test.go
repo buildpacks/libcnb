@@ -41,8 +41,6 @@ func testEnvironmentWriter(t *testing.T, context spec.G, it spec.S) {
 		path, err = ioutil.TempDir("", "environment-writer")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.RemoveAll(path)).To(Succeed())
-
-		writer = internal.EnvironmentWriter{}
 	})
 
 	it.After(func() {

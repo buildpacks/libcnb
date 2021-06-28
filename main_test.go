@@ -86,7 +86,7 @@ mixins = ["test-name"]
 [metadata]
 test-key = "test-value"
 `),
-			0644),
+			0600),
 		).To(Succeed())
 
 		f, err := ioutil.TempFile("", "main-buildpackplan-path")
@@ -103,7 +103,7 @@ version = "test-version"
 [entries.metadata]
 test-key = "test-value"
 `),
-			0644),
+			0600),
 		).To(Succeed())
 
 		f, err = ioutil.TempFile("", "main-buildplan-path")
@@ -129,7 +129,7 @@ test-key = "test-value"
 [metadata]
 test-key = "test-value"
 `),
-			0644),
+			0600),
 		).To(Succeed())
 
 		platformPath, err = ioutil.TempDir("", "main-platform-path")
@@ -139,17 +139,17 @@ test-key = "test-value"
 		Expect(ioutil.WriteFile(
 			filepath.Join(platformPath, "bindings", "alpha", "metadata", "test-metadata-key"),
 			[]byte("test-metadata-value"),
-			0644,
+			0600,
 		)).To(Succeed())
 		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha", "secret"), 0755)).To(Succeed())
 		Expect(ioutil.WriteFile(
 			filepath.Join(platformPath, "bindings", "alpha", "secret", "test-secret-key"),
 			[]byte("test-secret-value"),
-			0644,
+			0600,
 		)).To(Succeed())
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "env"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0644)).
+		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
 			To(Succeed())
 
 		tomlWriter = &mocks.TOMLWriter{}
@@ -239,5 +239,4 @@ test-key = "test-value"
 
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unsupported command test-command"))
 	})
-
 }

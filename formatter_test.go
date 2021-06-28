@@ -115,7 +115,5 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(libcnb.PlatformFormatter(plat).String()).To(Equal("Platform contents: [. test-file]"))
 		})
-
 	})
-
 }
