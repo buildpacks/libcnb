@@ -7,17 +7,16 @@ linters:
     - bodyclose
     - deadcode
     - dogsled
+    - exportloopref
     - gocritic
     - goimports
-    - golint
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - maligned
     - misspell
     - nakedret
-    - scopelint
+    - revive
     - staticcheck
     - structcheck
     - stylecheck
