@@ -55,7 +55,7 @@ func testConfigMap(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("loads the ConfigMap from a directory", func() {
-		Expect(ioutil.WriteFile(filepath.Join(path, "test-key"), []byte("test-value"), 0644)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(path, "test-key"), []byte("test-value"), 0600)).To(Succeed())
 
 		cm, err := internal.NewConfigMapFromPath(path)
 		Expect(err).NotTo(HaveOccurred())
@@ -69,7 +69,7 @@ func testConfigMap(t *testing.T, context spec.G, it spec.S) {
 		Expect(ioutil.WriteFile(
 			filepath.Join(path, ".hidden", "test-key"),
 			[]byte("test-value"),
-			0644,
+			0600,
 		)).To(Succeed())
 		Expect(os.Symlink(
 			filepath.Join(".hidden", "test-key"),
@@ -82,7 +82,7 @@ func testConfigMap(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("ignores hidden files", func() {
-		Expect(ioutil.WriteFile(filepath.Join(path, ".hidden-key"), []byte("hidden-value"), 0644)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(path, ".hidden-key"), []byte("hidden-value"), 0600)).To(Succeed())
 
 		cm, err := internal.NewConfigMapFromPath(path)
 		Expect(err).NotTo(HaveOccurred())

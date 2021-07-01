@@ -108,7 +108,7 @@ test-key = "test-value"
 		err = buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.6"})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0644)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
 		f, err := ioutil.TempFile("", "build-buildpackplan-path")
 		Expect(err).NotTo(HaveOccurred())
@@ -124,7 +124,7 @@ version = "test-version"
 [entries.metadata]
 test-key = "test-value"
 `),
-			0644),
+			0600),
 		).To(Succeed())
 
 		commandPath = filepath.Join("bin", "build")
@@ -145,7 +145,7 @@ test-key = "test-value"
 [metadata]
 test-key = "test-value"
 `),
-			0644),
+			0600),
 		).To(Succeed())
 
 		platformPath, err = ioutil.TempDir("", "build-platform-path")
@@ -153,10 +153,10 @@ test-key = "test-value"
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha"), 0755)).To(Succeed())
 		Expect(ioutil.WriteFile(filepath.Join(platformPath, "bindings", "alpha", "test-secret-key"),
-			[]byte("test-secret-value"), 0644)).To(Succeed())
+			[]byte("test-secret-value"), 0600)).To(Succeed())
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "env"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0644)).
+		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
 			To(Succeed())
 
 		tomlWriter = &mocks.TOMLWriter{}
@@ -192,7 +192,7 @@ id = "test-id"
 name = "test-name"
 version = "1.1.1"
 `),
-				0644),
+				0600),
 			).To(Succeed())
 		})
 
@@ -404,7 +404,7 @@ version = "1.1.1"
 		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.5"})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0644)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
 		layer := libcnb.Layer{
 			Name: "test-name",
@@ -561,9 +561,9 @@ version = "1.1.1"
 	})
 
 	it("removes stale layers", func() {
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "alpha.toml"), []byte(""), 0644)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "bravo.toml"), []byte(""), 0644)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "store.toml"), []byte(""), 0644)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(layersPath, "alpha.toml"), []byte(""), 0600)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(layersPath, "bravo.toml"), []byte(""), 0600)).To(Succeed())
+		Expect(ioutil.WriteFile(filepath.Join(layersPath, "store.toml"), []byte(""), 0600)).To(Succeed())
 
 		layer := libcnb.Layer{Name: "alpha"}
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)

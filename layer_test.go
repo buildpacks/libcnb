@@ -82,7 +82,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("Layers", func() {
-
 		it.Before(func() {
 			var err error
 			path, err = ioutil.TempDir("", "layers")
@@ -121,7 +120,7 @@ build = false
 [metadata]
 test-key = "test-value"
 		`),
-				0644),
+				0600),
 			).To(Succeed())
 
 			l, err := layers.Layer("test-name")
@@ -143,7 +142,7 @@ build = false
 [metadata]
 test-key = "test-value"
 		`),
-				0644),
+				0600),
 			).To(Succeed())
 
 			l, err := layers.Layer("test-name")
@@ -166,7 +165,7 @@ cache = false
 [metadata]
 test-key = "test-value"
 		`),
-				0644),
+				0600),
 			).To(Succeed())
 
 			l, err := layers.Layer("test-name")

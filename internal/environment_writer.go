@@ -38,6 +38,7 @@ func (w EnvironmentWriter) Write(path string, environment map[string]string) err
 
 	for key, value := range environment {
 		f := filepath.Join(path, key)
+		// #nosec
 		if err := ioutil.WriteFile(f, []byte(value), 0644); err != nil {
 			return fmt.Errorf("unable to write file %s\n%w", f, err)
 		}

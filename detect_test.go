@@ -86,7 +86,7 @@ mixins = ["test-name"]
 [metadata]
 test-key = "test-value"
 `),
-			0644),
+			0600),
 		).To(Succeed())
 
 		f, err := ioutil.TempFile("", "detect-buildplan-path")
@@ -108,10 +108,10 @@ test-key = "test-value"
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha"), 0755)).To(Succeed())
 		Expect(ioutil.WriteFile(filepath.Join(platformPath, "bindings", "alpha", "test-secret-key"),
-			[]byte("test-secret-value"), 0644)).To(Succeed())
+			[]byte("test-secret-value"), 0600)).To(Succeed())
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "env"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0644)).
+		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
 			To(Succeed())
 
 		tomlWriter = &mocks.TOMLWriter{}
@@ -146,7 +146,7 @@ id = "test-id"
 name = "test-name"
 version = "1.1.1"
 `),
-				0644),
+				0600),
 			).To(Succeed())
 		})
 

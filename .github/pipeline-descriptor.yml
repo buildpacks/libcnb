@@ -5,3 +5,22 @@ github:
 codeowners:
 - path:  "*"
   owner: "@buildpacks/implementation-maintainers"
+
+test:
+  steps:
+  - name: Install richgo
+    run: |
+      #!/usr/bin/env bash
+
+      set -euo pipefail
+
+      GO111MODULE=on go get -u -ldflags="-s -w" github.com/kyoh86/richgo
+  - name: Run Tests
+    run: |
+      #!/usr/bin/env bash
+
+      set -euo pipefail
+
+      GOCMD=richgo make
+    env:
+      RICHGO_FORCE_COLOR: "1"

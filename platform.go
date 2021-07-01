@@ -41,11 +41,10 @@ const (
 	// See the Service Binding Specification for Kubernetes for more details - https://k8s-service-bindings.github.io/spec/
 	EnvServiceBindings = "SERVICE_BINDING_ROOT"
 
-	// EnvCNBBindings is the name of the environment variable that contains the path to the CNB bindings directory. The CNB
-	// bindings spec will eventually by deprecated in favor of the Service Binding Specification for Kubernetes -
-	// https://github.com/buildpacks/rfcs/blob/main/text/0055-deprecate-service-bindings.md.
-	//
+	// EnvCNBBindings is the name of the environment variable that contains the path to the CNB bindings directory.
 	// See the CNB bindings extension spec for more details - https://github.com/buildpacks/spec/blob/main/extensions/bindings.md
+	// Deprecated: Use the Service Binding Specification for Kubernetes instead -
+	// https://github.com/buildpacks/rfcs/blob/main/text/0055-deprecate-service-bindings.md.
 	EnvCNBBindings = "CNB_BINDINGS"
 )
 
@@ -115,7 +114,7 @@ func NewBindingFromPath(path string) (Binding, error) {
 
 func (b Binding) String() string {
 	var s []string
-	for k, _ := range b.Secret {
+	for k := range b.Secret {
 		s = append(s, k)
 	}
 	sort.Strings(s)

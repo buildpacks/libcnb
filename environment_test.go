@@ -140,5 +140,4 @@ func testEnvironment(t *testing.T, context spec.G, it spec.S) {
 			filepath.Join("test-process", "TEST_NAME.prepend"): "test-value",
 		}))
 	})
-
 }
