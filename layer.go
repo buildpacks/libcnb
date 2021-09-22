@@ -112,18 +112,6 @@ type LayerTypes struct {
 	Launch bool `toml:"launch"`
 }
 
-//go:generate mockery -name LayerContributor -case=underscore
-
-// LayerContributor is an interface for types that create layers.
-type LayerContributor interface {
-
-	// Contribute accepts a layer and transforms it, returning a layer.
-	Contribute(layer Layer) (Layer, error)
-
-	// Name is the name of the layer.
-	Name() string
-}
-
 // Layers represents the layers part of the specification.
 type Layers struct {
 
