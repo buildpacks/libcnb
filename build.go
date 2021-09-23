@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -183,7 +184,6 @@ func Build(builder Builder, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", ctx.Platform.Path, err))
 		return
 	}
-	logger.Debugf("Platform Bindings: %+v", ctx.Platform.Bindings)
 
 	file = filepath.Join(ctx.Platform.Path, "env")
 	if ctx.Platform.Environment, err = internal.NewConfigMapFromPath(file); err != nil {
@@ -363,6 +363,34 @@ func Build(builder Builder, options ...Option) {
 			config.exitHandler.Error(fmt.Errorf("unable to write persistent metadata %s\n%w", file, err))
 			return
 		}
+	}
+	logBindings(ctx.Platform.Bindings, logger)
+}
+
+func logBindings(bindings Bindings, logger poet.Logger) {
+	numBindings := len(bindings)
+	if numBindings > 0 {
+		if numBindings == 1 {
+			logger.Info("\n1 Binding Identified:")
+		} else {
+			logger.Infof("\n%d Bindings Identified:", numBindings)
+		}
+		var s []string
+		for _, binding := range bindings {
+			for k := range binding.Secret {
+				s = append(s, k)
+			}
+			sort.Strings(s)
+			logger.Infof("  Name: %s", binding.Name)
+			if len(s) > 0 {
+				logger.Infof("    Keys: %s", strings.Join(s, ", "))
+			} else {
+				logger.Infof("    Keys: None")
+			}
+			s = nil
+		}
+	} else {
+		logger.Infof("No Platform Bindings Identified")
 	}
 }
 
