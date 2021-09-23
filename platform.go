@@ -174,6 +174,10 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 
 	bindings := Bindings{}
 	for _, file := range files {
+		if strings.HasPrefix(filepath.Base(file), ".") {
+			// ignore hidden files
+			continue
+		}
 		binding, err := NewBindingFromPath(file)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create new binding from %s\n%w", file, err)
