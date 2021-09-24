@@ -90,7 +90,7 @@ type BuildTOML struct {
 }
 
 func (b BuildTOML) isEmpty() bool {
-	return len(b.Unmet) == 0
+	return len(b.BOM) == 0 && len(b.Unmet) == 0
 }
 
 // BOMEntry contains a bill of materials entry.
