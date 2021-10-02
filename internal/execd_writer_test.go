@@ -14,24 +14,42 @@
  * limitations under the License.
  */
 
-package libcnb_test
+package internal_test
 
 import (
+	"bytes"
 	"testing"
 
+	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
-	"github.com/sclevine/spec/report"
+
+	"github.com/buildpacks/libcnb/internal"
 )
 
-func TestUnit(t *testing.T) {
-	suite := spec.New("libcnb", spec.Report(report.Terminal{}))
-	suite("Build", testBuild)
-	suite("Detect", testDetect)
-	suite("Environment", testEnvironment)
-	suite("Formatter", testFormatter)
-	suite("Layer", testLayer)
-	suite("Main", testMain)
-	suite("Platform", testPlatform)
-	suite("ExecD", testExecD)
-	suite.Run(t)
+func testExecDWriter(t *testing.T, context spec.G, it spec.S) {
+	var (
+		Expect = NewWithT(t).Expect
+
+		b      *bytes.Buffer
+		writer internal.ExecDWriter
+	)
+
+	it.Before(func() {
+		b = bytes.NewBuffer([]byte{})
+
+		writer = internal.NewExecDWriter(
+			internal.WithExecDOutputWriter(b),
+		)
+	})
+
+	it("writes the correct set of values", func() {
+		env := map[string]string{
+			"test":  "test",
+			"test2": "te∆t",
+		}
+		Expect(writer.Write(env)).To(BeNil())
+		Expect(b.String()).To(internal.MatchTOML(`
+			test = "test"
+			test2 = "te∆t"`))
+	})
 }
