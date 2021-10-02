@@ -112,7 +112,7 @@ type LayerTypes struct {
 	Launch bool `toml:"launch"`
 }
 
-//go:generate mockery -name LayerContributor -case=underscore
+//go:generate mockery --name LayerContributor --case=underscore
 
 // LayerContributor is an interface for types that create layers.
 type LayerContributor interface {
