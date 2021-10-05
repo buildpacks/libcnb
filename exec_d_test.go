@@ -46,7 +46,7 @@ func testExecD(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("encounters the wrong number of arguments", func() {
-		libcnb.ExecD(map[string]libcnb.Executor{},
+		libcnb.RunExecD(map[string]libcnb.ExecD{},
 			libcnb.WithArguments([]string{}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -55,7 +55,7 @@ func testExecD(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("encounters an unsupported execd binary name", func() {
-		libcnb.ExecD(map[string]libcnb.Executor{},
+		libcnb.RunExecD(map[string]libcnb.ExecD{},
 			libcnb.WithArguments([]string{"/dne"}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -63,27 +63,27 @@ func testExecD(t *testing.T, context spec.G, it spec.S) {
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unsupported command dne"))
 	})
 
-	it("calls the appropriate executor for a given execd binary", func() {
-		executor1 := &mocks.Executor{}
-		executor2 := &mocks.Executor{}
-		executor1.On("Execute", mock.Anything).Return(map[string]string{}, nil)
+	it("calls the appropriate execd for a given execd invoker binary", func() {
+		execd1 := &mocks.ExecD{}
+		execd2 := &mocks.ExecD{}
+		execd1.On("Execute", mock.Anything).Return(map[string]string{}, nil)
 
-		libcnb.ExecD(map[string]libcnb.Executor{"executor1": executor1, "executor2": executor2},
-			libcnb.WithArguments([]string{"executor1"}),
+		libcnb.RunExecD(map[string]libcnb.ExecD{"execd1": execd1, "execd2": execd2},
+			libcnb.WithArguments([]string{"execd1"}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithExecDWriter(execdWriter),
 		)
 
-		Expect(executor1.Calls).To(HaveLen(1))
-		Expect(executor2.Calls).To(BeEmpty())
+		Expect(execd1.Calls).To(HaveLen(1))
+		Expect(execd2.Calls).To(BeEmpty())
 	})
 
-	it("calls exitHandler with the error from the executor", func() {
-		e := &mocks.Executor{}
+	it("calls exitHandler with the error from the execd", func() {
+		e := &mocks.ExecD{}
 		err := fmt.Errorf("example error")
 		e.On("Execute", mock.Anything).Return(nil, err)
 
-		libcnb.ExecD(map[string]libcnb.Executor{"e": e},
+		libcnb.RunExecD(map[string]libcnb.ExecD{"e": e},
 			libcnb.WithArguments([]string{"/bin/e"}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithExecDWriter(execdWriter),
@@ -95,11 +95,11 @@ func testExecD(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("calls execdWriter.write with the appropriate input", func() {
-		e := &mocks.Executor{}
+		e := &mocks.ExecD{}
 		o := map[string]string{"test": "test"}
 		e.On("Execute", mock.Anything).Return(o, nil)
 
-		libcnb.ExecD(map[string]libcnb.Executor{"e": e},
+		libcnb.RunExecD(map[string]libcnb.ExecD{"e": e},
 			libcnb.WithArguments([]string{"/bin/e"}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithExecDWriter(execdWriter),
@@ -112,12 +112,12 @@ func testExecD(t *testing.T, context spec.G, it spec.S) {
 		Expect(execdWriter.Calls[0].Arguments[0]).To(Equal(o))
 	})
 
-	it("calls exitHandler with the error from the executor", func() {
-		e := &mocks.Executor{}
+	it("calls exitHandler with the error from the execd", func() {
+		e := &mocks.ExecD{}
 		err := fmt.Errorf("example error")
 		e.On("Execute", mock.Anything).Return(nil, err)
 
-		libcnb.ExecD(map[string]libcnb.Executor{"e": e},
+		libcnb.RunExecD(map[string]libcnb.ExecD{"e": e},
 			libcnb.WithArguments([]string{"/bin/e"}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithExecDWriter(execdWriter),
