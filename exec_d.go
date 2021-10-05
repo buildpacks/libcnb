@@ -24,17 +24,17 @@ import (
 	"github.com/buildpacks/libcnb/internal"
 )
 
-//go:generate mockery --name Executor --case=underscore
+//go:generate mockery --name ExecD --case=underscore
 
-// Executor describes an interface for types that follow the Exec.d specification.
+// ExecD describes an interface for types that follow the Exec.d specification.
 // It should return a map of environment variables and their values as output.
-type Executor interface {
+type ExecD interface {
 	Execute() (map[string]string, error)
 }
 
-// ExecD is called by the main function of a buildpack's execd binary, encompassing multiple execd
+// RunExecD is called by the main function of a buildpack's execd binary, encompassing multiple execd
 // executors in one binary.
-func ExecD(executors map[string]Executor, options ...Option) {
+func RunExecD(execDMap map[string]ExecD, options ...Option) {
 	config := Config{
 		arguments:   os.Args,
 		execdWriter: internal.NewExecDWriter(),
@@ -52,7 +52,7 @@ func ExecD(executors map[string]Executor, options ...Option) {
 	}
 
 	c := filepath.Base(config.arguments[0])
-	e, ok := executors[c]
+	e, ok := execDMap[c]
 	if !ok {
 		config.exitHandler.Error(fmt.Errorf("unsupported command %s", c))
 		return
