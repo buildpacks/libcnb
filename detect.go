@@ -55,7 +55,7 @@ type DetectResult struct {
 	Plans []BuildPlan
 }
 
-//go:generate mockery -name Detector -case=underscore
+//go:generate mockery --name Detector --case=underscore
 
 // Detector describes an interface for types that can be used by the Detect function.
 type Detector interface {

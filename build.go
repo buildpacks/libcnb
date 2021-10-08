@@ -105,7 +105,7 @@ func (b BuildResult) String() string {
 	)
 }
 
-//go:generate mockery -name Builder -case=underscore
+//go:generate mockery --name=Builder --case=underscore
 
 // Builder describes an interface for types that can be used by the Build function.
 type Builder interface {
