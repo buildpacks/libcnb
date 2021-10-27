@@ -105,17 +105,11 @@ func (b BuildResult) String() string {
 	)
 }
 
-//go:generate mockery -name Builder -case=underscore
-
-// Builder describes an interface for types that can be used by the Build function.
-type Builder interface {
-
-	// Build takes a context and returns a result, performing buildpack build behaviors.
-	Build(context BuildContext) (BuildResult, error)
-}
+// BuildFunc takes a context and returns a result, performing buildpack build behaviors.
+type BuildFunc func(context BuildContext) (BuildResult, error)
 
 // Build is called by the main function of a buildpack, for build.
-func Build(builder Builder, options ...Option) {
+func Build(build BuildFunc, options ...Option) {
 	config := Config{
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
@@ -214,7 +208,7 @@ func Build(builder Builder, options ...Option) {
 	}
 	logger.Debugf("Stack: %s", ctx.StackID)
 
-	result, err := builder.Build(ctx)
+	result, err := build(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return
@@ -326,15 +320,15 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
-	build := BuildTOML{
+	buildTOML := BuildTOML{
 		Unmet: result.Unmet,
 		BOM:   buildBOM,
 	}
 
-	if !build.isEmpty() {
+	if !buildTOML.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "build.toml")
 		logger.Debugf("Writing build metadata: %s <= %+v", file, build)
-		if err = config.tomlWriter.Write(file, build); err != nil {
+		if err = config.tomlWriter.Write(file, buildTOML); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write build metadata %s\n%w", file, err))
 			return
 		}

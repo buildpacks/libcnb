@@ -57,15 +57,11 @@ type DetectResult struct {
 
 //go:generate mockery -name Detector -case=underscore
 
-// Detector describes an interface for types that can be used by the Detect function.
-type Detector interface {
-
-	// Detect takes a context and returns a result, performing buildpack detect behaviors.
-	Detect(context DetectContext) (DetectResult, error)
-}
+// DetectFunc takes a context and returns a result, performing buildpack detect behaviors.
+type DetectFunc func(context DetectContext) (DetectResult, error)
 
 // Detect is called by the main function of a buildpack, for detection.
-func Detect(detector Detector, options ...Option) {
+func Detect(detect DetectFunc, options ...Option) {
 	config := Config{
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
@@ -146,7 +142,7 @@ func Detect(detector Detector, options ...Option) {
 	}
 	logger.Debugf("Stack: %s", ctx.StackID)
 
-	result, err := detector.Detect(ctx)
+	result, err := detect(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return

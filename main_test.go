@@ -35,11 +35,11 @@ func testMain(t *testing.T, context spec.G, it spec.S) {
 		Expect = NewWithT(t).Expect
 
 		applicationPath   string
-		builder           *mocks.Builder
+		buildFunc         libcnb.BuildFunc
 		buildpackPath     string
 		buildpackPlanPath string
 		buildPlanPath     string
-		detector          *mocks.Detector
+		detectFunc        libcnb.DetectFunc
 		environmentWriter *mocks.EnvironmentWriter
 		exitHandler       *mocks.ExitHandler
 		layersPath        string
@@ -57,7 +57,9 @@ func testMain(t *testing.T, context spec.G, it spec.S) {
 		applicationPath, err = filepath.EvalSymlinks(applicationPath)
 		Expect(err).NotTo(HaveOccurred())
 
-		builder = &mocks.Builder{}
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.NewBuildResult(), nil
+		}
 
 		buildpackPath, err = ioutil.TempDir("", "main-buildpack-path")
 		Expect(err).NotTo(HaveOccurred())
@@ -111,7 +113,9 @@ test-key = "test-value"
 		Expect(f.Close()).NotTo(HaveOccurred())
 		buildPlanPath = f.Name()
 
-		detector = &mocks.Detector{}
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+			return libcnb.DetectResult{}, nil
+		}
 
 		environmentWriter = &mocks.EnvironmentWriter{}
 		environmentWriter.On("Write", mock.Anything, mock.Anything).Return(nil)
@@ -175,7 +179,7 @@ test-key = "test-value"
 	})
 
 	it("encounters the wrong number of arguments", func() {
-		libcnb.Main(detector, builder,
+		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -184,10 +188,9 @@ test-key = "test-value"
 	})
 
 	it("calls builder for build command", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 		commandPath := filepath.Join("bin", "build")
 
-		libcnb.Main(detector, builder,
+		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -196,20 +199,24 @@ test-key = "test-value"
 	})
 
 	it("calls detector for detect command", func() {
-		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: true}, nil)
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+			return libcnb.DetectResult{Pass: true}, nil
+		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detector, builder,
+		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
 	})
 
 	it("calls exitHandler.Pass() on detection pass", func() {
-		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: true}, nil)
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+			return libcnb.DetectResult{Pass: true}, nil
+		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detector, builder,
+		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -218,10 +225,12 @@ test-key = "test-value"
 	})
 
 	it("calls exitHandler.Fail() on detection fail", func() {
-		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{Pass: false}, nil)
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+			return libcnb.DetectResult{Pass: false}, nil
+		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detector, builder,
+		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -232,7 +241,7 @@ test-key = "test-value"
 	it("encounters an unknown command", func() {
 		commandPath := filepath.Join("bin", "test-command")
 
-		libcnb.Main(detector, builder,
+		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)

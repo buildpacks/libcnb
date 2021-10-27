@@ -25,7 +25,7 @@ import (
 )
 
 // Main is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
-func Main(detector Detector, builder Builder, options ...Option) {
+func Main(detect DetectFunc, build BuildFunc, options ...Option) {
 	config := Config{
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
@@ -44,9 +44,9 @@ func Main(detector Detector, builder Builder, options ...Option) {
 
 	switch c := filepath.Base(config.arguments[0]); c {
 	case "build":
-		Build(builder, options...)
+		Build(build, options...)
 	case "detect":
-		Detect(detector, options...)
+		Detect(detect, options...)
 	default:
 		config.exitHandler.Error(fmt.Errorf("unsupported command %s", c))
 		return

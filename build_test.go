@@ -18,7 +18,7 @@ package libcnb_test
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -38,8 +38,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
+		buildFunc         libcnb.BuildFunc
 		applicationPath   string
-		builder           *mocks.Builder
 		buildpackPath     string
 		buildpackPlanPath string
 		bpTOMLContents    string
@@ -55,14 +55,15 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		var err error
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.NewBuildResult(), nil
+		}
 
+		var err error
 		applicationPath, err = ioutil.TempDir("", "build-application-path")
 		Expect(err).NotTo(HaveOccurred())
 		applicationPath, err = filepath.EvalSymlinks(applicationPath)
 		Expect(err).NotTo(HaveOccurred())
-
-		builder = &mocks.Builder{}
 
 		buildpackPath, err = ioutil.TempDir("", "build-buildpack-path")
 		Expect(err).NotTo(HaveOccurred())
@@ -194,7 +195,7 @@ version = "1.1.1"
 		})
 
 		it("fails", func() {
-			libcnb.Build(builder,
+			libcnb.Build(buildFunc,
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -206,9 +207,7 @@ version = "1.1.1"
 	})
 
 	it("encounters the wrong number of arguments", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
-
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -218,9 +217,8 @@ version = "1.1.1"
 
 	it("doesn't receive CNB_STACK_ID", func() {
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -229,13 +227,16 @@ version = "1.1.1"
 	})
 
 	it("creates context", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
+		var ctx libcnb.BuildContext
+		buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+			ctx = context
+			return libcnb.NewBuildResult(), nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 		)
 
-		ctx := builder.Calls[0].Arguments[0].(libcnb.BuildContext)
 		Expect(ctx.Application).To(Equal(libcnb.Application{Path: applicationPath}))
 		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
 			API: "0.6",
@@ -291,21 +292,25 @@ version = "1.1.1"
 	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
+		var ctx libcnb.BuildContext
+		buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+			ctx = context
+			return libcnb.NewBuildResult(), nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), layersPath, platformPath, buildpackPlanPath}),
 		)
-
-		ctx := builder.Calls[0].Arguments[0].(libcnb.BuildContext)
 
 		Expect(ctx.Buildpack.Path).To(Equal(buildpackPath))
 	})
 
 	it("handles error from BuildFunc", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), fmt.Errorf("test-error"))
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.NewBuildResult(), errors.New("test-error")
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -314,12 +319,13 @@ version = "1.1.1"
 	})
 
 	it("writes env.build", func() {
-		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), BuildEnvironment: libcnb.Environment{}}
-		layer.BuildEnvironment.Defaultf("test-build", "test-%s", "value")
-		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
-		builder.On("Build", mock.Anything).Return(result, nil)
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), BuildEnvironment: libcnb.Environment{}}
+			layer.BuildEnvironment.Defaultf("test-build", "test-%s", "value")
+			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
 		)
@@ -329,12 +335,13 @@ version = "1.1.1"
 	})
 
 	it("writes env.launch", func() {
-		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), LaunchEnvironment: libcnb.Environment{}}
-		layer.LaunchEnvironment.Defaultf("test-launch", "test-%s", "value")
-		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
-		builder.On("Build", mock.Anything).Return(result, nil)
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), LaunchEnvironment: libcnb.Environment{}}
+			layer.LaunchEnvironment.Defaultf("test-launch", "test-%s", "value")
+			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
 		)
@@ -344,13 +351,13 @@ version = "1.1.1"
 	})
 
 	it("writes env", func() {
-		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), SharedEnvironment: libcnb.Environment{}}
-		layer.SharedEnvironment.Defaultf("test-shared", "test-%s", "value")
-		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
-		builder.On("Build", mock.Anything).Return(result, nil)
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), SharedEnvironment: libcnb.Environment{}}
+			layer.SharedEnvironment.Defaultf("test-shared", "test-%s", "value")
+			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
+		}
 
-		libcnb.Build(builder,
-
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
 		)
@@ -360,12 +367,13 @@ version = "1.1.1"
 	})
 
 	it("writes profile.d", func() {
-		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), Profile: libcnb.Profile{}}
-		layer.Profile.Addf("test-profile", "test-%s", "value")
-		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
-		builder.On("Build", mock.Anything).Return(result, nil)
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), Profile: libcnb.Profile{}}
+			layer.Profile.Addf("test-profile", "test-%s", "value")
+			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
 		)
@@ -381,20 +389,21 @@ version = "1.1.1"
 
 		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
-		layer := libcnb.Layer{
-			Name: "test-name",
-			Path: filepath.Join(layersPath, "test-name"),
-			LayerTypes: libcnb.LayerTypes{
-				Build:  true,
-				Cache:  true,
-				Launch: true,
-			},
-			Metadata: map[string]interface{}{"test-key": "test-value"},
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			layer := libcnb.Layer{
+				Name: "test-name",
+				Path: filepath.Join(layersPath, "test-name"),
+				LayerTypes: libcnb.LayerTypes{
+					Build:  true,
+					Cache:  true,
+					Launch: true,
+				},
+				Metadata: map[string]interface{}{"test-key": "test-value"},
+			}
+			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
 		}
-		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
-		builder.On("Build", mock.Anything).Return(result, nil)
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -410,20 +419,21 @@ version = "1.1.1"
 	})
 
 	it("writes 0.6 layer metadata", func() {
-		layer := libcnb.Layer{
-			Name: "test-name",
-			Path: filepath.Join(layersPath, "test-name"),
-			LayerTypes: libcnb.LayerTypes{
-				Build:  true,
-				Cache:  true,
-				Launch: true,
-			},
-			Metadata: map[string]interface{}{"test-key": "test-value"},
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			layer := libcnb.Layer{
+				Name: "test-name",
+				Path: filepath.Join(layersPath, "test-name"),
+				LayerTypes: libcnb.LayerTypes{
+					Build:  true,
+					Cache:  true,
+					Launch: true,
+				},
+				Metadata: map[string]interface{}{"test-key": "test-value"},
+			}
+			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
 		}
-		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
-		builder.On("Build", mock.Anything).Return(result, nil)
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -439,39 +449,41 @@ version = "1.1.1"
 	})
 
 	it("writes launch.toml", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
-			BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
-				{
-					Name:     "test-launch-bom-entry",
-					Metadata: map[string]interface{}{"test-key": "test-value"},
-					Launch:   true,
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{
+				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
+					{
+						Name:     "test-launch-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Launch:   true,
+					},
+					{
+						Name:     "test-build-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+					},
+				}},
+				Labels: []libcnb.Label{
+					{
+						Key:   "test-key",
+						Value: "test-value",
+					},
 				},
-				{
-					Name:     "test-build-bom-entry",
-					Metadata: map[string]interface{}{"test-key": "test-value"},
+				Processes: []libcnb.Process{
+					{
+						Type:    "test-type",
+						Command: "test-command",
+						Default: true,
+					},
 				},
-			}},
-			Labels: []libcnb.Label{
-				{
-					Key:   "test-key",
-					Value: "test-value",
+				Slices: []libcnb.Slice{
+					{
+						Paths: []string{"test-path"},
+					},
 				},
-			},
-			Processes: []libcnb.Process{
-				{
-					Type:    "test-type",
-					Command: "test-command",
-					Default: true,
-				},
-			},
-			Slices: []libcnb.Slice{
-				{
-					Paths: []string{"test-path"},
-				},
-			},
-		}, nil)
+			}, nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -509,9 +521,11 @@ version = "1.1.1"
 	it("writes persistent metadata", func() {
 		m := map[string]interface{}{"test-key": "test-value"}
 
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{PersistentMetadata: m}, nil)
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{PersistentMetadata: m}, nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -521,9 +535,7 @@ version = "1.1.1"
 	})
 
 	it("does not write empty files", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
-
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -538,10 +550,11 @@ version = "1.1.1"
 
 		layer := libcnb.Layer{Name: "alpha"}
 
-		builder.On("Build", mock.Anything).
-			Return(libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil)
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -553,27 +566,29 @@ version = "1.1.1"
 	})
 
 	it("writes build.toml", func() {
-		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
-			BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
-				{
-					Name:     "test-build-bom-entry",
-					Metadata: map[string]interface{}{"test-key": "test-value"},
-					Build:    true,
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{
+				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
+					{
+						Name:     "test-build-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Build:    true,
+					},
+					{
+						Name:     "test-launch-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Build:    false,
+					},
+				}},
+				Unmet: []libcnb.UnmetPlanEntry{
+					{
+						Name: "test-entry",
+					},
 				},
-				{
-					Name:     "test-launch-bom-entry",
-					Metadata: map[string]interface{}{"test-key": "test-value"},
-					Build:    false,
-				},
-			}},
-			Unmet: []libcnb.UnmetPlanEntry{
-				{
-					Name: "test-entry",
-				},
-			},
-		}, nil)
+			}, nil
+		}
 
-		libcnb.Build(builder,
+		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
