@@ -46,7 +46,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		commandPath       string
 		environmentWriter *mocks.EnvironmentWriter
 		exitHandler       *mocks.ExitHandler
-		layerContributor  *mocks.LayerContributor
 		layersPath        string
 		platformPath      string
 		tomlWriter        *mocks.TOMLWriter
@@ -134,8 +133,6 @@ test-key = "test-value"
 
 		exitHandler = &mocks.ExitHandler{}
 		exitHandler.On("Error", mock.Anything)
-
-		layerContributor = &mocks.LayerContributor{}
 
 		layersPath, err = ioutil.TempDir("", "build-layers-path")
 		Expect(err).NotTo(HaveOccurred())
@@ -316,26 +313,10 @@ version = "1.1.1"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("test-error"))
 	})
 
-	it("calls layer contributor", func() {
-		layerContributor.On("Contribute", mock.Anything).Return(libcnb.Layer{}, nil)
-		layerContributor.On("Name").Return("test-name")
-		builder.On("Build", mock.Anything).
-			Return(libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}, nil)
-
-		libcnb.Build(builder,
-			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-			libcnb.WithTOMLWriter(tomlWriter),
-		)
-
-		Expect(layerContributor.Calls).To(HaveLen(2))
-	})
-
 	it("writes env.build", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), BuildEnvironment: libcnb.Environment{}}
 		layer.BuildEnvironment.Defaultf("test-build", "test-%s", "value")
-		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
-		layerContributor.On("Name").Return("test-name")
-		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
+		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
@@ -350,9 +331,7 @@ version = "1.1.1"
 	it("writes env.launch", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), LaunchEnvironment: libcnb.Environment{}}
 		layer.LaunchEnvironment.Defaultf("test-launch", "test-%s", "value")
-		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
-		layerContributor.On("Name").Return("test-name")
-		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
+		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
@@ -367,9 +346,7 @@ version = "1.1.1"
 	it("writes env", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), SharedEnvironment: libcnb.Environment{}}
 		layer.SharedEnvironment.Defaultf("test-shared", "test-%s", "value")
-		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
-		layerContributor.On("Name").Return("test-name")
-		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
+		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
@@ -385,9 +362,7 @@ version = "1.1.1"
 	it("writes profile.d", func() {
 		layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), Profile: libcnb.Profile{}}
 		layer.Profile.Addf("test-profile", "test-%s", "value")
-		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
-		layerContributor.On("Name").Return("test-name")
-		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
+		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
@@ -416,9 +391,7 @@ version = "1.1.1"
 			},
 			Metadata: map[string]interface{}{"test-key": "test-value"},
 		}
-		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
-		layerContributor.On("Name").Return("test-name")
-		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
+		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
@@ -447,9 +420,7 @@ version = "1.1.1"
 			},
 			Metadata: map[string]interface{}{"test-key": "test-value"},
 		}
-		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
-		layerContributor.On("Name").Return("test-name")
-		result := libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}
+		result := libcnb.BuildResult{Layers: []libcnb.Layer{layer}}
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
@@ -566,11 +537,9 @@ version = "1.1.1"
 		Expect(ioutil.WriteFile(filepath.Join(layersPath, "store.toml"), []byte(""), 0600)).To(Succeed())
 
 		layer := libcnb.Layer{Name: "alpha"}
-		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
-		layerContributor.On("Name").Return("alpha")
 
 		builder.On("Build", mock.Anything).
-			Return(libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}, nil)
+			Return(libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil)
 
 		libcnb.Build(builder,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),

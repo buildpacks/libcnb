@@ -64,7 +64,7 @@ type BuildResult struct {
 	Labels []Label
 
 	// Layers is the collection of LayerCreators contributed by the buildpack.
-	Layers []LayerContributor
+	Layers []Layer
 
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
 	PersistentMetadata map[string]interface{}
@@ -229,20 +229,7 @@ func Build(builder Builder, options ...Option) {
 	}
 	var contributed []string
 
-	for _, creator := range result.Layers {
-		name := creator.Name()
-		layer, err := ctx.Layers.Layer(name)
-		if err != nil {
-			config.exitHandler.Error(fmt.Errorf("unable to create layer %s\n%w", name, err))
-			return
-		}
-
-		layer, err = creator.Contribute(layer)
-		if err != nil {
-			config.exitHandler.Error(fmt.Errorf("unable to invoke layer creator\n%w", err))
-			return
-		}
-
+	for _, layer := range result.Layers {
 		file = filepath.Join(layer.Path, "env.build")
 		logger.Debugf("Writing layer env.build: %s <= %+v", file, layer.BuildEnvironment)
 		if err = config.environmentWriter.Write(file, layer.BuildEnvironment); err != nil {
