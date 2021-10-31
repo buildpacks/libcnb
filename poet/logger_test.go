@@ -64,6 +64,21 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		})
 	})
 
+	context("with BP_LOG_LEVEL set to DEBUG", func() {
+		it.Before(func() {
+			Expect(os.Setenv("BP_LOG_LEVEL", "DEBUG")).To(Succeed())
+			l = poet.NewLogger(b)
+		})
+
+		it.After(func() {
+			Expect(os.Unsetenv("BP_LOG_LEVEL")).To(Succeed())
+		})
+
+		it("configures debug", func() {
+			Expect(l.IsDebugEnabled()).To(BeTrue())
+		})
+	})
+
 	context("with debug disabled", func() {
 		it.Before(func() {
 			l = poet.NewLoggerWithOptions(b)
