@@ -16,7 +16,7 @@
 
 package libcnb
 
-//go:generate mockery -name EnvironmentWriter -case=underscore
+//go:generate mockery --name EnvironmentWriter --case=underscore
 
 // EnvironmentWriter is the interface implemented by a type that wants to serialize a map of environment variables to
 // the file system.
@@ -27,7 +27,7 @@ type EnvironmentWriter interface {
 	Write(dir string, environment map[string]string) error
 }
 
-//go:generate mockery -name ExitHandler -case=underscore
+//go:generate mockery --name ExitHandler --case=underscore
 
 // ExitHandler is the interface implemented by a type that wants to handle exit behavior when a buildpack encounters an
 // error.
@@ -43,7 +43,7 @@ type ExitHandler interface {
 	Pass()
 }
 
-//go:generate mockery -name TOMLWriter -case=underscore
+//go:generate mockery --name TOMLWriter --case=underscore
 
 // TOMLWriter is the interface implemented by a type that wants to serialize an object to a TOML file.
 type TOMLWriter interface {
@@ -52,12 +52,23 @@ type TOMLWriter interface {
 	Write(path string, value interface{}) error
 }
 
+//go:generate mockery --name ExecDWriter --case=underscore
+
+// ExecDWriter is the interface implemented by a type that wants to write exec.d output to file descriptor 3.
+type ExecDWriter interface {
+
+	// Write is called with the map of environment value key value
+	// pairs that will be written out
+	Write(value map[string]string) error
+}
+
 // Config is an object that contains configurable properties for execution.
 type Config struct {
 	arguments         []string
 	environmentWriter EnvironmentWriter
 	exitHandler       ExitHandler
 	tomlWriter        TOMLWriter
+	execdWriter       ExecDWriter
 }
 
 // Option is a function for configuring a Config instance.
@@ -91,6 +102,14 @@ func WithExitHandler(exitHandler ExitHandler) Option {
 func WithTOMLWriter(tomlWriter TOMLWriter) Option {
 	return func(config Config) Config {
 		config.tomlWriter = tomlWriter
+		return config
+	}
+}
+
+// WithExecDWriter creates an Option that sets a ExecDWriter implementation.
+func WithExecDWriter(execdWriter ExecDWriter) Option {
+	return func(config Config) Config {
+		config.execdWriter = execdWriter
 		return config
 	}
 }

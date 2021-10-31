@@ -57,11 +57,21 @@ func NewLoggerWithOptions(writer io.Writer, options ...Option) Logger {
 func NewLogger(writer io.Writer) Logger {
 	var options []Option
 
-	if _, ok := os.LookupEnv("BP_DEBUG"); ok {
-		options = append(options, WithDebug(writer))
-	}
+	// check for presence and value of log level environment variable
+	options = LogLevel(options, writer)
 
 	return NewLoggerWithOptions(writer, options...)
+}
+
+func LogLevel(options []Option, writer io.Writer) []Option {
+	// Check for older log level env variable
+	_, dbSet := os.LookupEnv("BP_DEBUG")
+
+	// Then check for common buildpack log level env variable - if either are set to DEBUG/true, enable Debug Writer
+	if level, ok := os.LookupEnv("BP_LOG_LEVEL"); (ok && strings.ToLower(level) == "debug") || dbSet {
+		options = append(options, WithDebug(writer))
+	}
+	return options
 }
 
 // Debug formats using the default formats for its operands and writes to the configured debug writer. Spaces are added
