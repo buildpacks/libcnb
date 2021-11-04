@@ -33,5 +33,6 @@ func TestUnit(t *testing.T) {
 	suite("Main", testMain)
 	suite("Platform", testPlatform)
 	suite("ExecD", testExecD)
+	suite("BuildpackTOML", testBuildpackTOML)
 	suite.Run(t)
 }
