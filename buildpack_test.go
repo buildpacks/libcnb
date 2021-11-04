@@ -32,22 +32,7 @@ func testBuildpackTOML(t *testing.T, context spec.G, it spec.S) {
 		Expect = NewWithT(t).Expect
 	)
 
-	it("does not serialize an empty Path field", func() {
-		bp := libcnb.Buildpack{
-			API: "0.6",
-			Info: libcnb.BuildpackInfo{
-				ID:   "test-buildpack/sample",
-				Name: "sample",
-			},
-		}
-
-		output := &bytes.Buffer{}
-
-		Expect(toml.NewEncoder(output).Encode(bp)).To(Succeed())
-		Expect(output.String()).NotTo(ContainSubstring("Path = "))
-	})
-
-	it("serializes a non-empty Path field", func() {
+	it("does not serialize the Path field", func() {
 		bp := libcnb.Buildpack{
 			API: "0.6",
 			Info: libcnb.BuildpackInfo{
@@ -60,6 +45,6 @@ func testBuildpackTOML(t *testing.T, context spec.G, it spec.S) {
 		output := &bytes.Buffer{}
 
 		Expect(toml.NewEncoder(output).Encode(bp)).To(Succeed())
-		Expect(output.String()).To(ContainSubstring(`path = "../buildpack"`))
+		Expect(output.String()).NotTo(ContainSubstring("ath = ")) // match on path and Path
 	})
 }
