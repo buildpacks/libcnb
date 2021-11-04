@@ -17,22 +17,34 @@
 package libcnb_test
 
 import (
+	"bytes"
 	"testing"
 
+	"github.com/BurntSushi/toml"
+	"github.com/buildpacks/libcnb"
 	"github.com/sclevine/spec"
-	"github.com/sclevine/spec/report"
+
+	. "github.com/onsi/gomega"
 )
 
-func TestUnit(t *testing.T) {
-	suite := spec.New("libcnb", spec.Report(report.Terminal{}))
-	suite("Build", testBuild)
-	suite("Detect", testDetect)
-	suite("Environment", testEnvironment)
-	suite("Formatter", testFormatter)
-	suite("Layer", testLayer)
-	suite("Main", testMain)
-	suite("Platform", testPlatform)
-	suite("ExecD", testExecD)
-	suite("BuildpackTOML", testBuildpackTOML)
-	suite.Run(t)
+func testBuildpackTOML(t *testing.T, context spec.G, it spec.S) {
+	var (
+		Expect = NewWithT(t).Expect
+	)
+
+	it("does not serialize the Path field", func() {
+		bp := libcnb.Buildpack{
+			API: "0.6",
+			Info: libcnb.BuildpackInfo{
+				ID:   "test-buildpack/sample",
+				Name: "sample",
+			},
+			Path: "../buildpack",
+		}
+
+		output := &bytes.Buffer{}
+
+		Expect(toml.NewEncoder(output).Encode(bp)).To(Succeed())
+		Expect(output.String()).NotTo(Or(ContainSubstring("Path = "), ContainSubstring("path = ")))
+	})
 }
