@@ -45,6 +45,6 @@ func testBuildpackTOML(t *testing.T, context spec.G, it spec.S) {
 		output := &bytes.Buffer{}
 
 		Expect(toml.NewEncoder(output).Encode(bp)).To(Succeed())
-		Expect(output.String()).NotTo(ContainSubstring("ath = ")) // match on path and Path
+		Expect(output.String()).NotTo(Or(ContainSubstring("Path = "), ContainSubstring("path = ")))
 	})
 }
