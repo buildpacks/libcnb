@@ -91,7 +91,7 @@ type Buildpack struct {
 	Info BuildpackInfo `toml:"buildpack"`
 
 	// Path is the path to the buildpack.
-	Path string `toml:"path,omitempty"`
+	Path string `toml:"-"`
 
 	// Stacks is the collection of stacks supported by the buildpack.
 	Stacks []BuildpackStack `toml:"stacks"`
