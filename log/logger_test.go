@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package poet_test
+package log_test
 
 import (
 	"bytes"
@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
 
-	"github.com/buildpacks/libcnb/poet"
+	"github.com/buildpacks/libcnb/log"
 )
 
 func testLogger(t *testing.T, context spec.G, it spec.S) {
@@ -32,7 +32,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		Expect = NewWithT(t).Expect
 
 		b *bytes.Buffer
-		l poet.Logger
+		l log.Logger
 	)
 
 	it.Before(func() {
@@ -41,7 +41,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 
 	context("without BP_DEBUG", func() {
 		it.Before(func() {
-			l = poet.NewLogger(b)
+			l = log.New(b)
 		})
 
 		it("does not configure debug", func() {
@@ -52,7 +52,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 	context("with BP_DEBUG", func() {
 		it.Before(func() {
 			Expect(os.Setenv("BP_DEBUG", "")).To(Succeed())
-			l = poet.NewLogger(b)
+			l = log.New(b)
 		})
 
 		it.After(func() {
@@ -67,7 +67,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 	context("with BP_LOG_LEVEL set to DEBUG", func() {
 		it.Before(func() {
 			Expect(os.Setenv("BP_LOG_LEVEL", "DEBUG")).To(Succeed())
-			l = poet.NewLogger(b)
+			l = log.New(b)
 		})
 
 		it.After(func() {
@@ -81,7 +81,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 
 	context("with debug disabled", func() {
 		it.Before(func() {
-			l = poet.NewLoggerWithOptions(b)
+			l = log.NewWithOptions(b)
 		})
 
 		it("does not write debug log", func() {
@@ -123,7 +123,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 
 	context("with debug enabled", func() {
 		it.Before(func() {
-			l = poet.NewLoggerWithOptions(b, poet.WithDebug(b))
+			l = log.NewWithOptions(b, log.WithDebug(b))
 		})
 
 		it("writes debug log", func() {

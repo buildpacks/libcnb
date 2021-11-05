@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package poet
+package log
 
 import (
 	"fmt"
@@ -40,8 +40,8 @@ func WithDebug(writer io.Writer) Option {
 	}
 }
 
-// NewLoggerWithOptions create a new instance of Logger.  It configures the Logger with options.
-func NewLoggerWithOptions(writer io.Writer, options ...Option) Logger {
+// NewWithOptions create a new instance of Logger.  It configures the Logger with options.
+func NewWithOptions(writer io.Writer, options ...Option) Logger {
 	l := Logger{
 		info: writer,
 	}
@@ -53,17 +53,17 @@ func NewLoggerWithOptions(writer io.Writer, options ...Option) Logger {
 	return l
 }
 
-// NewLogger creates a new instance of Logger.  It configures debug logging if $BP_DEBUG is set.
-func NewLogger(writer io.Writer) Logger {
+// New creates a new instance of Logger.  It configures debug logging if $BP_DEBUG is set.
+func New(writer io.Writer) Logger {
 	var options []Option
 
 	// check for presence and value of log level environment variable
-	options = LogLevel(options, writer)
+	options = Level(options, writer)
 
-	return NewLoggerWithOptions(writer, options...)
+	return NewWithOptions(writer, options...)
 }
 
-func LogLevel(options []Option, writer io.Writer) []Option {
+func Level(options []Option, writer io.Writer) []Option {
 	// Check for older log level env variable
 	_, dbSet := os.LookupEnv("BP_DEBUG")
 

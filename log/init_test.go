@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package poet_test
+package log_test
 
 import (
 	"testing"
@@ -24,7 +24,7 @@ import (
 )
 
 func TestUnit(t *testing.T) {
-	suite := spec.New("libcnb/poet", spec.Report(report.Terminal{}))
+	suite := spec.New("libcnb/log", spec.Report(report.Terminal{}))
 	suite("Logger", testLogger)
 	suite.Run(t)
 }
