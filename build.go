@@ -27,7 +27,7 @@ import (
 	"github.com/BurntSushi/toml"
 
 	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/poet"
+	"github.com/buildpacks/libcnb/log"
 )
 
 // BuildContext contains the inputs to build.
@@ -132,7 +132,7 @@ func Build(build BuildFunc, options ...Option) {
 		ok   bool
 	)
 	ctx := BuildContext{}
-	logger := poet.NewLogger(os.Stdout)
+	logger := log.New(os.Stdout)
 
 	ctx.Application.Path, err = os.Getwd()
 	if err != nil {
