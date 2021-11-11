@@ -179,7 +179,7 @@ test-key = "test-value"
 		Expect(os.RemoveAll(platformPath)).To(Succeed())
 	})
 
-	context("buildpack API is not 0.5 or 0.6", func() {
+	context("buildpack API is not 0.5, 0.6, or 0.7", func() {
 		it.Before(func() {
 			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
@@ -201,7 +201,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack APIs 0.5 and 0.6",
+				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, and 0.7",
 			))
 		})
 	})
