@@ -73,6 +73,8 @@ type LaunchTOML struct {
 	Slices []Slice `toml:"slices"`
 
 	// BOM is a collection of entries for the bill of materials.
+	//
+	// Deprecated: as of Buildpack API 0.7, write to `layer.BOMPath()` instead
 	BOM []BOMEntry `toml:"bom"`
 }
 
@@ -83,6 +85,8 @@ func (l LaunchTOML) isEmpty() bool {
 // BuildTOML represents the contents of build.toml.
 type BuildTOML struct {
 	// BOM contains the build-time bill of materials.
+	//
+	// Deprecated: as of Buildpack API 0.7, write to `layer.BOMPath()` instead
 	BOM []BOMEntry `toml:"bom"`
 
 	// Unmet is a collection of buildpack plan entries that should be passed through to subsequent providers.
@@ -94,6 +98,8 @@ func (b BuildTOML) isEmpty() bool {
 }
 
 // BOMEntry contains a bill of materials entry.
+//
+// Deprecated: as of Buildpack API 0.7, BOM should use standard formats like CycloneDX going forward
 type BOMEntry struct {
 	// Name represents the name of the entry.
 	Name string `toml:"name"`
