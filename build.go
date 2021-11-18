@@ -32,7 +32,6 @@ import (
 
 // BuildContext contains the inputs to build.
 type BuildContext struct {
-
 	// Application is application to build.
 	Application Application
 
@@ -57,9 +56,6 @@ type BuildContext struct {
 
 // BuildResult contains the results of detection.
 type BuildResult struct {
-	// BOM contains entries to be appended to the app image Bill of Materials and/or build Bill of Materials.
-	BOM *BOM
-
 	// Labels are the image labels contributed by the buildpack.
 	Labels []Label
 
@@ -80,16 +76,10 @@ type BuildResult struct {
 	Unmet []UnmetPlanEntry
 }
 
-// BOM contains all Bill of Materials entries
-type BOM struct {
-	Entries []BOMEntry
-}
-
 // NewBuildResult creates a new BuildResult instance, initializing empty fields.
 func NewBuildResult() BuildResult {
 	return BuildResult{
 		PersistentMetadata: make(map[string]interface{}),
-		BOM:                &BOM{},
 	}
 }
 
@@ -100,8 +90,8 @@ func (b BuildResult) String() string {
 	}
 
 	return fmt.Sprintf(
-		"{BOM: %+v, Labels:%+v Layers:%s PersistentMetadata:%+v Processes:%+v Slices:%+v, Unmet:%+v}",
-		b.BOM, b.Labels, l, b.PersistentMetadata, b.PersistentMetadata, b.Slices, b.Unmet,
+		"{Labels:%+v Layers:%s PersistentMetadata:%+v Processes:%+v Slices:%+v, Unmet:%+v}",
+		b.Labels, l, b.PersistentMetadata, b.PersistentMetadata, b.Slices, b.Unmet,
 	)
 }
 
@@ -283,23 +273,10 @@ func Build(build BuildFunc, options ...Option) {
 		}
 	}
 
-	var launchBOM, buildBOM []BOMEntry
-	if result.BOM != nil {
-		for _, entry := range result.BOM.Entries {
-			if entry.Launch {
-				launchBOM = append(launchBOM, entry)
-			}
-			if entry.Build {
-				buildBOM = append(buildBOM, entry)
-			}
-		}
-	}
-
 	launch := LaunchTOML{
 		Labels:    result.Labels,
 		Processes: result.Processes,
 		Slices:    result.Slices,
-		BOM:       launchBOM,
 	}
 
 	if !launch.isEmpty() {
@@ -322,7 +299,6 @@ func Build(build BuildFunc, options ...Option) {
 
 	buildTOML := BuildTOML{
 		Unmet: result.Unmet,
-		BOM:   buildBOM,
 	}
 
 	if !buildTOML.isEmpty() {
