@@ -28,7 +28,6 @@ import (
 
 // Exec represents the exec.d layer location
 type Exec struct {
-
 	// Path is the path to the exec.d directory.
 	Path string
 }
@@ -68,9 +67,21 @@ func (p Profile) ProcessAddf(processType string, name string, format string, a .
 	p.Addf(filepath.Join(processType, name), format, a...)
 }
 
-// Contribute represents a layer managed by the buildpack.
-type Layer struct {
+// BOMFormat indicates the format of the SBOM entry
+type SBOMFormat int
 
+const (
+	CycloneDXJSON SBOMFormat = iota
+	SPDXJSON
+	SyftJSON
+)
+
+func (b SBOMFormat) String() string {
+	return []string{"cdx.json", "spdx.json", "syft.json"}[b]
+}
+
+// Layer represents a layer managed by the buildpack.
+type Layer struct {
 	// LayerTypes indicates the type of layer
 	LayerTypes `toml:"types"`
 
@@ -99,6 +110,10 @@ type Layer struct {
 	Exec Exec `toml:"-"`
 }
 
+func (l Layer) SBOMPath(bt SBOMFormat) string {
+	return filepath.Join(filepath.Dir(l.Path), fmt.Sprintf("%s.sbom.%s", l.Name, bt))
+}
+
 // LayerTypes describes which types apply to a given layer. A layer may have any combination of Launch, Build, and
 // Cache types.
 type LayerTypes struct {
@@ -116,7 +131,6 @@ type LayerTypes struct {
 
 // LayerContributor is an interface for types that create layers.
 type LayerContributor interface {
-
 	// Contribute accepts a layer and transforms it, returning a layer.
 	Contribute(layer Layer) (Layer, error)
 
@@ -126,7 +140,6 @@ type LayerContributor interface {
 
 // Layers represents the layers part of the specification.
 type Layers struct {
-
 	// Path is the layers filesystem location.
 	Path string
 }
@@ -161,4 +174,14 @@ func (l *Layers) Layer(name string) (Layer, error) {
 	}
 
 	return layer, nil
+}
+
+// BOMBuildPath returns the full path to the build SBoM file for the buildpack
+func (l Layers) BuildSBOMPath(bt SBOMFormat) string {
+	return filepath.Join(l.Path, fmt.Sprintf("build.sbom.%s", bt))
+}
+
+// BOMLaunchPath returns the full path to the launch SBoM file for the buildpack
+func (l Layers) LaunchSBOMPath(bt SBOMFormat) string {
+	return filepath.Join(l.Path, fmt.Sprintf("launch.sbom.%s", bt))
 }

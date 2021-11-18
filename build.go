@@ -58,6 +58,8 @@ type BuildContext struct {
 // BuildResult contains the results of detection.
 type BuildResult struct {
 	// BOM contains entries to be appended to the app image Bill of Materials and/or build Bill of Materials.
+	//
+	// Deprecated: as of Buildpack API 0.7, write to `layer.BOMPath()` instead
 	BOM *BOM
 
 	// Labels are the image labels contributed by the buildpack.
@@ -81,6 +83,8 @@ type BuildResult struct {
 }
 
 // BOM contains all Bill of Materials entries
+//
+// Deprecated: as of Buildpack API 0.7, write to `layer.BOMPath()` instead
 type BOM struct {
 	Entries []BOMEntry
 }
@@ -302,6 +306,7 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
+	// Deprecated: as of Buildpack API 0.7, to be removed in a future version
 	var launchBOM, buildBOM []BOMEntry
 	if result.BOM != nil {
 		for _, entry := range result.BOM.Entries {

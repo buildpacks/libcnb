@@ -110,6 +110,18 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			Expect(l.Profile).To(Equal(libcnb.Profile{}))
 		})
 
+		it("generates BOM paths", func() {
+			l, err := layers.Layer("test-name")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(l.Path).To(Equal(filepath.Join(path, "test-name")))
+			Expect(layers.BuildSBOMPath(libcnb.CycloneDXJSON)).To(Equal(filepath.Join(path, "build.sbom.cdx.json")))
+			Expect(layers.BuildSBOMPath(libcnb.SPDXJSON)).To(Equal(filepath.Join(path, "build.sbom.spdx.json")))
+			Expect(layers.BuildSBOMPath(libcnb.SyftJSON)).To(Equal(filepath.Join(path, "build.sbom.syft.json")))
+			Expect(layers.LaunchSBOMPath(libcnb.SyftJSON)).To(Equal(filepath.Join(path, "launch.sbom.syft.json")))
+			Expect(l.SBOMPath(libcnb.SyftJSON)).To(Equal(filepath.Join(path, "test-name.sbom.syft.json")))
+		})
+
 		it("reads existing 0.5 metadata", func() {
 			Expect(ioutil.WriteFile(
 				filepath.Join(path, "test-name.toml"),

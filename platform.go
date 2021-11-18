@@ -43,6 +43,7 @@ const (
 
 	// EnvCNBBindings is the name of the environment variable that contains the path to the CNB bindings directory.
 	// See the CNB bindings extension spec for more details - https://github.com/buildpacks/spec/blob/main/extensions/bindings.md
+	//
 	// Deprecated: Use the Service Binding Specification for Kubernetes instead -
 	// https://github.com/buildpacks/rfcs/blob/main/text/0055-deprecate-service-bindings.md.
 	EnvCNBBindings = "CNB_BINDINGS"
