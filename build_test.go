@@ -451,17 +451,6 @@ version = "1.1.1"
 	it("writes launch.toml", func() {
 		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{
-				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
-					{
-						Name:     "test-launch-bom-entry",
-						Metadata: map[string]interface{}{"test-key": "test-value"},
-						Launch:   true,
-					},
-					{
-						Name:     "test-build-bom-entry",
-						Metadata: map[string]interface{}{"test-key": "test-value"},
-					},
-				}},
 				Labels: []libcnb.Label{
 					{
 						Key:   "test-key",
@@ -506,13 +495,6 @@ version = "1.1.1"
 			Slices: []libcnb.Slice{
 				{
 					Paths: []string{"test-path"},
-				},
-			},
-			BOM: []libcnb.BOMEntry{
-				{
-					Name:     "test-launch-bom-entry",
-					Metadata: map[string]interface{}{"test-key": "test-value"},
-					Launch:   true,
 				},
 			},
 		}))
@@ -568,18 +550,6 @@ version = "1.1.1"
 	it("writes build.toml", func() {
 		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{
-				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
-					{
-						Name:     "test-build-bom-entry",
-						Metadata: map[string]interface{}{"test-key": "test-value"},
-						Build:    true,
-					},
-					{
-						Name:     "test-launch-bom-entry",
-						Metadata: map[string]interface{}{"test-key": "test-value"},
-						Build:    false,
-					},
-				}},
 				Unmet: []libcnb.UnmetPlanEntry{
 					{
 						Name: "test-entry",
@@ -595,13 +565,6 @@ version = "1.1.1"
 
 		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "build.toml")))
 		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.BuildTOML{
-			BOM: []libcnb.BOMEntry{
-				{
-					Name:     "test-build-bom-entry",
-					Metadata: map[string]interface{}{"test-key": "test-value"},
-					Build:    true,
-				},
-			},
 			Unmet: []libcnb.UnmetPlanEntry{
 				{
 					Name: "test-entry",
