@@ -625,4 +625,30 @@ version = "1.1.1"
 			},
 		}))
 	})
+
+	context("Validates SBOM entries", func() {
+		it("has no SBOM files", func() {
+			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{})).To(BeNil())
+		})
+
+		it("has no accepted formats", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{})).To(MatchError("unable to find actual SBOM Type application/spdx+json in list of supported SBOM types []"))
+		})
+
+		it("has no matching formats", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{"application/vnd.cyclonedx+json"})).To(MatchError("unable to find actual SBOM Type application/spdx+json in list of supported SBOM types [application/vnd.cyclonedx+json]"))
+		})
+
+		it("has a matching format", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{"application/vnd.cyclonedx+json", "application/spdx+json"})).To(BeNil())
+		})
+
+		it("has an invalid format", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.junk.json"), []byte{}, 0600)).To(Succeed())
+			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{})).To(MatchError("unable to parse SBOM unknown\nunable to translate from junk.json to SBOMFormat"))
+		})
+	})
 }
