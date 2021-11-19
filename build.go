@@ -274,6 +274,11 @@ func Build(build BuildFunc, options ...Option) {
 		}
 	}
 
+	if err := ValidateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
+		config.exitHandler.Error(fmt.Errorf("unable to validate SBOM\n%w", err))
+		return
+	}
+
 	launch := LaunchTOML{
 		Labels:    result.Labels,
 		Processes: result.Processes,
@@ -305,6 +310,7 @@ func Build(build BuildFunc, options ...Option) {
 	if !buildTOML.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "build.toml")
 		logger.Debugf("Writing build metadata: %s <= %+v", file, build)
+
 		if err = config.tomlWriter.Write(file, buildTOML); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write build metadata %s\n%w", file, err))
 			return
@@ -332,4 +338,28 @@ func contains(candidates []string, s string) bool {
 	}
 
 	return false
+}
+
+func ValidateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error {
+	sbomFiles, err := filepath.Glob(filepath.Join(layersPath, "*.sbom.*"))
+	if err != nil {
+		return fmt.Errorf("unable find SBOM files\n%w", err)
+	}
+
+	for _, sbomFile := range sbomFiles {
+		parts := strings.Split(filepath.Base(sbomFile), ".")
+		if len(parts) <= 2 {
+			return fmt.Errorf("invalid format %s", filepath.Base(sbomFile))
+		}
+		sbomFormat, err := SBOMFormatFromString(strings.Join(parts[len(parts)-2:], "."))
+		if err != nil {
+			return fmt.Errorf("unable to parse SBOM %s\n%w", sbomFormat, err)
+		}
+
+		if !contains(acceptedSBOMFormats, sbomFormat.MediaType()) {
+			return fmt.Errorf("unable to find actual SBOM Type %s in list of supported SBOM types %s", sbomFormat.MediaType(), acceptedSBOMFormats)
+		}
+	}
+
+	return nil
 }

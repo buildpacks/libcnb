@@ -26,6 +26,16 @@ import (
 	"github.com/buildpacks/libcnb/internal"
 )
 
+const (
+	BOMFormatCycloneDXExtension = "cdx.json"
+	BOMFormatSPDXExtension      = "spdx.json"
+	BOMFormatSyftExtension      = "syft.json"
+	BOMMediaTypeCycloneDX       = "application/vnd.cyclonedx+json"
+	BOMMediaTypeSPDX            = "application/spdx+json"
+	BOMMediaTypeSyft            = "application/vnd.syft+json"
+	BOMUnknown                  = "unknown"
+)
+
 // Exec represents the exec.d layer location
 type Exec struct {
 	// Path is the path to the exec.d directory.
@@ -74,10 +84,36 @@ const (
 	CycloneDXJSON SBOMFormat = iota
 	SPDXJSON
 	SyftJSON
+	UnknownFormat
 )
 
 func (b SBOMFormat) String() string {
-	return []string{"cdx.json", "spdx.json", "syft.json"}[b]
+	return []string{
+		BOMFormatCycloneDXExtension,
+		BOMFormatSPDXExtension,
+		BOMFormatSyftExtension,
+		BOMUnknown}[b]
+}
+
+func (b SBOMFormat) MediaType() string {
+	return []string{
+		BOMMediaTypeCycloneDX,
+		BOMMediaTypeSPDX,
+		BOMMediaTypeSyft,
+		BOMUnknown}[b]
+}
+
+func SBOMFormatFromString(from string) (SBOMFormat, error) {
+	switch from {
+	case CycloneDXJSON.String():
+		return CycloneDXJSON, nil
+	case SPDXJSON.String():
+		return SPDXJSON, nil
+	case SyftJSON.String():
+		return SyftJSON, nil
+	}
+
+	return UnknownFormat, fmt.Errorf("unable to translate from %s to SBOMFormat", from)
 }
 
 // Contribute represents a layer managed by the buildpack.
