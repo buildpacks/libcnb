@@ -627,28 +627,87 @@ version = "1.1.1"
 	})
 
 	context("Validates SBOM entries", func() {
+		it.Before(func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "0.7"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+sbom-formats = ["application/vnd.cyclonedx+json"]
+`),
+				0600),
+			).To(Succeed())
+
+			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{}, nil)
+		})
+
 		it("has no SBOM files", func() {
-			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{})).To(BeNil())
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls).To(BeEmpty())
 		})
 
 		it("has no accepted formats", func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "0.7"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+sbom-formats = []
+`),
+				0600),
+			).To(Succeed())
+
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
-			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{})).To(MatchError("unable to find actual SBOM Type application/spdx+json in list of supported SBOM types []"))
+
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to find actual SBOM Type application/spdx+json in list of supported SBOM types []"))
 		})
 
 		it("has no matching formats", func() {
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
-			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{"application/vnd.cyclonedx+json"})).To(MatchError("unable to find actual SBOM Type application/spdx+json in list of supported SBOM types [application/vnd.cyclonedx+json]"))
+
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to find actual SBOM Type application/spdx+json in list of supported SBOM types [application/vnd.cyclonedx+json]"))
 		})
 
 		it("has a matching format", func() {
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
-			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{"application/vnd.cyclonedx+json", "application/spdx+json"})).To(BeNil())
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls).To(BeEmpty())
 		})
 
-		it("has an invalid format", func() {
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.junk.json"), []byte{}, 0600)).To(Succeed())
-			Expect(libcnb.ValidateSBOMFormats(layersPath, []string{})).To(MatchError("unable to parse SBOM unknown\nunable to translate from junk.json to SBOMFormat"))
+		it("has a junk format", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to parse SBOM unknown\nunable to translate from random.json to SBOMFormat"))
 		})
 	})
 }

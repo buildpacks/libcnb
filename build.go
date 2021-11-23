@@ -306,7 +306,7 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
-	if err := ValidateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
+	if err := validateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to validate SBOM\n%w", err))
 		return
 	}
@@ -399,7 +399,7 @@ func contains(candidates []string, s string) bool {
 	return false
 }
 
-func ValidateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error {
+func validateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error {
 	sbomFiles, err := filepath.Glob(filepath.Join(layersPath, "*.sbom.*"))
 	if err != nil {
 		return fmt.Errorf("unable find SBOM files\n%w", err)
