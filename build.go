@@ -306,6 +306,11 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
+	if err := validateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
+		config.exitHandler.Error(fmt.Errorf("unable to validate SBOM\n%w", err))
+		return
+	}
+
 	// Deprecated: as of Buildpack API 0.7, to be removed in a future version
 	var launchBOM, buildBOM []BOMEntry
 	if result.BOM != nil {
@@ -338,6 +343,12 @@ func Build(builder Builder, options ...Option) {
 			}
 		}
 
+		// even if there is data, do not write a BOM if we have buildpack API 0.7, that will cause a lifecycle error
+		if API == "0.7" {
+			logger.Info("Warning: this buildpack is including both old and new format SBOM information, which is an invalid state. To prevent the lifecycle from failing, libcnb is discarding the old SBOM information.")
+			launch.BOM = nil
+		}
+
 		if err = config.tomlWriter.Write(file, launch); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s\n%w", file, err))
 			return
@@ -352,6 +363,13 @@ func Build(builder Builder, options ...Option) {
 	if !build.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "build.toml")
 		logger.Debugf("Writing build metadata: %s <= %+v", file, build)
+
+		// even if there is data, do not write a BOM if we have buildpack API 0.7, that will cause a lifecycle error
+		if API == "0.7" {
+			logger.Info("Warning: this buildpack is including both old and new format SBOM information, which is an invalid state. To prevent the lifecycle from failing, libcnb is discarding the old SBOM information.")
+			build.BOM = nil
+		}
+
 		if err = config.tomlWriter.Write(file, build); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write build metadata %s\n%w", file, err))
 			return
@@ -379,4 +397,28 @@ func contains(candidates []string, s string) bool {
 	}
 
 	return false
+}
+
+func validateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error {
+	sbomFiles, err := filepath.Glob(filepath.Join(layersPath, "*.sbom.*"))
+	if err != nil {
+		return fmt.Errorf("unable find SBOM files\n%w", err)
+	}
+
+	for _, sbomFile := range sbomFiles {
+		parts := strings.Split(filepath.Base(sbomFile), ".")
+		if len(parts) <= 2 {
+			return fmt.Errorf("invalid format %s", filepath.Base(sbomFile))
+		}
+		sbomFormat, err := SBOMFormatFromString(strings.Join(parts[len(parts)-2:], "."))
+		if err != nil {
+			return fmt.Errorf("unable to parse SBOM %s\n%w", sbomFormat, err)
+		}
+
+		if !contains(acceptedSBOMFormats, sbomFormat.MediaType()) {
+			return fmt.Errorf("unable to find actual SBOM Type %s in list of supported SBOM types %s", sbomFormat.MediaType(), acceptedSBOMFormats)
+		}
+	}
+
+	return nil
 }
