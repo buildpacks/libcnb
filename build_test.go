@@ -626,6 +626,98 @@ version = "1.1.1"
 		}))
 	})
 
+	context("API 0.7", func() {
+		it.Before(func() {
+			var err error
+
+			buildpackTOML, err = template.New("buildpack.toml").Parse(bpTOMLContents)
+			Expect(err).ToNot(HaveOccurred())
+
+			var b bytes.Buffer
+			err = buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.7"})
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+		})
+
+		it("writes launch.toml with BOM entries which are removed", func() {
+			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
+				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
+					{
+						Name:     "test-launch-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Launch:   true,
+					},
+					{
+						Name:     "test-build-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+					},
+				}},
+				Processes: []libcnb.Process{
+					{
+						Type:    "test-type",
+						Command: "test-command",
+						Default: true,
+					},
+				},
+			}, nil)
+
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithTOMLWriter(tomlWriter),
+			)
+
+			Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "launch.toml")))
+			Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.LaunchTOML{
+				Processes: []libcnb.Process{
+					{
+						Type:    "test-type",
+						Command: "test-command",
+						Default: true,
+					},
+				},
+				BOM: nil,
+			}))
+		})
+
+		it("writes build.toml with BOM entries which are removed", func() {
+			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
+				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
+					{
+						Name:     "test-build-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Build:    true,
+					},
+					{
+						Name:     "test-launch-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Build:    false,
+					},
+				}},
+				Unmet: []libcnb.UnmetPlanEntry{
+					{
+						Name: "test-entry",
+					},
+				},
+			}, nil)
+
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithTOMLWriter(tomlWriter),
+			)
+
+			Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "build.toml")))
+			Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.BuildTOML{
+				BOM: nil,
+				Unmet: []libcnb.UnmetPlanEntry{
+					{
+						Name: "test-entry",
+					},
+				},
+			}))
+		})
+	})
+
 	context("Validates SBOM entries", func() {
 		it.Before(func() {
 			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
