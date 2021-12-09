@@ -32,8 +32,9 @@ import (
 
 // BuildContext contains the inputs to build.
 type BuildContext struct {
-	// Application is application to build.
-	Application Application
+	// WorkingDir is the location of the application source code as provided by
+	// the lifecycle.
+	WorkingDir string
 
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
@@ -124,13 +125,13 @@ func Build(build BuildFunc, options ...Option) {
 	ctx := BuildContext{}
 	logger := log.New(os.Stdout)
 
-	ctx.Application.Path, err = os.Getwd()
+	ctx.WorkingDir, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
 	if logger.IsDebugEnabled() {
-		logger.Debug(ApplicationPathFormatter(ctx.Application.Path))
+		logger.Debug(ApplicationPathFormatter(ctx.WorkingDir))
 	}
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
