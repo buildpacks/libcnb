@@ -16,8 +16,21 @@
 
 package libcnb
 
-// Application is the user contributed application to build.
-type Application struct {
-	// Path is the path to the application.
-	Path string
+// Process represents metadata about a type of command that can be run.
+type Process struct {
+	// Type is the type of the process.
+	Type string `toml:"type"`
+
+	// Command is the command of the process.
+	Command string `toml:"command"`
+
+	// Arguments are arguments to the command.
+	Arguments []string `toml:"args"`
+
+	// Command is exec'd directly by the os (no profile.d scripts run)
+	Direct bool `toml:"direct,omitempty"`
+
+	// Default can be set to true to indicate that the process
+	// type being defined should be the default process type for the app image.
+	Default bool `toml:"default,omitempty"`
 }

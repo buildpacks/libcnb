@@ -16,8 +16,9 @@
 
 package libcnb
 
-// Application is the user contributed application to build.
-type Application struct {
-	// Path is the path to the application.
-	Path string
+// Slice represents metadata about a slice.
+type Slice struct {
+
+	// Paths are the contents of the slice.
+	Paths []string `toml:"paths"`
 }

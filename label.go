@@ -16,8 +16,11 @@
 
 package libcnb
 
-// Application is the user contributed application to build.
-type Application struct {
-	// Path is the path to the application.
-	Path string
+// Label represents an image label.
+type Label struct {
+	// Key is the key of the label.
+	Key string `toml:"key"`
+
+	// Value is the value of the label.
+	Value string `toml:"value"`
 }

@@ -16,8 +16,18 @@
 
 package libcnb
 
-// Application is the user contributed application to build.
-type Application struct {
-	// Path is the path to the application.
-	Path string
+// LaunchTOML represents the contents of launch.toml.
+type LaunchTOML struct {
+	// Labels is the collection of image labels contributed by the buildpack.
+	Labels []Label `toml:"labels"`
+
+	// Processes is the collection of process types contributed by the buildpack.
+	Processes []Process `toml:"processes"`
+
+	// Slices is the collection of slices contributed by the buildpack.
+	Slices []Slice `toml:"slices"`
+}
+
+func (l LaunchTOML) isEmpty() bool {
+	return len(l.Labels) == 0 && len(l.Processes) == 0 && len(l.Slices) == 0
 }

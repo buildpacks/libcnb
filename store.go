@@ -16,8 +16,9 @@
 
 package libcnb
 
-// Application is the user contributed application to build.
-type Application struct {
-	// Path is the path to the application.
-	Path string
+// Store represents the contents of store.toml
+type Store struct {
+
+	// Metadata represents the persistent metadata.
+	Metadata map[string]interface{} `toml:"metadata"`
 }

@@ -16,8 +16,12 @@
 
 package libcnb
 
-// Application is the user contributed application to build.
-type Application struct {
-	// Path is the path to the application.
-	Path string
+// BuildTOML represents the contents of build.toml.
+type BuildTOML struct {
+	// Unmet is a collection of buildpack plan entries that should be passed through to subsequent providers.
+	Unmet []UnmetPlanEntry
+}
+
+func (b BuildTOML) isEmpty() bool {
+	return len(b.Unmet) == 0
 }
