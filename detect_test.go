@@ -188,7 +188,7 @@ version = "1.1.1"
 		var ctx libcnb.DetectContext
 		detectFunc = func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
 			ctx = context
-			return libcnb.DetectResult{Pass: true}, nil
+			return libcnb.DetectResult{}, nil
 		}
 
 		libcnb.Detect(detectFunc,
@@ -242,7 +242,7 @@ version = "1.1.1"
 		var ctx libcnb.DetectContext
 		detectFunc = func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
 			ctx = context
-			return libcnb.DetectResult{Pass: true}, nil
+			return libcnb.DetectResult{}, nil
 		}
 
 		libcnb.Detect(detectFunc,
@@ -268,7 +268,7 @@ version = "1.1.1"
 
 	it("does not write empty files", func() {
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: true}, nil
+			return libcnb.DetectResult{}, nil
 		}
 
 		libcnb.Detect(detectFunc,
@@ -283,7 +283,6 @@ version = "1.1.1"
 	it("writes one build plan", func() {
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{
-				Pass: true,
 				Plans: []libcnb.BuildPlan{
 					{
 						Provides: []libcnb.BuildPlanProvide{
@@ -325,7 +324,6 @@ version = "1.1.1"
 	it("writes two build plans", func() {
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{
-				Pass: true,
 				Plans: []libcnb.BuildPlan{
 					{
 						Provides: []libcnb.BuildPlanProvide{

@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package internal_test
+package internal
 
 import (
-	"testing"
-
-	"github.com/sclevine/spec"
-	"github.com/sclevine/spec/report"
+	"errors"
+	"fmt"
 )
 
-func TestUnit(t *testing.T) {
-	suite := spec.New("libcnb/internal", spec.Report(report.Terminal{}))
-	suite("ConfigMap", testConfigMap)
-	suite("DirectoryContents", testDirectoryContents)
-	suite("EnvironmentWriter", testEnvironmentWriter)
-	suite("ExecDWriter", testExecDWriter)
-	suite("ExitHandler", testExitHandler)
-	suite("Fail", testFail)
-	suite("TOMLWriter", testTOMLWriter)
-	suite.Run(t)
+var Fail = failError{error: errors.New("failed")}
+
+type failError struct {
+	error
+}
+
+func (f failError) WithMessage(format string, v ...interface{}) failError {
+	return failError{error: fmt.Errorf(format, v...)}
 }

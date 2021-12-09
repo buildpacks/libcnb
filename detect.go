@@ -48,14 +48,9 @@ type DetectContext struct {
 // DetectResult contains the results of detection.
 type DetectResult struct {
 
-	// Pass indicates whether detection has passed.
-	Pass bool
-
 	// Plans are the build plans contributed by the buildpack.
 	Plans []BuildPlan
 }
-
-//go:generate mockery --name Detector --case=underscore
 
 // DetectFunc takes a context and returns a result, performing buildpack detect behaviors.
 type DetectFunc func(context DetectContext) (DetectResult, error)
@@ -148,11 +143,6 @@ func Detect(detect DetectFunc, options ...Option) {
 		return
 	}
 	logger.Debugf("Result: %+v", result)
-
-	if !result.Pass {
-		config.exitHandler.Fail()
-		return
-	}
 
 	if len(result.Plans) > 0 {
 		var plans BuildPlans

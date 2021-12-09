@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-package internal_test
+package libcnb
 
-import (
-	"testing"
+import "github.com/buildpacks/libcnb/internal"
 
-	"github.com/sclevine/spec"
-	"github.com/sclevine/spec/report"
-)
-
-func TestUnit(t *testing.T) {
-	suite := spec.New("libcnb/internal", spec.Report(report.Terminal{}))
-	suite("ConfigMap", testConfigMap)
-	suite("DirectoryContents", testDirectoryContents)
-	suite("EnvironmentWriter", testEnvironmentWriter)
-	suite("ExecDWriter", testExecDWriter)
-	suite("ExitHandler", testExitHandler)
-	suite("Fail", testFail)
-	suite("TOMLWriter", testTOMLWriter)
-	suite.Run(t)
-}
+// Fail is a sentinal value that can be used to indicate a failure to detect
+// during the detect phase. Fail implements the Error interface and should be
+// returned as the error value in the DetectFunc signature. Fail also supports
+// a modifier function, WithMessage, that allows the caller to set a custom
+// failure message. The WithMessage function supports a fmt.Printf-like format
+// string and variadic arguments to build a message, eg:
+// packit.Fail.WithMessage("failed: %w", err).
+var Fail = internal.Fail

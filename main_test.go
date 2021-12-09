@@ -200,7 +200,7 @@ test-key = "test-value"
 
 	it("calls detector for detect command", func() {
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: true}, nil
+			return libcnb.DetectResult{}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")
 
@@ -212,7 +212,7 @@ test-key = "test-value"
 
 	it("calls exitHandler.Pass() on detection pass", func() {
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: true}, nil
+			return libcnb.DetectResult{}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")
 
@@ -226,7 +226,7 @@ test-key = "test-value"
 
 	it("calls exitHandler.Fail() on detection fail", func() {
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: false}, nil
+			return libcnb.DetectResult{}, libcnb.Fail
 		}
 		commandPath := filepath.Join("bin", "detect")
 
@@ -235,7 +235,7 @@ test-key = "test-value"
 			libcnb.WithExitHandler(exitHandler),
 		)
 
-		Expect(exitHandler.Calls[0].Method).To(BeIdenticalTo("Fail"))
+		Expect(exitHandler.Calls[0].Arguments[0]).To(BeIdenticalTo(libcnb.Fail))
 	})
 
 	it("encounters an unknown command", func() {

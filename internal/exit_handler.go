@@ -74,7 +74,14 @@ func NewExitHandler(options ...Option) ExitHandler {
 
 func (e ExitHandler) Error(err error) {
 	_, _ = fmt.Fprintln(e.writer, err)
-	e.exitFunc(ErrorStatusCode)
+	switch err.(type) {
+	case failError:
+		e.Fail()
+	case nil:
+		e.Pass()
+	default:
+		e.exitFunc(ErrorStatusCode)
+	}
 }
 
 func (e ExitHandler) Fail() {

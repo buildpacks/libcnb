@@ -19,18 +19,26 @@ package internal_test
 import (
 	"testing"
 
+	"github.com/buildpacks/libcnb/internal"
 	"github.com/sclevine/spec"
-	"github.com/sclevine/spec/report"
+
+	. "github.com/onsi/gomega"
 )
 
-func TestUnit(t *testing.T) {
-	suite := spec.New("libcnb/internal", spec.Report(report.Terminal{}))
-	suite("ConfigMap", testConfigMap)
-	suite("DirectoryContents", testDirectoryContents)
-	suite("EnvironmentWriter", testEnvironmentWriter)
-	suite("ExecDWriter", testExecDWriter)
-	suite("ExitHandler", testExitHandler)
-	suite("Fail", testFail)
-	suite("TOMLWriter", testTOMLWriter)
-	suite.Run(t)
+func testFail(t *testing.T, context spec.G, it spec.S) {
+	var (
+		Expect = NewWithT(t).Expect
+	)
+
+	it("acts as an error", func() {
+		fail := internal.Fail
+		Expect(fail).To(MatchError("failed"))
+	})
+
+	context("when given a message", func() {
+		it("acts as an error with that message", func() {
+			fail := internal.Fail.WithMessage("this is a %s", "failure message")
+			Expect(fail).To(MatchError("this is a failure message"))
+		})
+	})
 }
