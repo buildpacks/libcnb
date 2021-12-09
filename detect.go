@@ -55,8 +55,6 @@ type DetectResult struct {
 	Plans []BuildPlan
 }
 
-//go:generate mockery --name Detector --case=underscore
-
 // DetectFunc takes a context and returns a result, performing buildpack detect behaviors.
 type DetectFunc func(context DetectContext) (DetectResult, error)
 
