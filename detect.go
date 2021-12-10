@@ -32,9 +32,9 @@ import (
 // DetectContext contains the inputs to detection.
 type DetectContext struct {
 
-	// WorkingDir is the location of the application source code as provided by
+	// ApplicationPath is the location of the application source code as provided by
 	// the lifecycle.
-	WorkingDir string
+	ApplicationPath string
 
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
@@ -87,13 +87,13 @@ func Detect(detect DetectFunc, options ...Option) {
 	ctx := DetectContext{}
 	logger := log.New(os.Stdout)
 
-	ctx.WorkingDir, err = os.Getwd()
+	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
 	if logger.IsDebugEnabled() {
-		logger.Debug(ApplicationPathFormatter(ctx.WorkingDir))
+		logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {

@@ -196,7 +196,7 @@ version = "1.1.1"
 			libcnb.WithExitHandler(exitHandler),
 		)
 
-		Expect(ctx.WorkingDir).To(Equal(applicationPath))
+		Expect(ctx.ApplicationPath).To(Equal(applicationPath))
 		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
 			API: "0.6",
 			Info: libcnb.BuildpackInfo{
