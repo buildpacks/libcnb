@@ -237,7 +237,7 @@ version = "1.1.1"
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 		)
 
-		Expect(ctx.Application).To(Equal(libcnb.Application{Path: applicationPath}))
+		Expect(ctx.ApplicationPath).To(Equal(applicationPath))
 		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
 			API: "0.6",
 			Info: libcnb.BuildpackInfo{

@@ -32,8 +32,9 @@ import (
 // DetectContext contains the inputs to detection.
 type DetectContext struct {
 
-	// Application is the application to build.
-	Application Application
+	// ApplicationPath is the location of the application source code as provided by
+	// the lifecycle.
+	ApplicationPath string
 
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
@@ -54,8 +55,6 @@ type DetectResult struct {
 	// Plans are the build plans contributed by the buildpack.
 	Plans []BuildPlan
 }
-
-//go:generate mockery --name Detector --case=underscore
 
 // DetectFunc takes a context and returns a result, performing buildpack detect behaviors.
 type DetectFunc func(context DetectContext) (DetectResult, error)
@@ -86,13 +85,13 @@ func Detect(detect DetectFunc, options ...Option) {
 	ctx := DetectContext{}
 	logger := log.New(os.Stdout)
 
-	ctx.Application.Path, err = os.Getwd()
+	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
 	if logger.IsDebugEnabled() {
-		logger.Debug(ApplicationPathFormatter(ctx.Application.Path))
+		logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
