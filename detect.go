@@ -126,9 +126,8 @@ func Detect(detector Detector, options ...Option) {
 		logger.Debug(PlatformFormatter(ctx.Platform))
 	}
 
-	file = filepath.Join(ctx.Platform.Path, "bindings")
-	if ctx.Platform.Bindings, err = NewBindingsFromPath(file); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
+	if ctx.Platform.Bindings, err = NewBindingsForBuild(ctx.Platform.Path); err != nil {
+		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", ctx.Platform.Path, err))
 		return
 	}
 	logger.Debugf("Platform Bindings: %+v", ctx.Platform.Bindings)
