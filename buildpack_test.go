@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
-	"github.com/buildpacks/libcnb"
 	"github.com/sclevine/spec"
+
+	"github.com/buildpacks/libcnb"
 
 	. "github.com/onsi/gomega"
 )
