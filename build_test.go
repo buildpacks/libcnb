@@ -626,6 +626,30 @@ sbom-formats = []
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to find actual SBOM Type application/spdx+json in list of supported SBOM types []"))
 		})
 
+		it("skips if API is not 0.7", func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "0.6"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+sbom-formats = []
+`),
+				0600),
+			).To(Succeed())
+
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+
+			libcnb.Build(builder,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls).To(BeEmpty())
+		})
+
 		it("has no matching formats", func() {
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
