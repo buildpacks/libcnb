@@ -306,9 +306,11 @@ func Build(builder Builder, options ...Option) {
 		}
 	}
 
-	if err := validateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
-		config.exitHandler.Error(fmt.Errorf("unable to validate SBOM\n%w", err))
-		return
+	if API != "0.1" && API != "0.2" && API != "0.3" && API != "0.4" && API != "0.5" && API != "0.6" {
+		if err := validateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to validate SBOM\n%w", err))
+			return
+		}
 	}
 
 	// Deprecated: as of Buildpack API 0.7, to be removed in a future version
