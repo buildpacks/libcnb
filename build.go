@@ -345,12 +345,6 @@ func Build(builder Builder, options ...Option) {
 			}
 		}
 
-		// even if there is data, do not write a BOM if we have buildpack API 0.7, that will cause a lifecycle error
-		if API == "0.7" && len(launch.BOM) > 0 {
-			logger.Info("Warning: this buildpack is including both old and new format SBOM information, which is an invalid state. To prevent the lifecycle from failing, libcnb is discarding the old SBOM information.")
-			launch.BOM = nil
-		}
-
 		if err = config.tomlWriter.Write(file, launch); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s\n%w", file, err))
 			return
@@ -365,12 +359,6 @@ func Build(builder Builder, options ...Option) {
 	if !build.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "build.toml")
 		logger.Debugf("Writing build metadata: %s <= %+v", file, build)
-
-		// even if there is data, do not write a BOM if we have buildpack API 0.7, that will cause a lifecycle error
-		if API == "0.7" && len(build.BOM) > 0 {
-			logger.Info("Warning: this buildpack is including both old and new format SBOM information, which is an invalid state. To prevent the lifecycle from failing, libcnb is discarding the old SBOM information.")
-			build.BOM = nil
-		}
 
 		if err = config.tomlWriter.Write(file, build); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write build metadata %s\n%w", file, err))

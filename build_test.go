@@ -640,7 +640,7 @@ version = "1.1.1"
 			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 		})
 
-		it("writes launch.toml with BOM entries which are removed", func() {
+		it("writes launch.toml with BOM entries which are still permitted", func() {
 			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
 				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
 					{
@@ -676,11 +676,17 @@ version = "1.1.1"
 						Default: true,
 					},
 				},
-				BOM: nil,
+				BOM: []libcnb.BOMEntry{
+					{
+						Name:     "test-launch-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Launch:   true,
+					},
+				},
 			}))
 		})
 
-		it("writes build.toml with BOM entries which are removed", func() {
+		it("writes build.toml with BOM entries which are still permitted", func() {
 			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
 				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
 					{
@@ -708,7 +714,13 @@ version = "1.1.1"
 
 			Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "build.toml")))
 			Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.BuildTOML{
-				BOM: nil,
+				BOM: []libcnb.BOMEntry{
+					{
+						Name:     "test-build-bom-entry",
+						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Build:    true,
+					},
+				},
 				Unmet: []libcnb.UnmetPlanEntry{
 					{
 						Name: "test-entry",
