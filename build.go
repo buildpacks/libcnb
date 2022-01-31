@@ -122,6 +122,7 @@ type Builder interface {
 func Build(builder Builder, options ...Option) {
 	config := Config{
 		arguments:         os.Args,
+		bomLabel:          false,
 		environmentWriter: internal.EnvironmentWriter{},
 		exitHandler:       internal.NewExitHandler(),
 		tomlWriter:        internal.TOMLWriter{},
@@ -315,7 +316,7 @@ func Build(builder Builder, options ...Option) {
 
 	// Deprecated: as of Buildpack API 0.7, to be removed in a future version
 	var launchBOM, buildBOM []BOMEntry
-	if result.BOM != nil {
+	if result.BOM != nil && config.bomLabel {
 		for _, entry := range result.BOM.Entries {
 			if entry.Launch {
 				launchBOM = append(launchBOM, entry)

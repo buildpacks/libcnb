@@ -198,6 +198,7 @@ version = "1.1.1"
 
 		it("fails", func() {
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -212,6 +213,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -224,6 +226,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -235,6 +238,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 		)
 
@@ -297,6 +301,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), layersPath, platformPath, buildpackPlanPath}),
 		)
 
@@ -309,6 +314,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), fmt.Errorf("test-error"))
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 		)
@@ -323,6 +329,7 @@ version = "1.1.1"
 			Return(libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -339,6 +346,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
 		)
@@ -356,6 +364,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
 		)
@@ -373,6 +382,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
@@ -391,6 +401,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithEnvironmentWriter(environmentWriter),
 		)
@@ -422,6 +433,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -453,6 +465,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(result, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -501,6 +514,7 @@ version = "1.1.1"
 		}, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -541,6 +555,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{PersistentMetadata: m}, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -553,6 +568,7 @@ version = "1.1.1"
 		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -573,6 +589,7 @@ version = "1.1.1"
 			Return(libcnb.BuildResult{Layers: []libcnb.LayerContributor{layerContributor}}, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -605,6 +622,7 @@ version = "1.1.1"
 		}, nil)
 
 		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithTOMLWriter(tomlWriter),
 		)
@@ -626,7 +644,7 @@ version = "1.1.1"
 		}))
 	})
 
-	context("API 0.7", func() {
+	context("Config bomLabel is false", func() {
 		it.Before(func() {
 			var err error
 
@@ -640,7 +658,7 @@ version = "1.1.1"
 			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 		})
 
-		it("writes launch.toml with BOM entries which are still permitted", func() {
+		it("writes launch.toml without BOM entries", func() {
 			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
 				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
 					{
@@ -663,6 +681,7 @@ version = "1.1.1"
 			}, nil)
 
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(false),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 			)
@@ -676,17 +695,11 @@ version = "1.1.1"
 						Default: true,
 					},
 				},
-				BOM: []libcnb.BOMEntry{
-					{
-						Name:     "test-launch-bom-entry",
-						Metadata: map[string]interface{}{"test-key": "test-value"},
-						Launch:   true,
-					},
-				},
+				BOM: nil,
 			}))
 		})
 
-		it("writes build.toml with BOM entries which are still permitted", func() {
+		it("writes build.toml without BOM entries", func() {
 			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
 				BOM: &libcnb.BOM{Entries: []libcnb.BOMEntry{
 					{
@@ -708,19 +721,14 @@ version = "1.1.1"
 			}, nil)
 
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(false),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 			)
 
 			Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "build.toml")))
 			Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.BuildTOML{
-				BOM: []libcnb.BOMEntry{
-					{
-						Name:     "test-build-bom-entry",
-						Metadata: map[string]interface{}{"test-key": "test-value"},
-						Build:    true,
-					},
-				},
+				BOM: nil,
 				Unmet: []libcnb.UnmetPlanEntry{
 					{
 						Name: "test-entry",
@@ -750,6 +758,7 @@ sbom-formats = ["application/vnd.cyclonedx+json"]
 
 		it("has no SBOM files", func() {
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -774,6 +783,7 @@ sbom-formats = []
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -798,6 +808,7 @@ sbom-formats = []
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -809,6 +820,7 @@ sbom-formats = []
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -820,6 +832,7 @@ sbom-formats = []
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -831,6 +844,7 @@ sbom-formats = []
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			libcnb.Build(builder,
+				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
