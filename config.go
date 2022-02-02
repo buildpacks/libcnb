@@ -65,6 +65,7 @@ type ExecDWriter interface {
 // Config is an object that contains configurable properties for execution.
 type Config struct {
 	arguments         []string
+	bomLabel          bool
 	environmentWriter EnvironmentWriter
 	exitHandler       ExitHandler
 	tomlWriter        TOMLWriter
@@ -110,6 +111,15 @@ func WithTOMLWriter(tomlWriter TOMLWriter) Option {
 func WithExecDWriter(execdWriter ExecDWriter) Option {
 	return func(config Config) Config {
 		config.execdWriter = execdWriter
+		return config
+	}
+}
+
+// WithBOMLabel creates an Option that enables/disables writing the BOM Label
+// Deprecated: as of Buildpack API 0.7, to be removed in a future version
+func WithBOMLabel(bomLabel bool) Option {
+	return func(config Config) Config {
+		config.bomLabel = bomLabel
 		return config
 	}
 }
