@@ -642,7 +642,7 @@ sbom-formats = []
 
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
-			libcnb.Build(builder,
+			libcnb.Build(buildFunc,
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
