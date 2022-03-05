@@ -588,11 +588,13 @@ sbom-formats = ["application/vnd.cyclonedx+json"]
 				0600),
 			).To(Succeed())
 
-			builder.On("Build", mock.Anything).Return(libcnb.BuildResult{}, nil)
+			buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+				return libcnb.BuildResult{}, nil
+			}
 		})
 
 		it("has no SBOM files", func() {
-			libcnb.Build(builder,
+			libcnb.Build(buildFunc,
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -616,7 +618,7 @@ sbom-formats = []
 
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
-			libcnb.Build(builder,
+			libcnb.Build(buildFunc,
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -627,7 +629,7 @@ sbom-formats = []
 		it("has no matching formats", func() {
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
-			libcnb.Build(builder,
+			libcnb.Build(buildFunc,
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -638,7 +640,7 @@ sbom-formats = []
 		it("has a matching format", func() {
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
-			libcnb.Build(builder,
+			libcnb.Build(buildFunc,
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
@@ -649,7 +651,7 @@ sbom-formats = []
 		it("has a junk format", func() {
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
 			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
-			libcnb.Build(builder,
+			libcnb.Build(buildFunc,
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 			)
