@@ -27,9 +27,6 @@ import (
 )
 
 const (
-	// BindingKind is the metadata key for a binding's kind.
-	BindingKind = "kind"
-
 	// BindingProvider is the key for a binding's provider.
 	BindingProvider = "provider"
 
@@ -40,12 +37,6 @@ const (
 	//
 	// See the Service Binding Specification for Kubernetes for more details - https://k8s-service-bindings.github.io/spec/
 	EnvServiceBindings = "SERVICE_BINDING_ROOT"
-
-	// EnvCNBBindings is the name of the environment variable that contains the path to the CNB bindings directory.
-	// See the CNB bindings extension spec for more details - https://github.com/buildpacks/spec/blob/main/extensions/bindings.md
-	// Deprecated: Use the Service Binding Specification for Kubernetes instead -
-	// https://github.com/buildpacks/rfcs/blob/main/text/0055-deprecate-service-bindings.md.
-	EnvCNBBindings = "CNB_BINDINGS"
 )
 
 // Binding is a projection of metadata about an external entity to be bound to.
@@ -77,7 +68,7 @@ func NewBinding(name string, path string, secret map[string]string) Binding {
 
 	for k, v := range secret {
 		switch k {
-		case BindingType, BindingKind: // TODO: Remove as CNB_BINDINGS ages out
+		case BindingType:
 			b.Type = strings.TrimSpace(v)
 		case BindingProvider:
 			b.Provider = strings.TrimSpace(v)
@@ -94,19 +85,6 @@ func NewBindingFromPath(path string) (Binding, error) {
 	secret, err := internal.NewConfigMapFromPath(path)
 	if err != nil {
 		return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", path, err)
-	}
-
-	// TODO: Remove as CNB_BINDINGS ages out
-	for _, d := range []string{"metadata", "secret"} {
-		file := filepath.Join(path, d)
-		cm, err := internal.NewConfigMapFromPath(file)
-		if err != nil {
-			return Binding{}, fmt.Errorf("unable to create new config map from %s\n%w", file, err)
-		}
-
-		for k, v := range cm {
-			secret[k] = v
-		}
 	}
 
 	return NewBinding(filepath.Base(path), path, secret), nil
@@ -129,36 +107,16 @@ func (b Binding) SecretFilePath(name string) (string, bool) {
 		return "", false
 	}
 
-	// TODO: Remove as CNB_BINDINGS ages out
-	for _, d := range []string{"metadata", "secret"} {
-		file := filepath.Join(b.Path, d, name)
-		if _, err := os.Stat(file); err == nil {
-			return file, true
-		}
-	}
-
 	return filepath.Join(b.Path, name), true
 }
 
 // Bindings is a collection of bindings keyed by their name.
 type Bindings []Binding
 
-// NewBindingsFromEnvironment creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
-// or $CNB_BINDINGS if it does not exist.  If neither is defined, returns an empty collection of Bindings.
-// Note - This API is deprecated. Please use NewBindingsForLaunch instead.
-func NewBindingsFromEnvironment() (Bindings, error) {
-	return NewBindingsForLaunch()
-}
-
-// NewBindingsForLaunch creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
-// or $CNB_BINDINGS if it does not exist.  If neither is defined, returns an empty collection of Bindings.
+// NewBindingsForLaunch creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT.
+// If isn't defined, returns an empty collection of Bindings.
 func NewBindingsForLaunch() (Bindings, error) {
 	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
-		return NewBindingsFromPath(path)
-	}
-
-	// TODO: Remove as CNB_BINDINGS ages out
-	if path, ok := os.LookupEnv(EnvCNBBindings); ok {
 		return NewBindingsFromPath(path)
 	}
 
@@ -189,17 +147,14 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 	return bindings, nil
 }
 
-// NewBindingsForBuild creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT
-// or $CNB_BINDINGS if it does not exist.  If neither is defined, bindings are read from <platform>/bindings, the default
+// NewBindingsForBuild creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT.
+// If isn't defined, bindings are read from <platform>/bindings, the default
 // path defined in the CNB Binding extension specification.
 func NewBindingsForBuild(platformDir string) (Bindings, error) {
 	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
 		return NewBindingsFromPath(path)
 	}
-	// TODO: Remove as CNB_BINDINGS ages out
-	if path, ok := os.LookupEnv(EnvCNBBindings); ok {
-		return NewBindingsFromPath(path)
-	}
+
 	return NewBindingsFromPath(filepath.Join(platformDir, "bindings"))
 }
 
