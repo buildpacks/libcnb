@@ -179,7 +179,7 @@ test-key = "test-value"
 		Expect(os.RemoveAll(platformPath)).To(Succeed())
 	})
 
-	context("buildpack API is not 0.5 or 0.6", func() {
+	context("buildpack API is not 0.5, 0.6, or 0.7", func() {
 		it.Before(func() {
 			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
@@ -201,7 +201,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack APIs 0.5 and 0.6",
+				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, and 0.7",
 			))
 		})
 	})
@@ -571,5 +571,116 @@ version = "1.1.1"
 				},
 			},
 		}))
+	})
+
+	context("Validates SBOM entries", func() {
+		it.Before(func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "0.7"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+sbom-formats = ["application/vnd.cyclonedx+json"]
+`),
+				0600),
+			).To(Succeed())
+
+			buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+				return libcnb.BuildResult{}, nil
+			}
+		})
+
+		it("has no SBOM files", func() {
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls).To(BeEmpty())
+		})
+
+		it("has no accepted formats", func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "0.7"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+sbom-formats = []
+`),
+				0600),
+			).To(Succeed())
+
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to find actual SBOM Type application/spdx+json in list of supported SBOM types []"))
+		})
+
+		it("skips if API is not 0.7", func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "0.6"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+sbom-formats = []
+`),
+				0600),
+			).To(Succeed())
+
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls).To(BeEmpty())
+		})
+
+		it("has no matching formats", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to find actual SBOM Type application/spdx+json in list of supported SBOM types [application/vnd.cyclonedx+json]"))
+		})
+
+		it("has a matching format", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls).To(BeEmpty())
+		})
+
+		it("has a junk format", func() {
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
+			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to parse SBOM unknown\nunable to translate from random.json to SBOMFormat"))
+		})
 	})
 }

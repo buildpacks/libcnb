@@ -41,6 +41,9 @@ type BuildpackInfo struct {
 
 	// Licenses a list of buildpack licenses.
 	Licenses []License `toml:"licenses"`
+
+	// SBOM is the list of supported SBOM media types
+	SBOMFormats []string `toml:"sbom-formats"`
 }
 
 // License contains information about a Software License
