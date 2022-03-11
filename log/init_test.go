@@ -25,6 +25,6 @@ import (
 
 func TestUnit(t *testing.T) {
 	suite := spec.New("libcnb/log", spec.Report(report.Terminal{}))
-	suite("Logger", testLogger)
+	suite("PlainLogger", testLogger)
 	suite.Run(t)
 }

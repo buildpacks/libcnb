@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/buildpacks/libcnb"
+	"github.com/buildpacks/libcnb/log"
 	"github.com/buildpacks/libcnb/mocks"
 )
 
@@ -182,6 +183,7 @@ test-key = "test-value"
 		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{}),
 			libcnb.WithExitHandler(exitHandler),
+			libcnb.WithLogger(log.NewDiscard()),
 		)
 
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("expected command name"))
@@ -193,6 +195,7 @@ test-key = "test-value"
 		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
+			libcnb.WithLogger(log.NewDiscard()),
 		)
 
 		Expect(exitHandler.Calls).To(BeEmpty())
@@ -207,6 +210,7 @@ test-key = "test-value"
 		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
+			libcnb.WithLogger(log.NewDiscard()),
 		)
 	})
 
@@ -219,6 +223,7 @@ test-key = "test-value"
 		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
+			libcnb.WithLogger(log.NewDiscard()),
 		)
 
 		Expect(exitHandler.Calls[0].Method).To(BeIdenticalTo("Pass"))
@@ -233,6 +238,7 @@ test-key = "test-value"
 		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
+			libcnb.WithLogger(log.NewDiscard()),
 		)
 
 		Expect(exitHandler.Calls[0].Method).To(BeIdenticalTo("Fail"))
@@ -244,6 +250,7 @@ test-key = "test-value"
 		libcnb.Main(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
+			libcnb.WithLogger(log.NewDiscard()),
 		)
 
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unsupported command test-command"))

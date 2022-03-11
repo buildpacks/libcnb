@@ -32,7 +32,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		Expect = NewWithT(t).Expect
 
 		b *bytes.Buffer
-		l log.Logger
+		l log.PlainLogger
 	)
 
 	it.Before(func() {
@@ -60,7 +60,7 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("configures debug", func() {
-			Expect(l.IsDebugEnabled()).To(BeTrue())
+			Expect(l.IsDebugEnabled()).To(BeFalse())
 		})
 	})
 
@@ -79,51 +79,14 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 		})
 	})
 
-	context("with debug disabled", func() {
-		it.Before(func() {
-			l = log.NewWithOptions(b)
-		})
-
-		it("does not write debug log", func() {
-			l.Debug("test-message")
-			Expect(b.String()).To(Equal(""))
-		})
-
-		it("does not write debugf log", func() {
-			l.Debugf("test-%s", "message")
-			Expect(b.String()).To(Equal(""))
-		})
-
-		it("does not return debug writer", func() {
-			Expect(l.DebugWriter()).To(BeNil())
-		})
-
-		it("indicates that debug is not enabled", func() {
-			Expect(l.IsDebugEnabled()).To(BeFalse())
-		})
-
-		it("writes info log", func() {
-			l.Info("test-message")
-			Expect(b.String()).To(Equal("test-message\n"))
-		})
-
-		it("writes infof log", func() {
-			l.Infof("test-%s", "message")
-			Expect(b.String()).To(Equal("test-message\n"))
-		})
-
-		it("returns info writer", func() {
-			Expect(l.InfoWriter()).NotTo(BeNil())
-		})
-
-		it("indicates that info is enabled", func() {
-			Expect(l.IsInfoEnabled()).To(BeTrue())
-		})
-	})
-
 	context("with debug enabled", func() {
 		it.Before(func() {
-			l = log.NewWithOptions(b, log.WithDebug(b))
+			Expect(os.Setenv("BP_LOG_LEVEL", "DEBUG")).To(Succeed())
+			l = log.New(b)
+		})
+
+		it.After(func() {
+			Expect(os.Unsetenv("BP_LOG_LEVEL")).To(Succeed())
 		})
 
 		it("writes debug log", func() {
@@ -142,24 +105,6 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 
 		it("indicates that debug is enabled", func() {
 			Expect(l.IsDebugEnabled()).To(BeTrue())
-		})
-
-		it("writes info log", func() {
-			l.Info("test-message")
-			Expect(b.String()).To(Equal("test-message\n"))
-		})
-
-		it("writes infof log", func() {
-			l.Infof("test-%s", "message")
-			Expect(b.String()).To(Equal("test-message\n"))
-		})
-
-		it("returns info writer", func() {
-			Expect(l.InfoWriter()).NotTo(BeNil())
-		})
-
-		it("indicates that info is enabled", func() {
-			Expect(l.IsInfoEnabled()).To(BeTrue())
 		})
 	})
 }

@@ -23,129 +23,60 @@ import (
 	"strings"
 )
 
-// Logger logs messages to a writer.
-type Logger struct {
+// PlainLogger implements Logger and logs messages to a writer.
+type PlainLogger struct {
 	debug io.Writer
-	info  io.Writer
 }
 
-// Option is a function that configures a Logger.
-type Option func(Logger) Logger
-
-// WithDebug configures the debug Writer.
-func WithDebug(writer io.Writer) Option {
-	return func(logger Logger) Logger {
-		logger.debug = writer
-		return logger
+// New creates a new instance of PlainLogger.  It configures debug logging if $BP_DEBUG or $BP_LOG_LEVEL are set.
+func New(debug io.Writer) PlainLogger {
+	if strings.ToLower(os.Getenv("BP_LOG_LEVEL")) == "debug" || os.Getenv("BP_DEBUG") != "" {
+		return PlainLogger{debug: debug}
 	}
+
+	return PlainLogger{}
 }
 
-// NewWithOptions create a new instance of Logger.  It configures the Logger with options.
-func NewWithOptions(writer io.Writer, options ...Option) Logger {
-	l := Logger{
-		info: writer,
-	}
-
-	for _, option := range options {
-		l = option(l)
-	}
-
-	return l
-}
-
-// New creates a new instance of Logger.  It configures debug logging if $BP_DEBUG is set.
-func New(writer io.Writer) Logger {
-	var options []Option
-
-	// check for presence and value of log level environment variable
-	options = Level(options, writer)
-
-	return NewWithOptions(writer, options...)
-}
-
-func Level(options []Option, writer io.Writer) []Option {
-	// Check for older log level env variable
-	_, dbSet := os.LookupEnv("BP_DEBUG")
-
-	// Then check for common buildpack log level env variable - if either are set to DEBUG/true, enable Debug Writer
-	if level, ok := os.LookupEnv("BP_LOG_LEVEL"); (ok && strings.ToLower(level) == "debug") || dbSet {
-		options = append(options, WithDebug(writer))
-	}
-	return options
+// NewDiscard creates a new instance of PlainLogger that discards all log messages. Useful in testing.
+func NewDiscard() PlainLogger {
+	return PlainLogger{debug: io.Discard}
 }
 
 // Debug formats using the default formats for its operands and writes to the configured debug writer. Spaces are added
 // between operands when neither is a string.
-func (l Logger) Debug(a ...interface{}) {
+func (l PlainLogger) Debug(a ...interface{}) {
 	if !l.IsDebugEnabled() {
 		return
 	}
 
-	l.print(l.debug, a...)
-}
-
-// Debugf formats according to a format specifier and writes to the configured debug writer.
-func (l Logger) Debugf(format string, a ...interface{}) {
-	if !l.IsDebugEnabled() {
-		return
-	}
-
-	l.printf(l.debug, format, a...)
-}
-
-// DebugWriter returns the configured debug writer.
-func (l Logger) DebugWriter() io.Writer {
-	return l.debug
-}
-
-// IsDebugEnabled indicates whether debug logging is enabled.
-func (l Logger) IsDebugEnabled() bool {
-	return l.debug != nil
-}
-
-// Info formats using the default formats for its operands and writes to the configured info writer. Spaces are added
-// between operands when neither is a string.
-func (l Logger) Info(a ...interface{}) {
-	if !l.IsInfoEnabled() {
-		return
-	}
-
-	l.print(l.info, a...)
-}
-
-// Infof formats according to a format specifier and writes to the configured info writer.
-func (l Logger) Infof(format string, a ...interface{}) {
-	if !l.IsInfoEnabled() {
-		return
-	}
-
-	l.printf(l.info, format, a...)
-}
-
-// InfoWriter returns the configured info writer.
-func (l Logger) InfoWriter() io.Writer {
-	return l.info
-}
-
-// IsInfoEnabled indicates whether info logging is enabled.
-func (l Logger) IsInfoEnabled() bool {
-	return l.info != nil
-}
-
-func (Logger) print(writer io.Writer, a ...interface{}) {
 	s := fmt.Sprint(a...)
 
 	if !strings.HasSuffix(s, "\n") {
 		s += "\n"
 	}
 
-	_, _ = fmt.Fprint(writer, s)
+	_, _ = fmt.Fprint(l.debug, s)
 }
 
-func (Logger) printf(writer io.Writer, format string, a ...interface{}) {
+// Debugf formats according to a format specifier and writes to the configured debug writer.
+func (l PlainLogger) Debugf(format string, a ...interface{}) {
+	if !l.IsDebugEnabled() {
+		return
+	}
+
 	if !strings.HasSuffix(format, "\n") {
 		format += "\n"
 	}
 
-	_, _ = fmt.Fprintf(writer, format, a...)
+	_, _ = fmt.Fprintf(l.debug, format, a...)
+}
+
+// DebugWriter returns the configured debug writer.
+func (l PlainLogger) DebugWriter() io.Writer {
+	return l.debug
+}
+
+// IsDebugEnabled indicates whether debug logging is enabled.
+func (l PlainLogger) IsDebugEnabled() bool {
+	return l.debug != nil
 }
