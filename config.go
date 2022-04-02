@@ -16,10 +16,6 @@
 
 package libcnb
 
-import (
-	"io"
-)
-
 //go:generate mockery --name EnvironmentWriter --case=underscore
 
 // EnvironmentWriter is the interface implemented by a type that wants to serialize a map of environment variables to
@@ -75,9 +71,6 @@ type Logger interface {
 
 	// Debugf formats according to a format specifier
 	Debugf(format string, a ...interface{})
-
-	// DebugWriter returns a writer where everything is written at this level
-	DebugWriter() io.Writer
 
 	// IsDebugEnabled indicates whether debug logging is enabled
 	IsDebugEnabled() bool

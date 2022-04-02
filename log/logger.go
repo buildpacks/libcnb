@@ -71,11 +71,6 @@ func (l PlainLogger) Debugf(format string, a ...interface{}) {
 	_, _ = fmt.Fprintf(l.debug, format, a...)
 }
 
-// DebugWriter returns the configured debug writer.
-func (l PlainLogger) DebugWriter() io.Writer {
-	return l.debug
-}
-
 // IsDebugEnabled indicates whether debug logging is enabled.
 func (l PlainLogger) IsDebugEnabled() bool {
 	return l.debug != nil

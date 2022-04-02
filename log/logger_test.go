@@ -99,10 +99,6 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 			Expect(b.String()).To(Equal("test-message\n"))
 		})
 
-		it("returns debug writer", func() {
-			Expect(l.DebugWriter()).NotTo(BeNil())
-		})
-
 		it("indicates that debug is enabled", func() {
 			Expect(l.IsDebugEnabled()).To(BeTrue())
 		})
