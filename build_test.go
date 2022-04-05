@@ -204,7 +204,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, and 0.7",
+				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, 0.7 and 0.8",
 			))
 		})
 	})
@@ -544,6 +544,72 @@ version = "1.1.1"
 					Name:     "test-launch-bom-entry",
 					Metadata: map[string]interface{}{"test-key": "test-value"},
 					Launch:   true,
+				},
+			},
+		}))
+	})
+
+	it("ignore working-directory setting and writes launch.toml (API<0.8)", func() {
+		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
+			Processes: []libcnb.Process{
+				{
+					Type:             "test-type",
+					Command:          "test-command-in-dir",
+					Default:          true,
+					WorkingDirectory: "/my/directory/",
+				},
+			},
+		}, nil)
+
+		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+		)
+
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "launch.toml")))
+		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.LaunchTOML{
+			Processes: []libcnb.Process{
+				{
+					Type:    "test-type",
+					Command: "test-command-in-dir",
+					Default: true,
+				},
+			},
+		}))
+	})
+
+	it("writes launch.toml with working-directory setting(API>=0.8)", func() {
+		var b bytes.Buffer
+		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
+			Processes: []libcnb.Process{
+				{
+					Type:             "test-type",
+					Command:          "test-command-in-dir",
+					Default:          true,
+					WorkingDirectory: "/my/directory/",
+				},
+			},
+		}, nil)
+
+		libcnb.Build(builder,
+			libcnb.WithBOMLabel(true),
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+		)
+
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "launch.toml")))
+		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.LaunchTOML{
+			Processes: []libcnb.Process{
+				{
+					Type:             "test-type",
+					Command:          "test-command-in-dir",
+					Default:          true,
+					WorkingDirectory: "/my/directory/",
 				},
 			},
 		}))
