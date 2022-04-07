@@ -26,6 +26,7 @@ import (
 	"github.com/BurntSushi/toml"
 
 	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/log"
 )
 
 // DetectContext contains the inputs to detection.
@@ -64,6 +65,7 @@ func Detect(detect DetectFunc, options ...Option) {
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
 		exitHandler:       internal.NewExitHandler(),
+		logger:            log.New(os.Stdout),
 		tomlWriter:        internal.TOMLWriter{},
 	}
 

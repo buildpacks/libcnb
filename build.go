@@ -27,6 +27,7 @@ import (
 	"github.com/BurntSushi/toml"
 
 	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/log"
 )
 
 // BuildContext contains the inputs to build.
@@ -104,6 +105,7 @@ func Build(build BuildFunc, options ...Option) {
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
 		exitHandler:       internal.NewExitHandler(),
+		logger:            log.New(os.Stdout),
 		tomlWriter:        internal.TOMLWriter{},
 	}
 
