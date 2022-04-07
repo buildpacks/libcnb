@@ -3,7 +3,8 @@ module github.com/buildpacks/libcnb
 go 1.17
 
 require (
-	github.com/BurntSushi/toml v1.1.0
+	github.com/BurntSushi/toml v1.0.0
+	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/onsi/gomega v1.19.0
 	github.com/sclevine/spec v1.4.0
 	github.com/stretchr/testify v1.7.1
