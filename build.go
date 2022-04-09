@@ -188,7 +188,7 @@ func Build(builder Builder, options ...Option) {
 	}
 	var buildpackPlanPath string
 
-	if API != "0.8" {
+	if API.LessThan(semver.MustParse("0.8")) {
 		if len(config.arguments) != 4 {
 			config.exitHandler.Error(fmt.Errorf("expected 3 arguments and received %d", len(config.arguments)-1))
 			return
@@ -205,7 +205,12 @@ func Build(builder Builder, options ...Option) {
 		ctx.Layers = Layers{layersDir}
 		ctx.Platform.Path, ok = os.LookupEnv("CNB_PLATFORM_DIR")
 		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_BUILD_PLAN_PATH to be set"))
+			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
+			return
+		}
+		buildpackPlanPath, ok = os.LookupEnv("CNB_BP_PLAN_PATH")
+		if !ok {
+			config.exitHandler.Error(fmt.Errorf("expected CNB_BP_PLAN_PATH to be set"))
 			return
 		}
 	}

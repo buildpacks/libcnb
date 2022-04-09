@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/poet"
@@ -110,15 +111,21 @@ func Detect(detector Detector, options ...Option) {
 	}
 	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
-	API := strings.TrimSpace(ctx.Buildpack.API)
-	if API != "0.5" && API != "0.6" && API != "0.7" && API != "0.8" {
-		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, 0.7 and 0.8"))
+	API, err := semver.NewVersion(ctx.Buildpack.API)
+	if err != nil {
+		config.exitHandler.Error(errors.New("version cannot be parsed"))
+		return
+	}
+
+	compatVersionCheck, _ := semver.NewConstraint(fmt.Sprintf(">= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
+	if !compatVersionCheck.Check(API) {
+		config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 		return
 	}
 
 	var buildPlanPath string
 
-	if API != "0.8" {
+	if API.LessThan(semver.MustParse("0.8")) {
 		if len(config.arguments) != 3 {
 			config.exitHandler.Error(fmt.Errorf("expected 2 arguments and received %d", len(config.arguments)-1))
 			return
