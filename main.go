@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/log"
 )
 
 // Main is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
@@ -30,6 +31,7 @@ func Main(detect DetectFunc, build BuildFunc, options ...Option) {
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
 		exitHandler:       internal.NewExitHandler(),
+		logger:            log.New(os.Stdout),
 		tomlWriter:        internal.TOMLWriter{},
 	}
 

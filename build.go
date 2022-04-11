@@ -105,6 +105,7 @@ func Build(build BuildFunc, options ...Option) {
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
 		exitHandler:       internal.NewExitHandler(),
+		logger:            log.New(os.Stdout),
 		tomlWriter:        internal.TOMLWriter{},
 	}
 
@@ -123,15 +124,14 @@ func Build(build BuildFunc, options ...Option) {
 		ok   bool
 	)
 	ctx := BuildContext{}
-	logger := log.New(os.Stdout)
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
-	if logger.IsDebugEnabled() {
-		logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
+	if config.logger.IsDebugEnabled() {
+		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
@@ -139,8 +139,8 @@ func Build(build BuildFunc, options ...Option) {
 	} else { // TODO: Remove branch once lifecycle has been updated to support this
 		ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "build")))
 	}
-	if logger.IsDebugEnabled() {
-		logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
+	if config.logger.IsDebugEnabled() {
+		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
@@ -148,7 +148,7 @@ func Build(build BuildFunc, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s\n%w", file, err))
 		return
 	}
-	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
+	config.logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
 	API := strings.TrimSpace(ctx.Buildpack.API)
 	if API != "0.5" && API != "0.6" && API != "0.7" {
@@ -157,25 +157,25 @@ func Build(build BuildFunc, options ...Option) {
 	}
 
 	ctx.Layers = Layers{config.arguments[1]}
-	logger.Debugf("Layers: %+v", ctx.Layers)
+	config.logger.Debugf("Layers: %+v", ctx.Layers)
 
 	ctx.Platform.Path = config.arguments[2]
-	if logger.IsDebugEnabled() {
-		logger.Debug(PlatformFormatter(ctx.Platform))
+	if config.logger.IsDebugEnabled() {
+		config.logger.Debug(PlatformFormatter(ctx.Platform))
 	}
 
 	if ctx.Platform.Bindings, err = NewBindingsForBuild(ctx.Platform.Path); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", ctx.Platform.Path, err))
 		return
 	}
-	logger.Debugf("Platform Bindings: %+v", ctx.Platform.Bindings)
+	config.logger.Debugf("Platform Bindings: %+v", ctx.Platform.Bindings)
 
 	file = filepath.Join(ctx.Platform.Path, "env")
 	if ctx.Platform.Environment, err = internal.NewConfigMapFromPath(file); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform environment %s\n%w", file, err))
 		return
 	}
-	logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
+	config.logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
 	var store Store
 	file = filepath.Join(ctx.Layers.Path, "store.toml")
@@ -184,27 +184,27 @@ func Build(build BuildFunc, options ...Option) {
 		return
 	}
 	ctx.PersistentMetadata = store.Metadata
-	logger.Debugf("Persistent Metadata: %+v", ctx.PersistentMetadata)
+	config.logger.Debugf("Persistent Metadata: %+v", ctx.PersistentMetadata)
 
 	file = config.arguments[3]
 	if _, err = toml.DecodeFile(file, &ctx.Plan); err != nil && !os.IsNotExist(err) {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack plan %s\n%w", file, err))
 		return
 	}
-	logger.Debugf("Buildpack Plan: %+v", ctx.Plan)
+	config.logger.Debugf("Buildpack Plan: %+v", ctx.Plan)
 
 	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
 		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
 		return
 	}
-	logger.Debugf("Stack: %s", ctx.StackID)
+	config.logger.Debugf("Stack: %s", ctx.StackID)
 
 	result, err := build(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return
 	}
-	logger.Debugf("Result: %+v", result)
+	config.logger.Debugf("Result: %+v", result)
 
 	file = filepath.Join(ctx.Layers.Path, "*.toml")
 	existing, err := filepath.Glob(file)
@@ -216,35 +216,35 @@ func Build(build BuildFunc, options ...Option) {
 
 	for _, layer := range result.Layers {
 		file = filepath.Join(layer.Path, "env.build")
-		logger.Debugf("Writing layer env.build: %s <= %+v", file, layer.BuildEnvironment)
+		config.logger.Debugf("Writing layer env.build: %s <= %+v", file, layer.BuildEnvironment)
 		if err = config.environmentWriter.Write(file, layer.BuildEnvironment); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write layer env.build %s\n%w", file, err))
 			return
 		}
 
 		file = filepath.Join(layer.Path, "env.launch")
-		logger.Debugf("Writing layer env.launch: %s <= %+v", file, layer.LaunchEnvironment)
+		config.logger.Debugf("Writing layer env.launch: %s <= %+v", file, layer.LaunchEnvironment)
 		if err = config.environmentWriter.Write(file, layer.LaunchEnvironment); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write layer env.launch %s\n%w", file, err))
 			return
 		}
 
 		file = filepath.Join(layer.Path, "env")
-		logger.Debugf("Writing layer env: %s <= %+v", file, layer.SharedEnvironment)
+		config.logger.Debugf("Writing layer env: %s <= %+v", file, layer.SharedEnvironment)
 		if err = config.environmentWriter.Write(file, layer.SharedEnvironment); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write layer env %s\n%w", file, err))
 			return
 		}
 
 		file = filepath.Join(layer.Path, "profile.d")
-		logger.Debugf("Writing layer profile.d: %s <= %+v", file, layer.Profile)
+		config.logger.Debugf("Writing layer profile.d: %s <= %+v", file, layer.Profile)
 		if err = config.environmentWriter.Write(file, layer.Profile); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write layer profile.d %s\n%w", file, err))
 			return
 		}
 
 		file = filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.toml", layer.Name))
-		logger.Debugf("Writing layer metadata: %s <= %+v", file, layer)
+		config.logger.Debugf("Writing layer metadata: %s <= %+v", file, layer)
 		var toWrite interface{} = layer
 		if API == "0.5" {
 			toWrite = internal.LayerAPI5{
@@ -266,7 +266,7 @@ func Build(build BuildFunc, options ...Option) {
 			continue
 		}
 
-		logger.Debugf("Removing %s", e)
+		config.logger.Debugf("Removing %s", e)
 
 		if err := os.RemoveAll(e); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to remove %s\n%w", e, err))
@@ -289,12 +289,12 @@ func Build(build BuildFunc, options ...Option) {
 
 	if !launch.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "launch.toml")
-		logger.Debugf("Writing application metadata: %s <= %+v", file, launch)
+		config.logger.Debugf("Writing application metadata: %s <= %+v", file, launch)
 
 		if API == "0.5" {
 			for _, process := range launch.Processes {
 				if process.Default {
-					logger.Info("WARNING: Launch layer is setting default=true, but that is not supported until API version 0.6. This setting will be ignored.")
+					config.exitHandler.Error(fmt.Errorf("unable to set default=true as that is not supported until API version 0.6"))
 				}
 			}
 		}
@@ -311,7 +311,7 @@ func Build(build BuildFunc, options ...Option) {
 
 	if !buildTOML.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "build.toml")
-		logger.Debugf("Writing build metadata: %s <= %+v", file, build)
+		config.logger.Debugf("Writing build metadata: %s <= %+v", file, build)
 
 		if err = config.tomlWriter.Write(file, buildTOML); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write build metadata %s\n%w", file, err))
@@ -324,7 +324,7 @@ func Build(build BuildFunc, options ...Option) {
 			Metadata: result.PersistentMetadata,
 		}
 		file = filepath.Join(ctx.Layers.Path, "store.toml")
-		logger.Debugf("Writing persistent metadata: %s <= %+v", file, store)
+		config.logger.Debugf("Writing persistent metadata: %s <= %+v", file, store)
 		if err = config.tomlWriter.Write(file, store); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write persistent metadata %s\n%w", file, err))
 			return

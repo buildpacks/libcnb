@@ -65,6 +65,7 @@ func Detect(detect DetectFunc, options ...Option) {
 		arguments:         os.Args,
 		environmentWriter: internal.EnvironmentWriter{},
 		exitHandler:       internal.NewExitHandler(),
+		logger:            log.New(os.Stdout),
 		tomlWriter:        internal.TOMLWriter{},
 	}
 
@@ -83,15 +84,14 @@ func Detect(detect DetectFunc, options ...Option) {
 		ok   bool
 	)
 	ctx := DetectContext{}
-	logger := log.New(os.Stdout)
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
-	if logger.IsDebugEnabled() {
-		logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
+	if config.logger.IsDebugEnabled() {
+		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
@@ -99,8 +99,8 @@ func Detect(detect DetectFunc, options ...Option) {
 	} else { // TODO: Remove branch once lifecycle has been updated to support this
 		ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "detect")))
 	}
-	if logger.IsDebugEnabled() {
-		logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
+	if config.logger.IsDebugEnabled() {
+		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
@@ -108,7 +108,7 @@ func Detect(detect DetectFunc, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s\n%w", file, err))
 		return
 	}
-	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
+	config.logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
 	API := strings.TrimSpace(ctx.Buildpack.API)
 	if API != "0.5" && API != "0.6" && API != "0.7" {
@@ -117,8 +117,8 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 
 	ctx.Platform.Path = config.arguments[1]
-	if logger.IsDebugEnabled() {
-		logger.Debug(PlatformFormatter(ctx.Platform))
+	if config.logger.IsDebugEnabled() {
+		config.logger.Debug(PlatformFormatter(ctx.Platform))
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
@@ -126,27 +126,27 @@ func Detect(detect DetectFunc, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
 		return
 	}
-	logger.Debugf("Platform Bindings: %+v", ctx.Platform.Bindings)
+	config.logger.Debugf("Platform Bindings: %+v", ctx.Platform.Bindings)
 
 	file = filepath.Join(ctx.Platform.Path, "env")
 	if ctx.Platform.Environment, err = internal.NewConfigMapFromPath(file); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform environment %s\n%w", file, err))
 		return
 	}
-	logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
+	config.logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
 	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
 		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
 		return
 	}
-	logger.Debugf("Stack: %s", ctx.StackID)
+	config.logger.Debugf("Stack: %s", ctx.StackID)
 
 	result, err := detect(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return
 	}
-	logger.Debugf("Result: %+v", result)
+	config.logger.Debugf("Result: %+v", result)
 
 	if !result.Pass {
 		config.exitHandler.Fail()
@@ -163,7 +163,7 @@ func Detect(detect DetectFunc, options ...Option) {
 		}
 
 		file = config.arguments[2]
-		logger.Debugf("Writing build plans: %s <= %+v", file, plans)
+		config.logger.Debugf("Writing build plans: %s <= %+v", file, plans)
 		if err := config.tomlWriter.Write(file, plans); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s\n%w", file, err))
 			return
