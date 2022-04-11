@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/poet"
@@ -77,11 +78,6 @@ func Detect(detector Detector, options ...Option) {
 		config = option(config)
 	}
 
-	if len(config.arguments) != 3 {
-		config.exitHandler.Error(fmt.Errorf("expected 2 arguments and received %d", len(config.arguments)-1))
-		return
-	}
-
 	var (
 		err  error
 		file string
@@ -115,13 +111,40 @@ func Detect(detector Detector, options ...Option) {
 	}
 	logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
-	API := strings.TrimSpace(ctx.Buildpack.API)
-	if API != "0.5" && API != "0.6" && API != "0.7" {
-		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, and 0.7"))
+	API, err := semver.NewVersion(ctx.Buildpack.API)
+	if err != nil {
+		config.exitHandler.Error(errors.New("version cannot be parsed"))
 		return
 	}
 
-	ctx.Platform.Path = config.arguments[1]
+	compatVersionCheck, _ := semver.NewConstraint(fmt.Sprintf(">= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
+	if !compatVersionCheck.Check(API) {
+		config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
+		return
+	}
+
+	var buildPlanPath string
+
+	if API.LessThan(semver.MustParse("0.8")) {
+		if len(config.arguments) != 3 {
+			config.exitHandler.Error(fmt.Errorf("expected 2 arguments and received %d", len(config.arguments)-1))
+			return
+		}
+		ctx.Platform.Path = config.arguments[1]
+		buildPlanPath = config.arguments[2]
+	} else {
+		ctx.Platform.Path, ok = os.LookupEnv("CNB_PLATFORM_DIR")
+		if !ok {
+			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
+			return
+		}
+		buildPlanPath, ok = os.LookupEnv("CNB_BUILD_PLAN_PATH")
+		if !ok {
+			config.exitHandler.Error(fmt.Errorf("expected CNB_BUILD_PLAN_PATH to be set"))
+			return
+		}
+	}
+
 	if logger.IsDebugEnabled() {
 		logger.Debug(PlatformFormatter(ctx.Platform))
 	}
@@ -166,10 +189,9 @@ func Detect(detector Detector, options ...Option) {
 			plans.Or = result.Plans[1:]
 		}
 
-		file = config.arguments[2]
-		logger.Debugf("Writing build plans: %s <= %+v", file, plans)
-		if err := config.tomlWriter.Write(file, plans); err != nil {
-			config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s\n%w", file, err))
+		logger.Debugf("Writing build plans: %s <= %+v", buildPlanPath, plans)
+		if err := config.tomlWriter.Write(buildPlanPath, plans); err != nil {
+			config.exitHandler.Error(fmt.Errorf("unable to write buildplan %s\n%w", buildPlanPath, err))
 			return
 		}
 	}

@@ -142,11 +142,6 @@ func Build(builder Builder, options ...Option) {
 		config = option(config)
 	}
 
-	if len(config.arguments) != 4 {
-		config.exitHandler.Error(fmt.Errorf("expected 3 arguments and received %d", len(config.arguments)-1))
-		return
-	}
-
 	var (
 		err  error
 		file string
@@ -191,11 +186,36 @@ func Build(builder Builder, options ...Option) {
 		config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 		return
 	}
+	var buildpackPlanPath string
 
-	ctx.Layers = Layers{config.arguments[1]}
+	if API.LessThan(semver.MustParse("0.8")) {
+		if len(config.arguments) != 4 {
+			config.exitHandler.Error(fmt.Errorf("expected 3 arguments and received %d", len(config.arguments)-1))
+			return
+		}
+		ctx.Layers = Layers{config.arguments[1]}
+		ctx.Platform.Path = config.arguments[2]
+		buildpackPlanPath = config.arguments[3]
+	} else {
+		layersDir, ok := os.LookupEnv("CNB_LAYERS_DIR")
+		if !ok {
+			config.exitHandler.Error(fmt.Errorf("expected CNB_LAYERS_DIR to be set"))
+			return
+		}
+		ctx.Layers = Layers{layersDir}
+		ctx.Platform.Path, ok = os.LookupEnv("CNB_PLATFORM_DIR")
+		if !ok {
+			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
+			return
+		}
+		buildpackPlanPath, ok = os.LookupEnv("CNB_BP_PLAN_PATH")
+		if !ok {
+			config.exitHandler.Error(fmt.Errorf("expected CNB_BP_PLAN_PATH to be set"))
+			return
+		}
+	}
+
 	logger.Debugf("Layers: %+v", ctx.Layers)
-
-	ctx.Platform.Path = config.arguments[2]
 	if logger.IsDebugEnabled() {
 		logger.Debug(PlatformFormatter(ctx.Platform))
 	}
@@ -222,9 +242,8 @@ func Build(builder Builder, options ...Option) {
 	ctx.PersistentMetadata = store.Metadata
 	logger.Debugf("Persistent Metadata: %+v", ctx.PersistentMetadata)
 
-	file = config.arguments[3]
-	if _, err = toml.DecodeFile(file, &ctx.Plan); err != nil && !os.IsNotExist(err) {
-		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack plan %s\n%w", file, err))
+	if _, err = toml.DecodeFile(buildpackPlanPath, &ctx.Plan); err != nil && !os.IsNotExist(err) {
+		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack plan %s\n%w", buildpackPlanPath, err))
 		return
 	}
 	logger.Debugf("Buildpack Plan: %+v", ctx.Plan)
