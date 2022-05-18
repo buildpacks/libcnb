@@ -28,8 +28,9 @@ func TestUnit(t *testing.T) {
 	suite("ConfigMap", testConfigMap)
 	suite("DirectoryContents", testDirectoryContents)
 	suite("EnvironmentWriter", testEnvironmentWriter)
-	suite("ExitHandler", testExitHandler)
-	suite("TOMLWriter", testTOMLWriter)
 	suite("ExecDWriter", testExecDWriter)
+	suite("ExitHandler", testExitHandler)
+	suite("FileWriter", testFileWriter)
+	suite("TOMLWriter", testTOMLWriter)
 	suite.Run(t)
 }

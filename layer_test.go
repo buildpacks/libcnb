@@ -109,36 +109,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			Expect(l.Profile).To(Equal(libcnb.Profile{}))
 		})
 
-		it("generates SBOM paths", func() {
-			l, err := layers.Layer("test-name")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(l.Path).To(Equal(filepath.Join(path, "test-name")))
-			Expect(layers.BuildSBOMPath(libcnb.CycloneDXJSON)).To(Equal(filepath.Join(path, "build.sbom.cdx.json")))
-			Expect(layers.BuildSBOMPath(libcnb.SPDXJSON)).To(Equal(filepath.Join(path, "build.sbom.spdx.json")))
-			Expect(layers.BuildSBOMPath(libcnb.SyftJSON)).To(Equal(filepath.Join(path, "build.sbom.syft.json")))
-			Expect(layers.LaunchSBOMPath(libcnb.SyftJSON)).To(Equal(filepath.Join(path, "launch.sbom.syft.json")))
-			Expect(l.SBOMPath(libcnb.SyftJSON)).To(Equal(filepath.Join(path, "test-name.sbom.syft.json")))
-		})
-
-		it("maps from string to SBOM Format", func() {
-			fmt, err := libcnb.SBOMFormatFromString("cdx.json")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(fmt).To(Equal(libcnb.CycloneDXJSON))
-
-			fmt, err = libcnb.SBOMFormatFromString("spdx.json")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(fmt).To(Equal(libcnb.SPDXJSON))
-
-			fmt, err = libcnb.SBOMFormatFromString("syft.json")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(fmt).To(Equal(libcnb.SyftJSON))
-
-			fmt, err = libcnb.SBOMFormatFromString("foobar.json")
-			Expect(err).To(MatchError("unable to translate from foobar.json to SBOMFormat"))
-			Expect(fmt).To(Equal(libcnb.UnknownFormat))
-		})
-
 		it("reads existing 0.5 metadata", func() {
 			Expect(os.WriteFile(
 				filepath.Join(path, "test-name.toml"),

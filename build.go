@@ -117,6 +117,7 @@ func Build(build BuildFunc, options ...Option) {
 		exitHandler:       internal.NewExitHandler(),
 		logger:            log.New(os.Stdout),
 		tomlWriter:        internal.TOMLWriter{},
+		fileWriter:        internal.FileWriter{},
 	}
 
 	for _, option := range options {
@@ -280,6 +281,21 @@ func Build(build BuildFunc, options ...Option) {
 			return
 		}
 
+		if layer.SBOM != nil {
+			if API.GreaterThan(semver.MustParse("0.6")) {
+				for _, format := range layer.SBOM.Formats() {
+					err = config.fileWriter.Write(filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.sbom.%s", layer.Name, format.Extension)), format.Content)
+					if err != nil {
+						config.exitHandler.Error(err)
+						return
+					}
+				}
+			} else {
+				config.exitHandler.Error(fmt.Errorf("%s.sbom.* output is only supported with Buildpack API v0.7 or higher", layer.Name))
+				return
+			}
+		}
+
 		file = filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.toml", layer.Name))
 		config.logger.Debugf("Writing layer metadata: %s <= %+v", file, layer)
 		var toWrite interface{} = layer
@@ -307,13 +323,6 @@ func Build(build BuildFunc, options ...Option) {
 
 		if err := os.RemoveAll(e); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to remove %s\n%w", e, err))
-			return
-		}
-	}
-
-	if API.GreaterThan(semver.MustParse("0.7")) || API.Equal(semver.MustParse("0.7")) {
-		if err := validateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
-			config.exitHandler.Error(fmt.Errorf("unable to validate SBOM\n%w", err))
 			return
 		}
 	}
@@ -386,28 +395,4 @@ func contains(candidates []string, s string) bool {
 	}
 
 	return false
-}
-
-func validateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error {
-	sbomFiles, err := filepath.Glob(filepath.Join(layersPath, "*.sbom.*"))
-	if err != nil {
-		return fmt.Errorf("unable find SBOM files\n%w", err)
-	}
-
-	for _, sbomFile := range sbomFiles {
-		parts := strings.Split(filepath.Base(sbomFile), ".")
-		if len(parts) <= 2 {
-			return fmt.Errorf("invalid format %s", filepath.Base(sbomFile))
-		}
-		sbomFormat, err := SBOMFormatFromString(strings.Join(parts[len(parts)-2:], "."))
-		if err != nil {
-			return fmt.Errorf("unable to parse SBOM %s\n%w", sbomFormat, err)
-		}
-
-		if !contains(acceptedSBOMFormats, sbomFormat.MediaType()) {
-			return fmt.Errorf("unable to find actual SBOM Type %s in list of supported SBOM types %s", sbomFormat.MediaType(), acceptedSBOMFormats)
-		}
-	}
-
-	return nil
 }
