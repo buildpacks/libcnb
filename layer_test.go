@@ -81,6 +81,156 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 		})
 	})
 
+	context("Reset", func() {
+		var layer libcnb.Layer
+
+		it.Before(func() {
+			var err error
+			path, err = ioutil.TempDir("", "layers")
+			Expect(err).NotTo(HaveOccurred())
+
+			layers = libcnb.Layers{Path: path}
+		})
+
+		it.After(func() {
+			Expect(os.RemoveAll(path)).To(Succeed())
+		})
+
+		context("when there is no previous build", func() {
+			it.Before(func() {
+				layer = libcnb.Layer{
+					Name: "test-name",
+					Path: filepath.Join(layers.Path, "test-name"),
+					LayerTypes: libcnb.LayerTypes{
+						Launch: true,
+						Build:  true,
+						Cache:  true,
+					},
+				}
+			})
+
+			it("initializes an empty layer", func() {
+				var err error
+				layer, err = layer.Reset()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(layer).To(Equal(libcnb.Layer{
+					Name: "test-name",
+					Path: filepath.Join(layers.Path, "test-name"),
+					LayerTypes: libcnb.LayerTypes{
+						Launch: false,
+						Build:  false,
+						Cache:  false,
+					},
+					SharedEnvironment: libcnb.Environment{},
+					BuildEnvironment:  libcnb.Environment{},
+					LaunchEnvironment: libcnb.Environment{},
+				}))
+
+				Expect(filepath.Join(layers.Path, "test-name")).To(BeADirectory())
+			})
+		})
+
+		context("when cache is retrieved from previous build", func() {
+			it.Before(func() {
+				sharedEnvDir := filepath.Join(layers.Path, "test-name", "env")
+				Expect(os.MkdirAll(sharedEnvDir, os.ModePerm)).To(Succeed())
+
+				err := os.WriteFile(filepath.Join(sharedEnvDir, "OVERRIDE_VAR.override"), []byte("override-value"), 0600)
+				Expect(err).NotTo(HaveOccurred())
+
+				buildEnvDir := filepath.Join(layers.Path, "test-name", "env.build")
+				Expect(os.MkdirAll(buildEnvDir, os.ModePerm)).To(Succeed())
+
+				err = os.WriteFile(filepath.Join(buildEnvDir, "DEFAULT_VAR.default"), []byte("default-value"), 0600)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(buildEnvDir, "INVALID_VAR.invalid"), []byte("invalid-value"), 0600)
+				Expect(err).NotTo(HaveOccurred())
+
+				launchEnvDir := filepath.Join(layers.Path, "test-name", "env.launch")
+				Expect(os.MkdirAll(launchEnvDir, os.ModePerm)).To(Succeed())
+
+				err = os.WriteFile(filepath.Join(launchEnvDir, "APPEND_VAR.append"), []byte("append-value"), 0600)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = os.WriteFile(filepath.Join(launchEnvDir, "APPEND_VAR.delim"), []byte("!"), 0600)
+				Expect(err).NotTo(HaveOccurred())
+
+				layer = libcnb.Layer{
+					Name: "test-name",
+					Path: filepath.Join(layers.Path, "test-name"),
+					LayerTypes: libcnb.LayerTypes{
+						Launch: true,
+						Build:  true,
+						Cache:  true,
+					},
+					SharedEnvironment: libcnb.Environment{
+						"OVERRIDE_VAR.override": "override-value",
+					},
+					BuildEnvironment: libcnb.Environment{
+						"DEFAULT_VAR.default": "default-value",
+					},
+					LaunchEnvironment: libcnb.Environment{
+						"APPEND_VAR.append": "append-value",
+						"APPEND_VAR.delim":  "!",
+					},
+					Metadata: map[string]interface{}{
+						"some-key": "some-value",
+					},
+				}
+			})
+
+			context("when Reset is called on a layer", func() {
+				it("resets all of the layer data and clears the directory", func() {
+					layer, err := layer.Reset()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(layer).To(Equal(libcnb.Layer{
+						Name: "test-name",
+						Path: filepath.Join(layers.Path, "test-name"),
+						LayerTypes: libcnb.LayerTypes{
+							Launch: false,
+							Build:  false,
+							Cache:  false,
+						},
+						SharedEnvironment: libcnb.Environment{},
+						BuildEnvironment:  libcnb.Environment{},
+						LaunchEnvironment: libcnb.Environment{},
+					}))
+
+					Expect(filepath.Join(layers.Path, "test-name")).To(BeADirectory())
+
+					files, err := filepath.Glob(filepath.Join(layers.Path, "test-name", "*"))
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(files).To(BeEmpty())
+				})
+			})
+		})
+
+		context("could not remove files in layer", func() {
+			it.Before(func() {
+				Expect(os.Chmod(layers.Path, 0000)).To(Succeed())
+			})
+
+			it.After(func() {
+				Expect(os.Chmod(layers.Path, 0777)).To(Succeed())
+			})
+
+			it("return an error", func() {
+				layer := libcnb.Layer{
+					Name: "some-layer",
+					Path: filepath.Join(layers.Path, "some-layer"),
+				}
+
+				_, err := layer.Reset()
+				Expect(err).To(MatchError(ContainSubstring("error could not remove file: ")))
+				Expect(err).To(MatchError(ContainSubstring("permission denied")))
+			})
+		})
+	})
+
 	context("Layers", func() {
 		it.Before(func() {
 			var err error
