@@ -17,7 +17,6 @@
 package internal_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,7 +37,7 @@ func testEnvironmentWriter(t *testing.T, context spec.G, it spec.S) {
 
 	it.Before(func() {
 		var err error
-		path, err = ioutil.TempDir("", "environment-writer")
+		path, err = os.MkdirTemp("", "environment-writer")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.RemoveAll(path)).To(Succeed())
 	})
@@ -54,11 +53,11 @@ func testEnvironmentWriter(t *testing.T, context spec.G, it spec.S) {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		content, err := ioutil.ReadFile(filepath.Join(path, "some-name"))
+		content, err := os.ReadFile(filepath.Join(path, "some-name"))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(content)).To(Equal("some-content"))
 
-		content, err = ioutil.ReadFile(filepath.Join(path, "other-name"))
+		content, err = os.ReadFile(filepath.Join(path, "other-name"))
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(content)).To(Equal("other-content"))
 	})

@@ -17,7 +17,6 @@
 package internal_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,7 +38,7 @@ func testTOMLWriter(t *testing.T, context spec.G, it spec.S) {
 
 	it.Before(func() {
 		var err error
-		parent, err = ioutil.TempDir("", "toml-writer")
+		parent, err = os.MkdirTemp("", "toml-writer")
 		Expect(err).NotTo(HaveOccurred())
 
 		path = filepath.Join(parent, "text.toml")
@@ -56,7 +55,7 @@ func testTOMLWriter(t *testing.T, context spec.G, it spec.S) {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(ioutil.ReadFile(path)).To(internal.MatchTOML(`
+		Expect(os.ReadFile(path)).To(internal.MatchTOML(`
 some-field = "some-value"
 other-field = "other-value"`))
 	})

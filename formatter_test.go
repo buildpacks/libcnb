@@ -17,7 +17,6 @@
 package libcnb_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -40,7 +39,7 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 
 		it.Before(func() {
 			var err error
-			app, err = ioutil.TempDir("", "application-path-formatter")
+			app, err = os.MkdirTemp("", "application-path-formatter")
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -68,7 +67,7 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 
 		it.Before(func() {
 			var err error
-			bp, err = ioutil.TempDir("", "buildpack-path-formatter")
+			bp, err = os.MkdirTemp("", "buildpack-path-formatter")
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -96,7 +95,7 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 
 		it.Before(func() {
 			var err error
-			plat.Path, err = ioutil.TempDir("", "platform-formatter")
+			plat.Path, err = os.MkdirTemp("", "platform-formatter")
 			Expect(err).NotTo(HaveOccurred())
 		})
 

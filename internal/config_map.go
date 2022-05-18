@@ -18,7 +18,6 @@ package internal
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +44,7 @@ func NewConfigMapFromPath(path string) (ConfigMap, error) {
 		} else if stat.IsDir() {
 			continue
 		}
-		contents, err := ioutil.ReadFile(file)
+		contents, err := os.ReadFile(file)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read file %s\n%w", file, err)
 		}

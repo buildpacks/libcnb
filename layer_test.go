@@ -17,7 +17,6 @@
 package libcnb_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -84,7 +83,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 	context("Layers", func() {
 		it.Before(func() {
 			var err error
-			path, err = ioutil.TempDir("", "layers")
+			path, err = os.MkdirTemp("", "layers")
 			Expect(err).NotTo(HaveOccurred())
 
 			layers = libcnb.Layers{Path: path}
@@ -141,7 +140,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("reads existing 0.5 metadata", func() {
-			Expect(ioutil.WriteFile(
+			Expect(os.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`
 launch = true
@@ -162,7 +161,7 @@ test-key = "test-value"
 		})
 
 		it("reads existing 0.6 metadata", func() {
-			Expect(ioutil.WriteFile(
+			Expect(os.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`
 [types]
@@ -184,7 +183,7 @@ test-key = "test-value"
 		})
 
 		it("reads existing 0.6 metadata with launch, build and cache all false", func() {
-			Expect(ioutil.WriteFile(
+			Expect(os.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`
 [types]
