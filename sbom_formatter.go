@@ -9,6 +9,8 @@ type SBOMFormat struct {
 	Content   io.Reader
 }
 
+//go:generate mockery --name SBOMFormatter --case=underscore
+
 // SBOMFormatter defines the interface for types capable of generating
 // formatted SBoMs.
 type SBOMFormatter interface {
