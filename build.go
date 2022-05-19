@@ -282,7 +282,7 @@ func Build(build BuildFunc, options ...Option) {
 		}
 
 		if layer.SBOM != nil {
-			if API.GreaterThan(semver.MustParse("0.6")) {
+			if API.GreaterThan(semver.MustParse("0.7")) || API.Equal(semver.MustParse("0.7")) {
 				for _, format := range layer.SBOM.Formats() {
 					err = config.fileWriter.Write(filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.sbom.%s", layer.Name, format.Extension)), format.Content)
 					if err != nil {

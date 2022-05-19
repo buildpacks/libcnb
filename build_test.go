@@ -216,6 +216,34 @@ version = "1.1.1"
 		})
 	})
 
+	context("buildpack API is not valid semver", func() {
+		it.Before(func() {
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "not valid semver"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+`),
+				0600),
+			).To(Succeed())
+		})
+
+		it("fails", func() {
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+				libcnb.WithLogger(log.NewDiscard()),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+				"version cannot be parsed",
+			))
+		})
+	})
+
 	context("errors if required env vars are not set for buildpack API >=0.8", func() {
 		for _, e := range []string{"CNB_LAYERS_DIR", "CNB_PLATFORM_DIR", "CNB_BP_PLAN_PATH"} {
 			// We need to do this assignment because of the way that spec binds variables
@@ -819,9 +847,7 @@ api = "0.6"
 id = "test-id"
 name = "test-name"
 version = "1.1.1"
-`),
-					0600),
-				).To(Succeed())
+`), 0600)).To(Succeed())
 			})
 
 			it("throws an error", func() {
