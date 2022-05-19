@@ -17,7 +17,6 @@
 package internal_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,7 +36,7 @@ func testDirectoryContents(t *testing.T, context spec.G, it spec.S) {
 
 	it.Before(func() {
 		var err error
-		path, err = ioutil.TempDir("", "directory-contents")
+		path, err = os.MkdirTemp("", "directory-contents")
 		Expect(err).NotTo(HaveOccurred())
 	})
 

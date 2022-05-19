@@ -18,7 +18,6 @@ package libcnb_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,7 +37,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 
 	it.Before(func() {
 		var err error
-		platformPath, err = ioutil.TempDir("", "platform")
+		platformPath, err = os.MkdirTemp("", "platform")
 		path = filepath.Join(platformPath, "bindings")
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -50,18 +49,18 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 	context("Kubernetes Service Bindings", func() {
 		it.Before(func() {
 			Expect(os.MkdirAll(filepath.Join(path, "alpha"), 0755)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "type"), []byte("test-type"), 0600)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "provider"), []byte("test-provider"), 0600)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, "alpha", "test-secret-key"), []byte("test-secret-value"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, "alpha", "type"), []byte("test-type"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, "alpha", "provider"), []byte("test-provider"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, "alpha", "test-secret-key"), []byte("test-secret-value"), 0600)).To(Succeed())
 
 			Expect(os.MkdirAll(filepath.Join(path, "bravo"), 0755)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "type"), []byte("test-type"), 0600)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "provider"), []byte("test-provider"), 0600)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, "bravo", "test-secret-key"), []byte("test-secret-value"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, "bravo", "type"), []byte("test-type"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, "bravo", "provider"), []byte("test-provider"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, "bravo", "test-secret-key"), []byte("test-secret-value"), 0600)).To(Succeed())
 
 			Expect(os.MkdirAll(filepath.Join(path, ".hidden", "metadata"), 0755)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, ".hidden", "metadata", "kind"), []byte("test-kind"), 0600)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(path, ".hiddenFile"), []byte("test-kind"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, ".hidden", "metadata", "kind"), []byte("test-kind"), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(path, ".hiddenFile"), []byte("test-kind"), 0600)).To(Succeed())
 		})
 
 		context("Binding", func() {
