@@ -203,7 +203,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, 0.7 and 0.8",
+				"this version of libcnb is only compatible with buildpack APIs >= 0.5, <= 0.8",
 			))
 		})
 	})

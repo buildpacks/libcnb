@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Masterminds/semver"
 
 	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/log"
@@ -76,6 +77,15 @@ type BuildResult struct {
 	// passed to subsequent providers.
 	Unmet []UnmetPlanEntry
 }
+
+// Constants to track minimum and maximum supported Buildpack API versions
+const (
+	// MinSupportedBPVersion indicates the minium supported version of the Buildpacks API
+	MinSupportedBPVersion = "0.5"
+
+	// MaxSupportedBPVersion indicates the maximum supported version of the Buildpacks API
+	MaxSupportedBPVersion = "0.8"
+)
 
 // NewBuildResult creates a new BuildResult instance, initializing empty fields.
 func NewBuildResult() BuildResult {
@@ -150,9 +160,15 @@ func Build(build BuildFunc, options ...Option) {
 	}
 	config.logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
-	API := strings.TrimSpace(ctx.Buildpack.API)
-	if API != "0.5" && API != "0.6" && API != "0.7" && API != "0.8" {
-		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, 0.7 and 0.8"))
+	API, err := semver.NewVersion(ctx.Buildpack.API)
+	if err != nil {
+		config.exitHandler.Error(errors.New("version cannot be parsed"))
+		return
+	}
+
+	compatVersionCheck, _ := semver.NewConstraint(fmt.Sprintf(">= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
+	if !compatVersionCheck.Check(API) {
+		config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 		return
 	}
 
@@ -246,7 +262,7 @@ func Build(build BuildFunc, options ...Option) {
 		file = filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.toml", layer.Name))
 		config.logger.Debugf("Writing layer metadata: %s <= %+v", file, layer)
 		var toWrite interface{} = layer
-		if API == "0.5" {
+		if API.Equal(semver.MustParse("0.5")) {
 			toWrite = internal.LayerAPI5{
 				Build:    layer.LayerTypes.Build,
 				Cache:    layer.LayerTypes.Cache,
@@ -274,7 +290,7 @@ func Build(build BuildFunc, options ...Option) {
 		}
 	}
 
-	if API != "0.5" && API != "0.6" {
+	if API.GreaterThan(semver.MustParse("0.7")) || API.Equal(semver.MustParse("0.7")) {
 		if err := validateSBOMFormats(ctx.Layers.Path, ctx.Buildpack.Info.SBOMFormats); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to validate SBOM\n%w", err))
 			return
@@ -291,7 +307,7 @@ func Build(build BuildFunc, options ...Option) {
 		file = filepath.Join(ctx.Layers.Path, "launch.toml")
 		config.logger.Debugf("Writing application metadata: %s <= %+v", file, launch)
 
-		if API == "0.5" {
+		if API.LessThan(semver.MustParse("0.6")) {
 			for _, process := range launch.Processes {
 				if process.Default {
 					config.exitHandler.Error(fmt.Errorf("unable to set default=true as that is not supported until API version 0.6"))
@@ -299,7 +315,7 @@ func Build(build BuildFunc, options ...Option) {
 			}
 		}
 
-		if API != "0.8" {
+		if API.LessThan(semver.MustParse("0.8")) {
 			for i, process := range launch.Processes {
 				if process.WorkingDirectory != "" {
 					config.exitHandler.Error(fmt.Errorf("unable to set working-directory=%s because that is not supported until API version 0.8", process.WorkingDirectory))
