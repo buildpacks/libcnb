@@ -64,7 +64,13 @@ type ExecDWriter interface {
 	Write(value map[string]string) error
 }
 
+//go:generate mockery --name FileWriter --case=underscore
+
+// FileWriter is the interface implemented by a type that wants to write the contents of an io.Reader onto disk.
 type FileWriter interface {
+
+	// Write is called with the path that a file should be written to and the
+	// io.Reader with the desired contents of the file.
 	Write(path string, reader io.Reader) error
 }
 
