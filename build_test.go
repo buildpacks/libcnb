@@ -19,6 +19,7 @@ package libcnb_test
 import (
 	"bytes"
 	"errors"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -202,7 +203,7 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, and 0.7",
+				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, 0.7 and 0.8",
 			))
 		})
 	})
@@ -458,6 +459,70 @@ version = "1.1.1"
 		Expect(layer.LayerTypes.Cache).To(BeTrue())
 		Expect(layer.LayerTypes.Launch).To(BeTrue())
 		Expect(layer.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+	})
+
+	it("fails when working-directory set (API<0.8)", func() {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{
+				Layers: []libcnb.Layer{},
+				Processes: []libcnb.Process{
+					{
+						Type:             "test-type",
+						Command:          "test-command-in-dir",
+						Default:          true,
+						WorkingDirectory: "/my/directory/",
+					},
+				},
+			}, nil
+		}
+
+		libcnb.Build(buildFunc,
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+			libcnb.WithExitHandler(exitHandler))
+
+		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+			"unable to set working-directory=/my/directory/ because that is not supported until API version 0.8",
+		))
+	})
+
+	it("writes launch.toml with working-directory setting(API>=0.8)", func() {
+		var b bytes.Buffer
+		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{
+				Layers: []libcnb.Layer{},
+				Processes: []libcnb.Process{
+					{
+						Type:             "test-type",
+						Command:          "test-command-in-dir",
+						Default:          true,
+						WorkingDirectory: "/my/directory/",
+					},
+				},
+			}, nil
+		}
+
+		libcnb.Build(buildFunc,
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+		)
+
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "launch.toml")))
+		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.LaunchTOML{
+			Processes: []libcnb.Process{
+				{
+					Type:             "test-type",
+					Command:          "test-command-in-dir",
+					Default:          true,
+					WorkingDirectory: "/my/directory/",
+				},
+			},
+		}))
 	})
 
 	it("writes launch.toml", func() {

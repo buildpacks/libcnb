@@ -151,8 +151,8 @@ func Build(build BuildFunc, options ...Option) {
 	config.logger.Debugf("Buildpack: %+v", ctx.Buildpack)
 
 	API := strings.TrimSpace(ctx.Buildpack.API)
-	if API != "0.5" && API != "0.6" && API != "0.7" {
-		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, and 0.7"))
+	if API != "0.5" && API != "0.6" && API != "0.7" && API != "0.8" {
+		config.exitHandler.Error(errors.New("this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, 0.7 and 0.8"))
 		return
 	}
 
@@ -295,6 +295,15 @@ func Build(build BuildFunc, options ...Option) {
 			for _, process := range launch.Processes {
 				if process.Default {
 					config.exitHandler.Error(fmt.Errorf("unable to set default=true as that is not supported until API version 0.6"))
+				}
+			}
+		}
+
+		if API != "0.8" {
+			for i, process := range launch.Processes {
+				if process.WorkingDirectory != "" {
+					config.exitHandler.Error(fmt.Errorf("unable to set working-directory=%s because that is not supported until API version 0.8", process.WorkingDirectory))
+					launch.Processes[i].WorkingDirectory = ""
 				}
 			}
 		}
