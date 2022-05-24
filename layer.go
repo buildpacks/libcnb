@@ -96,9 +96,36 @@ type Layer struct {
 	// Exec is the exec.d executables set in the layer.
 	Exec Exec `toml:"-"`
 
+
 	// SBOM is a type that implements SBOMFormatter and declares the formats that
 	// bill-of-materials should be output for the layer SBoM.
 	SBOM SBOMFormatter
+}
+
+func (l Layer) Reset() (Layer, error) {
+	l.LayerTypes = LayerTypes{
+		Build:  false,
+		Launch: false,
+		Cache:  false,
+	}
+
+	l.SharedEnvironment = Environment{}
+	l.BuildEnvironment = Environment{}
+	l.LaunchEnvironment = Environment{}
+	l.Profile = Profile{}
+	l.Metadata = nil
+
+	err := os.RemoveAll(l.Path)
+	if err != nil {
+		return Layer{}, fmt.Errorf("error could not remove file: %s", err)
+	}
+
+	err = os.MkdirAll(l.Path, os.ModePerm)
+	if err != nil {
+		return Layer{}, fmt.Errorf("error could not create directory: %s", err)
+	}
+
+	return l, nil
 }
 
 // LayerTypes describes which types apply to a given layer. A layer may have any combination of Launch, Build, and
