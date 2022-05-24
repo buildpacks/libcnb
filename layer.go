@@ -157,7 +157,6 @@ func (l Layer) Reset() (Layer, error) {
 	l.BuildEnvironment = Environment{}
 	l.LaunchEnvironment = Environment{}
 	l.Profile = Profile{}
-	l.Exec = Exec{Path: filepath.Join(l.Path, "exec.d")}
 	l.Metadata = nil
 
 	err := os.RemoveAll(l.Path)

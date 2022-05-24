@@ -126,7 +126,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 					BuildEnvironment:  libcnb.Environment{},
 					LaunchEnvironment: libcnb.Environment{},
 					Profile:           libcnb.Profile{},
-					Exec:              libcnb.Exec{Path: filepath.Join(layers.Path, "test-name", "exec.d")},
 				}))
 
 				Expect(filepath.Join(layers.Path, "test-name")).To(BeADirectory())
@@ -181,7 +180,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 						"some-key": "some-value",
 					},
 					Profile: libcnb.Profile{"name": "value"},
-					Exec:    libcnb.Exec{Path: "something"},
 				}
 			})
 
@@ -202,7 +200,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 						BuildEnvironment:  libcnb.Environment{},
 						LaunchEnvironment: libcnb.Environment{},
 						Profile:           libcnb.Profile{},
-						Exec:              libcnb.Exec{Path: filepath.Join(layers.Path, "test-name", "exec.d")},
 					}))
 
 					Expect(filepath.Join(layers.Path, "test-name")).To(BeADirectory())
