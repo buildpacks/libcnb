@@ -146,6 +146,32 @@ type Layer struct {
 	Exec Exec `toml:"-"`
 }
 
+func (l Layer) Reset() (Layer, error) {
+	l.LayerTypes = LayerTypes{
+		Build:  false,
+		Launch: false,
+		Cache:  false,
+	}
+
+	l.SharedEnvironment = Environment{}
+	l.BuildEnvironment = Environment{}
+	l.LaunchEnvironment = Environment{}
+	l.Profile = Profile{}
+	l.Metadata = nil
+
+	err := os.RemoveAll(l.Path)
+	if err != nil {
+		return Layer{}, fmt.Errorf("error could not remove file: %s", err)
+	}
+
+	err = os.MkdirAll(l.Path, os.ModePerm)
+	if err != nil {
+		return Layer{}, fmt.Errorf("error could not create directory: %s", err)
+	}
+
+	return l, nil
+}
+
 // SBOMPath returns the path to the layer specific SBOM File
 func (l Layer) SBOMPath(bt SBOMFormat) string {
 	return filepath.Join(filepath.Dir(l.Path), fmt.Sprintf("%s.sbom.%s", l.Name, bt))
