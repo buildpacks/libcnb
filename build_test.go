@@ -19,6 +19,8 @@ package libcnb_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -161,6 +163,9 @@ test-key = "test-value"
 		tomlWriter.On("Write", mock.Anything, mock.Anything).Return(nil)
 
 		Expect(os.Setenv("CNB_STACK_ID", "test-stack-id")).To(Succeed())
+		Expect(os.Setenv("CNB_LAYERS_DIR", layersPath)).To(Succeed())
+		Expect(os.Setenv("CNB_PLATFORM_DIR", platformPath)).To(Succeed())
+		Expect(os.Setenv("CNB_BP_PLAN_PATH", buildpackPlanPath)).To(Succeed())
 
 		workingDir, err = os.Getwd()
 		Expect(err).NotTo(HaveOccurred())
@@ -171,6 +176,9 @@ test-key = "test-value"
 		Expect(os.Chdir(workingDir)).To(Succeed())
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
+		Expect(os.Unsetenv("CNB_PLATFORM_DIR")).To(Succeed())
+		Expect(os.Unsetenv("CNB_BP_PLAN_PATH")).To(Succeed())
+		Expect(os.Unsetenv("CNB_LAYERS_DIR")).To(Succeed())
 
 		Expect(os.RemoveAll(applicationPath)).To(Succeed())
 		Expect(os.RemoveAll(buildpackPath)).To(Succeed())
@@ -179,7 +187,7 @@ test-key = "test-value"
 		Expect(os.RemoveAll(platformPath)).To(Succeed())
 	})
 
-	context("buildpack API is not 0.5, 0.6, or 0.7", func() {
+	context("buildpack API is not within the supported range", func() {
 		it.Before(func() {
 			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
@@ -202,9 +210,42 @@ version = "1.1.1"
 			)
 
 			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				"this version of libcnb is only compatible with buildpack APIs 0.5, 0.6, and 0.7",
+				fmt.Sprintf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", libcnb.MinSupportedBPVersion, libcnb.MaxSupportedBPVersion),
 			))
 		})
+	})
+
+	context("errors if required env vars are not set for buildpack API >=0.8", func() {
+		for _, e := range []string{"CNB_LAYERS_DIR", "CNB_PLATFORM_DIR", "CNB_BP_PLAN_PATH"} {
+			// We need to do this assignment because of the way that spec binds variables
+			envVar := e
+			context(fmt.Sprintf("when %s is unset", envVar), func() {
+				it.Before(func() {
+					Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+						[]byte(`
+		api = "0.8"
+		
+		[buildpack]
+		id = "test-id"
+		name = "test-name"
+		version = "1.1.1"
+		`),
+						0600),
+					).To(Succeed())
+					os.Unsetenv(envVar)
+				})
+
+				it("fails", func() {
+					libcnb.Build(buildFunc,
+						libcnb.WithArguments([]string{commandPath}),
+						libcnb.WithExitHandler(exitHandler),
+					)
+					Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+						fmt.Sprintf("expected %s to be set", envVar),
+					))
+				})
+			})
+		}
 	})
 
 	it("encounters the wrong number of arguments", func() {
@@ -229,68 +270,142 @@ version = "1.1.1"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("CNB_STACK_ID not set"))
 	})
 
-	it("creates context", func() {
+	context("when BP API >= 0.8", func() {
 		var ctx libcnb.BuildContext
-		buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
-			ctx = context
-			return libcnb.NewBuildResult(), nil
-		}
 
-		libcnb.Build(buildFunc,
-			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-			libcnb.WithLogger(log.NewDiscard()),
-		)
+		it.Before(func() {
+			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+	api = "0.8"
+	
+	[buildpack]
+	id = "test-id"
+	name = "test-name"
+	version = "1.1.1"
+	`),
+				0600),
+			).To(Succeed())
 
-		Expect(ctx.ApplicationPath).To(Equal(applicationPath))
-		Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
-			API: "0.6",
-			Info: libcnb.BuildpackInfo{
-				ID:               "test-id",
-				Name:             "test-name",
-				Version:          "1.1.1",
-				ClearEnvironment: true,
-				Description:      "A test buildpack",
-				Keywords:         []string{"test", "buildpack"},
-				Licenses: []libcnb.License{
-					{Type: "Apache-2.0", URI: "https://spdx.org/licenses/Apache-2.0.html"},
-					{Type: "Apache-1.1", URI: "https://spdx.org/licenses/Apache-1.1.html"},
+			buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+				ctx = context
+				return libcnb.NewBuildResult(), nil
+			}
+		})
+
+		it("creates context", func() {
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath}),
+			)
+
+			Expect(ctx.ApplicationPath).To(Equal(applicationPath))
+			Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
+				API: "0.8",
+				Info: libcnb.BuildpackInfo{
+					ID:      "test-id",
+					Name:    "test-name",
+					Version: "1.1.1",
 				},
-			},
-			Path: buildpackPath,
-			Stacks: []libcnb.BuildpackStack{
-				{
-					ID:     "test-id",
-					Mixins: []string{"test-name"},
-				},
-			},
-			Metadata: map[string]interface{}{"test-key": "test-value"},
-		}))
-		Expect(ctx.Layers).To(Equal(libcnb.Layers{Path: layersPath}))
-		Expect(ctx.PersistentMetadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
-		Expect(ctx.Plan).To(Equal(libcnb.BuildpackPlan{
-			Entries: []libcnb.BuildpackPlanEntry{
-				{
-					Name: "test-name",
-					Metadata: map[string]interface{}{
-						"test-key": "test-value",
+				Path: buildpackPath,
+			}))
+			Expect(ctx.Layers).To(Equal(libcnb.Layers{Path: layersPath}))
+			Expect(ctx.PersistentMetadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(ctx.Plan).To(Equal(libcnb.BuildpackPlan{
+				Entries: []libcnb.BuildpackPlanEntry{
+					{
+						Name: "test-name",
+						Metadata: map[string]interface{}{
+							"test-key": "test-value",
+						},
 					},
 				},
-			},
-		}))
-		Expect(ctx.Platform).To(Equal(libcnb.Platform{
-			Bindings: libcnb.Bindings{
-				libcnb.Binding{
-					Name: "alpha",
-					Path: filepath.Join(platformPath, "bindings", "alpha"),
-					Secret: map[string]string{
-						"test-secret-key": "test-secret-value",
+			}))
+			Expect(ctx.Platform).To(Equal(libcnb.Platform{
+				Bindings: libcnb.Bindings{
+					libcnb.Binding{
+						Name: "alpha",
+						Path: filepath.Join(platformPath, "bindings", "alpha"),
+						Secret: map[string]string{
+							"test-secret-key": "test-secret-value",
+						},
 					},
 				},
-			},
-			Environment: map[string]string{"TEST_ENV": "test-value"},
-			Path:        platformPath,
-		}))
-		Expect(ctx.StackID).To(Equal("test-stack-id"))
+				Environment: map[string]string{"TEST_ENV": "test-value"},
+				Path:        platformPath,
+			}))
+			Expect(ctx.StackID).To(Equal("test-stack-id"))
+		})
+	})
+
+	context("when BP API < 0.8", func() {
+		var ctx libcnb.BuildContext
+
+		it.Before(func() {
+			Expect(os.Unsetenv("CNB_PLATFORM_DIR")).To(Succeed())
+			Expect(os.Unsetenv("CNB_BP_PLAN_PATH")).To(Succeed())
+			Expect(os.Unsetenv("CNB_LAYERS_DIR")).To(Succeed())
+
+			buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+				ctx = context
+				return libcnb.NewBuildResult(), nil
+			}
+		})
+
+		it("creates context", func() {
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			)
+
+			Expect(ctx.ApplicationPath).To(Equal(applicationPath))
+			Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
+				API: "0.6",
+				Info: libcnb.BuildpackInfo{
+					ID:               "test-id",
+					Name:             "test-name",
+					Version:          "1.1.1",
+					ClearEnvironment: true,
+					Description:      "A test buildpack",
+					Keywords:         []string{"test", "buildpack"},
+					Licenses: []libcnb.License{
+						{Type: "Apache-2.0", URI: "https://spdx.org/licenses/Apache-2.0.html"},
+						{Type: "Apache-1.1", URI: "https://spdx.org/licenses/Apache-1.1.html"},
+					},
+				},
+				Path: buildpackPath,
+				Stacks: []libcnb.BuildpackStack{
+					{
+						ID:     "test-id",
+						Mixins: []string{"test-name"},
+					},
+				},
+				Metadata: map[string]interface{}{"test-key": "test-value"},
+			}))
+			Expect(ctx.Layers).To(Equal(libcnb.Layers{Path: layersPath}))
+			Expect(ctx.PersistentMetadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(ctx.Plan).To(Equal(libcnb.BuildpackPlan{
+				Entries: []libcnb.BuildpackPlanEntry{
+					{
+						Name: "test-name",
+						Metadata: map[string]interface{}{
+							"test-key": "test-value",
+						},
+					},
+				},
+			}))
+			Expect(ctx.Platform).To(Equal(libcnb.Platform{
+				Bindings: libcnb.Bindings{
+					libcnb.Binding{
+						Name: "alpha",
+						Path: filepath.Join(platformPath, "bindings", "alpha"),
+						Secret: map[string]string{
+							"test-secret-key": "test-secret-value",
+						},
+					},
+				},
+				Environment: map[string]string{"TEST_ENV": "test-value"},
+				Path:        platformPath,
+			}))
+			Expect(ctx.StackID).To(Equal("test-stack-id"))
+		})
 	})
 
 	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
@@ -458,6 +573,70 @@ version = "1.1.1"
 		Expect(layer.LayerTypes.Cache).To(BeTrue())
 		Expect(layer.LayerTypes.Launch).To(BeTrue())
 		Expect(layer.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+	})
+
+	it("fails when working-directory set (API<0.8)", func() {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{
+				Layers: []libcnb.Layer{},
+				Processes: []libcnb.Process{
+					{
+						Type:             "test-type",
+						Command:          "test-command-in-dir",
+						Default:          true,
+						WorkingDirectory: "/my/directory/",
+					},
+				},
+			}, nil
+		}
+
+		libcnb.Build(buildFunc,
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+			libcnb.WithExitHandler(exitHandler))
+
+		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+			"unable to set working-directory=/my/directory/ because that is not supported until API version 0.8",
+		))
+	})
+
+	it("writes launch.toml with working-directory setting(API>=0.8)", func() {
+		var b bytes.Buffer
+		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
+		Expect(err).ToNot(HaveOccurred())
+
+		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+			return libcnb.BuildResult{
+				Layers: []libcnb.Layer{},
+				Processes: []libcnb.Process{
+					{
+						Type:             "test-type",
+						Command:          "test-command-in-dir",
+						Default:          true,
+						WorkingDirectory: "/my/directory/",
+					},
+				},
+			}, nil
+		}
+
+		libcnb.Build(buildFunc,
+			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithTOMLWriter(tomlWriter),
+		)
+
+		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "launch.toml")))
+		Expect(tomlWriter.Calls[0].Arguments[1]).To(Equal(libcnb.LaunchTOML{
+			Processes: []libcnb.Process{
+				{
+					Type:             "test-type",
+					Command:          "test-command-in-dir",
+					Default:          true,
+					WorkingDirectory: "/my/directory/",
+				},
+			},
+		}))
 	})
 
 	it("writes launch.toml", func() {
