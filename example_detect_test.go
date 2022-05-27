@@ -15,7 +15,7 @@ const (
 )
 
 type Detector struct {
-	Logger libcnb.Logger
+	Logger log.Logger
 }
 
 func (Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, error) {

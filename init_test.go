@@ -28,7 +28,6 @@ func TestUnit(t *testing.T) {
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
 	suite("Environment", testEnvironment)
-	suite("Formatter", testFormatter)
 	suite("Layer", testLayer)
 	suite("Main", testMain)
 	suite("Platform", testPlatform)

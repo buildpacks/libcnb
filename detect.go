@@ -75,8 +75,14 @@ func Detect(detect DetectFunc, config Config) {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
+
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
+		if err := internal.NewDirectoryContentsWriter(
+			ctx.ApplicationPath,
+			config.dirContentFormatter,
+			config.logger.DebugWriter()).Write("Application contents"); err != nil {
+			config.logger.Debugf("unable to write application contents\n%w", err)
+		}
 	}
 
 	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
@@ -87,7 +93,12 @@ func Detect(detect DetectFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
+		if internal.NewDirectoryContentsWriter(
+			ctx.Buildpack.Path,
+			config.dirContentFormatter,
+			config.logger.DebugWriter()).Write("Buildpack contents"); err != nil {
+			config.logger.Debugf("unable to write buildpack contents\n%w", err)
+		}
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
@@ -129,7 +140,12 @@ func Detect(detect DetectFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(PlatformFormatter(ctx.Platform))
+		if internal.NewDirectoryContentsWriter(
+			ctx.Platform.Path,
+			config.dirContentFormatter,
+			config.logger.DebugWriter()).Write("Platform contents"); err != nil {
+			config.logger.Debugf("unable to write platform contents\n%w", err)
+		}
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")

@@ -26,7 +26,7 @@ import (
 func TestUnit(t *testing.T) {
 	suite := spec.New("libcnb/internal", spec.Report(report.Terminal{}))
 	suite("ConfigMap", testConfigMap)
-	suite("DirectoryContents", testDirectoryContents)
+	suite("DirectoryContents", testDirectoryContentsWriter)
 	suite("EnvironmentWriter", testEnvironmentWriter)
 	suite("ExitHandler", testExitHandler)
 	suite("TOMLWriter", testTOMLWriter)

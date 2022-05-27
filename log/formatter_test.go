@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package internal_test
+package log_test
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,16 +25,14 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
 
-	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/log"
 )
 
-func testDirectoryContentsWriter(t *testing.T, context spec.G, it spec.S) {
+func testFormatters(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
 		path string
-		buf  bytes.Buffer
 	)
 
 	it.Before(func() {
@@ -66,25 +63,5 @@ func testDirectoryContentsWriter(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(fm.File(cwd, info)).To(Equal(fmt.Sprintf("%s\n", filepath.Base(cwd))))
 		})
-	})
-
-	it("lists empty directory contents", func() {
-		fm := log.NewPlainDirectoryContentFormatter()
-		dc := internal.NewDirectoryContentsWriter(path, &fm, &buf)
-
-		Expect(dc.Write("title")).To(Succeed())
-		Expect(buf.String()).To(Equal("title:\n.\n"))
-	})
-
-	it("lists directory contents", func() {
-		f, err := os.Create(filepath.Join(path, "test-file"))
-		Expect(err).NotTo(HaveOccurred())
-		defer f.Close()
-
-		fm := log.NewPlainDirectoryContentFormatter()
-		dc := internal.NewDirectoryContentsWriter(path, &fm, &buf)
-
-		Expect(dc.Write("title")).To(Succeed())
-		Expect(buf.String()).To(Equal("title:\n.\ntest-file\n"))
 	})
 }
