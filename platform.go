@@ -17,7 +17,9 @@
 package libcnb
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -37,6 +39,8 @@ const (
 	//
 	// See the Service Binding Specification for Kubernetes for more details - https://k8s-service-bindings.github.io/spec/
 	EnvServiceBindings = "SERVICE_BINDING_ROOT"
+
+	DefaultPlatformBindingsLocation = "/platform/bindings"
 )
 
 // Binding is a projection of metadata about an external entity to be bound to.
@@ -113,30 +117,24 @@ func (b Binding) SecretFilePath(name string) (string, bool) {
 // Bindings is a collection of bindings keyed by their name.
 type Bindings []Binding
 
-// NewBindingsForLaunch creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT.
-// If isn't defined, returns an empty collection of Bindings.
-func NewBindingsForLaunch() (Bindings, error) {
-	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
-		return NewBindingsFromPath(path)
-	}
-
-	return Bindings{}, nil
-}
-
 // NewBindingsFromPath creates a new instance from all the bindings at a given path.
 func NewBindingsFromPath(path string) (Bindings, error) {
-	files, err := filepath.Glob(filepath.Join(path, "*"))
-	if err != nil {
-		return nil, fmt.Errorf("unable to glob %s\n%w", path, err)
+	files, err := os.ReadDir(path)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		return Bindings{}, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("unable to list directory %s\n%w", path, err)
 	}
 
 	bindings := Bindings{}
 	for _, file := range files {
-		if strings.HasPrefix(filepath.Base(file), ".") {
+		bindingPath := filepath.Join(path, file.Name())
+
+		if strings.HasPrefix(filepath.Base(bindingPath), ".") {
 			// ignore hidden files
 			continue
 		}
-		binding, err := NewBindingFromPath(file)
+		binding, err := NewBindingFromPath(bindingPath)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create new binding from %s\n%w", file, err)
 		}
@@ -147,12 +145,16 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 	return bindings, nil
 }
 
-// NewBindingsForBuild creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT.
-// If isn't defined, bindings are read from <platform>/bindings, the default
-// path defined in the CNB Binding extension specification.
-func NewBindingsForBuild(platformDir string) (Bindings, error) {
+// NewBindings creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT.
+// If that isn't defined, bindings are read from <platform>/bindings.
+// If that isn't defined, the specified platform path will be used
+func NewBindings(platformDir string) (Bindings, error) {
 	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
 		return NewBindingsFromPath(path)
+	}
+
+	if path, ok := os.LookupEnv("CNB_PLATFORM_DIR"); ok {
+		return NewBindingsFromPath(filepath.Join(path, "bindings"))
 	}
 
 	return NewBindingsFromPath(filepath.Join(platformDir, "bindings"))

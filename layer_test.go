@@ -17,6 +17,7 @@
 package libcnb_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"

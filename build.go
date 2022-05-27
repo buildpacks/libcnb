@@ -202,7 +202,7 @@ func Build(build BuildFunc, options ...Option) {
 		config.logger.Debug(PlatformFormatter(ctx.Platform))
 	}
 
-	if ctx.Platform.Bindings, err = NewBindingsForBuild(ctx.Platform.Path); err != nil {
+	if ctx.Platform.Bindings, err = NewBindings(ctx.Platform.Path); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", ctx.Platform.Path, err))
 		return
 	}

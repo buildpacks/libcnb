@@ -145,7 +145,7 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
-	if ctx.Platform.Bindings, err = NewBindingsFromPath(file); err != nil {
+	if ctx.Platform.Bindings, err = NewBindings(ctx.Platform.Path); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
 		return
 	}
