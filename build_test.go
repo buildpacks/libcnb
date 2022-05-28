@@ -408,21 +408,16 @@ version = "1.1.1"
 		})
 	})
 
-	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
+	it("fails if CNB_BUILDPACK_PATH is not set", func() {
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
-
-		var ctx libcnb.BuildContext
-		buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
-			ctx = context
-			return libcnb.NewBuildResult(), nil
-		}
 
 		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
 
-		Expect(ctx.Buildpack.Path).To(Equal(buildpackPath))
+		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to get CNB_BUILDPACK_DIR, not found"))
 	})
 
 	it("handles error from BuildFunc", func() {

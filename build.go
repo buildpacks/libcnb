@@ -141,9 +141,11 @@ func Build(build BuildFunc, options ...Option) {
 
 	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
 		ctx.Buildpack.Path = filepath.Clean(s)
-	} else { // TODO: Remove branch once lifecycle has been updated to support this
-		ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "build")))
+	} else {
+		config.exitHandler.Error(fmt.Errorf("unable to get CNB_BUILDPACK_DIR, not found"))
+		return
 	}
+
 	if config.logger.IsDebugEnabled() {
 		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
 	}

@@ -329,19 +329,13 @@ version = "1.1.1"
 	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 
-		var ctx libcnb.DetectContext
-		detectFunc = func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-			ctx = context
-			return libcnb.DetectResult{Pass: true}, nil
-		}
-
 		libcnb.Detect(detectFunc,
 			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), platformPath, buildPlanPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
 
-		Expect(ctx.Buildpack.Path).To(Equal(buildpackPath))
+		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to get CNB_BUILDPACK_DIR, not found"))
 	})
 
 	it("handles error from DetectFunc", func() {
