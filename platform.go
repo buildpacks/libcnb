@@ -40,6 +40,27 @@ const (
 	// See the Service Binding Specification for Kubernetes for more details - https://k8s-service-bindings.github.io/spec/
 	EnvServiceBindings = "SERVICE_BINDING_ROOT"
 
+	// EnvBuildpackDirectory is the name of the environment variable that contains the path to the buildpack
+	EnvBuildpackDirectory = "CNB_BUILDPACK_DIR"
+
+	// EnvLayersDirectory is the name of the environment variable that contains the root path to all buildpack layers
+	EnvLayersDirectory = "CNB_LAYERS_DIR"
+
+	// EnvPlatformDirectory is the name of the environment variable that contains the path to the platform directory
+	EnvPlatformDirectory = "CNB_PLATFORM_DIR"
+
+	// EnvDetectBuildPlanPath is the name of the environment variable that contains the path to the build plan
+	EnvDetectPlanPath = "CNB_BUILD_PLAN_PATH"
+
+	// EnvBuildPlanPath is the name of the environment variable that contains the path to the build plan
+	EnvBuildPlanPath = "CNB_BP_PLAN_PATH"
+
+	// EnvStackID is the name of the environment variable that contains the stack id
+	EnvStackID = "CNB_STACK_ID"
+
+	// DefaultPlatformBindingsLocation is the typical location for bindings, which exists under the platform directory
+	//
+	// Not guaranteed to exist, but often does. This should only be used as a fallback if EnvServiceBindings and EnvPlatformDirectory are not set
 	DefaultPlatformBindingsLocation = "/platform/bindings"
 )
 
@@ -153,7 +174,7 @@ func NewBindings(platformDir string) (Bindings, error) {
 		return NewBindingsFromPath(path)
 	}
 
-	if path, ok := os.LookupEnv("CNB_PLATFORM_DIR"); ok {
+	if path, ok := os.LookupEnv(EnvPlatformDirectory); ok {
 		return NewBindingsFromPath(filepath.Join(path, "bindings"))
 	}
 

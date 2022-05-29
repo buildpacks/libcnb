@@ -139,7 +139,7 @@ func Build(build BuildFunc, options ...Option) {
 		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
-	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
+	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
 		ctx.Buildpack.Path = filepath.Clean(s)
 	} else {
 		config.exitHandler.Error(fmt.Errorf("unable to get CNB_BUILDPACK_DIR, not found"))
@@ -180,18 +180,18 @@ func Build(build BuildFunc, options ...Option) {
 		ctx.Platform.Path = config.arguments[2]
 		buildpackPlanPath = config.arguments[3]
 	} else {
-		layersDir, ok := os.LookupEnv("CNB_LAYERS_DIR")
+		layersDir, ok := os.LookupEnv(EnvLayersDirectory)
 		if !ok {
 			config.exitHandler.Error(fmt.Errorf("expected CNB_LAYERS_DIR to be set"))
 			return
 		}
 		ctx.Layers = Layers{layersDir}
-		ctx.Platform.Path, ok = os.LookupEnv("CNB_PLATFORM_DIR")
+		ctx.Platform.Path, ok = os.LookupEnv(EnvPlatformDirectory)
 		if !ok {
 			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
 			return
 		}
-		buildpackPlanPath, ok = os.LookupEnv("CNB_BP_PLAN_PATH")
+		buildpackPlanPath, ok = os.LookupEnv(EnvBuildPlanPath)
 		if !ok {
 			config.exitHandler.Error(fmt.Errorf("expected CNB_BP_PLAN_PATH to be set"))
 			return
@@ -232,7 +232,7 @@ func Build(build BuildFunc, options ...Option) {
 	}
 	config.logger.Debugf("Buildpack Plan: %+v", ctx.Plan)
 
-	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
+	if ctx.StackID, ok = os.LookupEnv(EnvStackID); !ok {
 		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
 		return
 	}
