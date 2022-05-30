@@ -89,7 +89,7 @@ func Detect(detect DetectFunc, options ...Option) {
 		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
-	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
+	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
 		ctx.Buildpack.Path = filepath.Clean(s)
 	} else {
 		config.exitHandler.Error(fmt.Errorf("unable to get CNB_BUILDPACK_DIR, not found"))
@@ -129,12 +129,12 @@ func Detect(detect DetectFunc, options ...Option) {
 		ctx.Platform.Path = config.arguments[1]
 		buildPlanPath = config.arguments[2]
 	} else {
-		ctx.Platform.Path, ok = os.LookupEnv("CNB_PLATFORM_DIR")
+		ctx.Platform.Path, ok = os.LookupEnv(EnvPlatformDirectory)
 		if !ok {
 			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
 			return
 		}
-		buildPlanPath, ok = os.LookupEnv("CNB_BUILD_PLAN_PATH")
+		buildPlanPath, ok = os.LookupEnv(EnvDetectPlanPath)
 		if !ok {
 			config.exitHandler.Error(fmt.Errorf("expected CNB_BUILD_PLAN_PATH to be set"))
 			return
@@ -146,7 +146,7 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
-	if ctx.Platform.Bindings, err = NewBindingsFromPath(file); err != nil {
+	if ctx.Platform.Bindings, err = NewBindings(ctx.Platform.Path); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
 		return
 	}
@@ -159,7 +159,7 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 	config.logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
-	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
+	if ctx.StackID, ok = os.LookupEnv(EnvStackID); !ok {
 		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
 		return
 	}
