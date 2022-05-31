@@ -468,7 +468,7 @@ version = "1.1.1"
 				Processes: []libcnb.Process{
 					{
 						Type:             "test-type",
-						Command:          "test-command-in-dir",
+						Command:          []string{"test-command-in-dir"},
 						Default:          true,
 						WorkingDirectory: "/my/directory/",
 					},
@@ -486,7 +486,7 @@ version = "1.1.1"
 			Processes: []libcnb.Process{
 				{
 					Type:             "test-type",
-					Command:          "test-command-in-dir",
+					Command:          []string{"test-command-in-dir"},
 					Default:          true,
 					WorkingDirectory: "/my/directory/",
 				},
@@ -506,7 +506,7 @@ version = "1.1.1"
 				Processes: []libcnb.Process{
 					{
 						Type:    "test-type",
-						Command: "test-command",
+						Command: []string{"test-command"},
 						Default: true,
 					},
 				},
@@ -535,7 +535,7 @@ version = "1.1.1"
 			Processes: []libcnb.Process{
 				{
 					Type:    "test-type",
-					Command: "test-command",
+					Command: []string{"test-command"},
 					Default: true,
 				},
 			},
