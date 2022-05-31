@@ -115,30 +115,27 @@ func Detect(detect DetectFunc, options ...Option) {
 
 	compatVersionCheck, _ := semver.NewConstraint(fmt.Sprintf(">= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 	if !compatVersionCheck.Check(API) {
+		if MinSupportedBPVersion == MaxSupportedBPVersion {
+			config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack API == %s", MinSupportedBPVersion))
+			return
+		}
+
 		config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 		return
 	}
 
 	var buildPlanPath string
 
-	if API.LessThan(semver.MustParse("0.8")) {
-		if len(config.arguments) != 3 {
-			config.exitHandler.Error(fmt.Errorf("expected 2 arguments and received %d", len(config.arguments)-1))
-			return
-		}
-		ctx.Platform.Path = config.arguments[1]
-		buildPlanPath = config.arguments[2]
-	} else {
-		ctx.Platform.Path, ok = os.LookupEnv(EnvPlatformDirectory)
-		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
-			return
-		}
-		buildPlanPath, ok = os.LookupEnv(EnvDetectPlanPath)
-		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_BUILD_PLAN_PATH to be set"))
-			return
-		}
+	ctx.Platform.Path, ok = os.LookupEnv(EnvPlatformDirectory)
+	if !ok {
+		config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
+		return
+	}
+
+	buildPlanPath, ok = os.LookupEnv(EnvDetectPlanPath)
+	if !ok {
+		config.exitHandler.Error(fmt.Errorf("expected CNB_BUILD_PLAN_PATH to be set"))
+		return
 	}
 
 	if config.logger.IsDebugEnabled() {
