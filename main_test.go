@@ -38,7 +38,6 @@ func testMain(t *testing.T, context spec.G, it spec.S) {
 		buildFunc         libcnb.BuildFunc
 		buildpackPath     string
 		buildpackPlanPath string
-		buildPlanPath     string
 		detectFunc        libcnb.DetectFunc
 		environmentWriter *mocks.EnvironmentWriter
 		exitHandler       *mocks.ExitHandler
@@ -67,7 +66,7 @@ func testMain(t *testing.T, context spec.G, it spec.S) {
 
 		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
-api = "0.6"
+api = "0.8"
 
 [buildpack]
 id = "test-id"
@@ -107,11 +106,6 @@ test-key = "test-value"
 `),
 			0600),
 		).To(Succeed())
-
-		f, err = os.CreateTemp("", "main-buildplan-path")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(f.Close()).NotTo(HaveOccurred())
-		buildPlanPath = f.Name()
 
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{}, nil
@@ -160,6 +154,10 @@ test-key = "test-value"
 		tomlWriter.On("Write", mock.Anything, mock.Anything).Return(nil)
 
 		Expect(os.Setenv("CNB_STACK_ID", "test-stack-id")).To(Succeed())
+		Expect(os.Setenv("CNB_LAYERS_DIR", layersPath)).To(Succeed())
+		Expect(os.Setenv("CNB_PLATFORM_DIR", platformPath)).To(Succeed())
+		Expect(os.Setenv("CNB_BP_PLAN_PATH", buildpackPlanPath)).To(Succeed())
+		Expect(os.Setenv("CNB_BUILD_PLAN_PATH", buildpackPlanPath)).To(Succeed())
 
 		workingDir, err = os.Getwd()
 		Expect(err).NotTo(HaveOccurred())
@@ -170,6 +168,10 @@ test-key = "test-value"
 		Expect(os.Chdir(workingDir)).To(Succeed())
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
+		Expect(os.Unsetenv("CNB_PLATFORM_DIR")).To(Succeed())
+		Expect(os.Unsetenv("CNB_BP_PLAN_PATH")).To(Succeed())
+		Expect(os.Unsetenv("CNB_LAYERS_DIR")).To(Succeed())
+		Expect(os.Unsetenv("CNB_BUILD_PLAN_PATH")).To(Succeed())
 
 		Expect(os.RemoveAll(applicationPath)).To(Succeed())
 		Expect(os.RemoveAll(buildpackPath)).To(Succeed())
@@ -192,7 +194,7 @@ test-key = "test-value"
 		commandPath := filepath.Join("bin", "build")
 
 		libcnb.Main(detectFunc, buildFunc,
-			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
@@ -207,7 +209,7 @@ test-key = "test-value"
 		commandPath := filepath.Join("bin", "detect")
 
 		libcnb.Main(detectFunc, buildFunc,
-			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
+			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
@@ -220,7 +222,7 @@ test-key = "test-value"
 		commandPath := filepath.Join("bin", "detect")
 
 		libcnb.Main(detectFunc, buildFunc,
-			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
+			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
@@ -235,7 +237,7 @@ test-key = "test-value"
 		commandPath := filepath.Join("bin", "detect")
 
 		libcnb.Main(detectFunc, buildFunc,
-			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
+			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)

@@ -22,8 +22,6 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-
-	"github.com/buildpacks/libcnb/internal"
 )
 
 const (
@@ -211,18 +209,6 @@ func (l *Layers) Layer(name string) (Layer, error) {
 	f := filepath.Join(l.Path, fmt.Sprintf("%s.toml", name))
 	if _, err := toml.DecodeFile(f, &layer); err != nil && !os.IsNotExist(err) {
 		return Layer{}, fmt.Errorf("unable to decode layer metadata %s\n%w", f, err)
-	}
-
-	if !layer.Build && !layer.Cache && !layer.Launch {
-		// if all three are false, that could mean we have a API <= 0.5 TOML file
-		// try parsing the <= 0.5 API format where these were top level attributes
-		buf := internal.LayerAPI5{}
-		if _, err := toml.DecodeFile(f, &buf); err != nil && !os.IsNotExist(err) {
-			return Layer{}, fmt.Errorf("unable to decode layer metadata %s\n%w", f, err)
-		}
-		layer.Build = buf.Build
-		layer.Cache = buf.Cache
-		layer.Launch = buf.Launch
 	}
 
 	return layer, nil

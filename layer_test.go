@@ -293,28 +293,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			Expect(fmt).To(Equal(libcnb.UnknownFormat))
 		})
 
-		it("reads existing 0.5 metadata", func() {
-			Expect(os.WriteFile(
-				filepath.Join(path, "test-name.toml"),
-				[]byte(`
-launch = true
-build = false
-
-[metadata]
-test-key = "test-value"
-		`),
-				0600),
-			).To(Succeed())
-
-			l, err := layers.Layer("test-name")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(l.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
-			Expect(l.Launch).To(BeTrue())
-			Expect(l.Build).To(BeFalse())
-		})
-
-		it("reads existing 0.6 metadata", func() {
+		it("reads existing metadata", func() {
 			Expect(os.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`
@@ -336,7 +315,7 @@ test-key = "test-value"
 			Expect(l.Build).To(BeFalse())
 		})
 
-		it("reads existing 0.6 metadata with launch, build and cache all false", func() {
+		it("reads existing metadata with launch, build and cache all false", func() {
 			Expect(os.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`
