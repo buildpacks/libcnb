@@ -24,7 +24,25 @@ import (
 
 //go:generate mockery --name DirectoryContentFormatter --case=underscore
 
-// DirectoryContentFormatter allows customization of the directory output
+// DirectoryContentFormatter allows customization of logged directory output
+//
+// When libcnb logs the contents of a directory, each item in the directory
+// is passed through a DirectoryContentFormatter.
+//
+// DirectoryContentsWriter implements this workflow:
+//   - call RootPath(string) with the root path that's being walked
+//   - call Title(string) with the given title, the output is logged
+//   - for each file in the directory:
+//       - call File(string, os.FileInfo), the output is logged
+//
+// A default implementation, PlainDirectoryContentFormatter is provided. A
+// buildpack author could provide their own implementation through
+// WithDirectoryContentFormatter when calling Detect or Build.
+//
+// A custom implementation might log in color or might log additional
+// information about each file, like permissions. The implementation can
+// also control line endings to force all of the files to be logged on a
+// single line, or as multiple lines.
 type DirectoryContentFormatter interface {
 	// File takes the full path and os.FileInfo and returns a display string
 	File(path string, info os.FileInfo) (string, error)
@@ -37,6 +55,10 @@ type DirectoryContentFormatter interface {
 }
 
 // PlainDirectoryContentFormatter applies no formatting
+//
+// PlainDirectoryContentFormatter operates as such:
+//    Title -> returns string followed by `:\n`
+//    File  -> returns file name relative to the root followed by `\n`
 type PlainDirectoryContentFormatter struct {
 	rootPath string
 }

@@ -93,7 +93,7 @@ func Detect(detect DetectFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		if internal.NewDirectoryContentsWriter(
+		if err := internal.NewDirectoryContentsWriter(
 			ctx.Buildpack.Path,
 			config.dirContentFormatter,
 			config.logger.DebugWriter()).Write("Buildpack contents"); err != nil {
@@ -140,7 +140,7 @@ func Detect(detect DetectFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		if internal.NewDirectoryContentsWriter(
+		if err := internal.NewDirectoryContentsWriter(
 			ctx.Platform.Path,
 			config.dirContentFormatter,
 			config.logger.DebugWriter()).Write("Platform contents"); err != nil {
