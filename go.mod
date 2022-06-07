@@ -10,7 +10,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/onsi/gomega v1.19.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 )
 
@@ -24,5 +24,5 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20220512140231-539c8e751b99 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
