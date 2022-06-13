@@ -279,17 +279,12 @@ func Build(build BuildFunc, options ...Option) {
 		}
 
 		if layer.SBOM != nil {
-			if API.GreaterThan(semver.MustParse("0.7")) || API.Equal(semver.MustParse("0.7")) {
-				for _, format := range layer.SBOM.Formats() {
-					err = config.fileWriter.Write(filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.sbom.%s", layer.Name, format.Extension)), format.Content)
-					if err != nil {
-						config.exitHandler.Error(err)
-						return
-					}
+			for _, format := range layer.SBOM.Formats() {
+				err = config.fileWriter.Write(filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.sbom.%s", layer.Name, format.Extension)), format.Content)
+				if err != nil {
+					config.exitHandler.Error(err)
+					return
 				}
-			} else {
-				config.exitHandler.Error(fmt.Errorf("%s.sbom.* output is only supported with Buildpack API v0.7 or higher", layer.Name))
-				return
 			}
 		}
 

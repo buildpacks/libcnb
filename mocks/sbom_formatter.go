@@ -3,8 +3,9 @@
 package mocks
 
 import (
-	libcnb "github.com/buildpacks/libcnb"
 	mock "github.com/stretchr/testify/mock"
+
+	libcnb "github.com/buildpacks/libcnb"
 
 	testing "testing"
 )

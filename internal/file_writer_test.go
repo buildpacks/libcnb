@@ -8,8 +8,9 @@ import (
 	"testing"
 	"testing/iotest"
 
-	"github.com/buildpacks/libcnb/internal"
 	"github.com/sclevine/spec"
+
+	"github.com/buildpacks/libcnb/internal"
 
 	. "github.com/onsi/gomega"
 )

@@ -94,7 +94,6 @@ type Layer struct {
 	// Exec is the exec.d executables set in the layer.
 	Exec Exec `toml:"-"`
 
-
 	// SBOM is a type that implements SBOMFormatter and declares the formats that
 	// bill-of-materials should be output for the layer SBoM.
 	SBOM SBOMFormatter
