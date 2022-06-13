@@ -61,7 +61,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
-api = "0.6"
+api = "0.8"
 
 [buildpack]
 id = "test-id"
@@ -145,7 +145,7 @@ test-key = "test-value"
 		it.Before(func() {
 			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
-api = "0.4"
+api = "0.7"
 
 [buildpack]
 id = "test-id"
@@ -163,20 +163,15 @@ version = "1.1.1"
 				libcnb.WithLogger(log.NewDiscard()),
 			)
 
-			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				fmt.Sprintf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", libcnb.MinSupportedBPVersion, libcnb.MaxSupportedBPVersion),
-			))
+			if libcnb.MinSupportedBPVersion == libcnb.MaxSupportedBPVersion {
+				Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+					fmt.Sprintf("this version of libcnb is only compatible with buildpack API == %s", libcnb.MinSupportedBPVersion)))
+			} else {
+				Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+					fmt.Sprintf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", libcnb.MinSupportedBPVersion, libcnb.MaxSupportedBPVersion),
+				))
+			}
 		})
-	})
-
-	it("encounters the wrong number of Arguments", func() {
-		libcnb.Detect(detectFunc,
-			libcnb.WithArguments([]string{commandPath}),
-			libcnb.WithExitHandler(exitHandler),
-			libcnb.WithLogger(log.NewDiscard()),
-		)
-
-		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("expected 2 arguments and received 0"))
 	})
 
 	it("doesn't receive CNB_STACK_ID", func() {
@@ -191,7 +186,7 @@ version = "1.1.1"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("CNB_STACK_ID not set"))
 	})
 
-	context("errors if required env vars are not set for buildpack API >=0.8", func() {
+	context("errors if required env vars are not set", func() {
 		for _, e := range []string{"CNB_PLATFORM_DIR", "CNB_BUILD_PLAN_PATH"} {
 			// We need to do this assignment because of the way that spec binds variables
 			envVar := e
@@ -224,7 +219,7 @@ version = "1.1.1"
 		}
 	})
 
-	context("when BP API >= 0.8", func() {
+	context("has a detect environment", func() {
 		var ctx libcnb.DetectContext
 
 		it.Before(func() {
@@ -279,60 +274,8 @@ version = "1.1.1"
 		})
 	})
 
-	context("when BP API < 0.8", func() {
-		var ctx libcnb.DetectContext
-
-		it.Before(func() {
-			Expect(os.Unsetenv("CNB_PLATFORM_DIR")).To(Succeed())
-			Expect(os.Unsetenv("CNB_BUILD_PLAN_PATH")).To(Succeed())
-
-			detectFunc = func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-				ctx = context
-				return libcnb.DetectResult{}, nil
-			}
-		})
-
-		it("creates context", func() {
-			libcnb.Detect(detectFunc,
-				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
-				libcnb.WithExitHandler(exitHandler),
-			)
-
-			Expect(ctx.ApplicationPath).To(Equal(applicationPath))
-			Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
-				API: "0.6",
-				Info: libcnb.BuildpackInfo{
-					ID:               "test-id",
-					Name:             "test-name",
-					Version:          "1.1.1",
-					ClearEnvironment: true,
-					Description:      "A test buildpack",
-					Keywords:         []string{"test", "buildpack"},
-					Licenses: []libcnb.License{
-						{Type: "Apache-2.0", URI: "https://spdx.org/licenses/Apache-2.0.html"},
-						{Type: "Apache-1.1", URI: "https://spdx.org/licenses/Apache-1.1.html"},
-					},
-				},
-				Path: buildpackPath,
-				Stacks: []libcnb.BuildpackStack{
-					{
-						ID:     "test-id",
-						Mixins: []string{"test-name"},
-					},
-				},
-				Metadata: map[string]interface{}{"test-key": "test-value"},
-			}))
-		})
-	})
-
-	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
+	it("fails if CNB_BUILDPACK_DIR is not set", func() {
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
-
-		var ctx libcnb.DetectContext
-		detectFunc = func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
-			ctx = context
-			return libcnb.DetectResult{Pass: true}, nil
-		}
 
 		libcnb.Detect(detectFunc,
 			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), platformPath, buildPlanPath}),
@@ -340,7 +283,7 @@ version = "1.1.1"
 			libcnb.WithLogger(log.NewDiscard()),
 		)
 
-		Expect(ctx.Buildpack.Path).To(Equal(buildpackPath))
+		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to get CNB_BUILDPACK_DIR, not found"))
 	})
 
 	it("handles error from DetectFunc", func() {

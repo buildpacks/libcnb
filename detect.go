@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/semver"
@@ -90,11 +89,13 @@ func Detect(detect DetectFunc, options ...Option) {
 		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
-	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
+	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
 		ctx.Buildpack.Path = filepath.Clean(s)
-	} else { // TODO: Remove branch once lifecycle has been updated to support this
-		ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "detect")))
+	} else {
+		config.exitHandler.Error(fmt.Errorf("unable to get CNB_BUILDPACK_DIR, not found"))
+		return
 	}
+
 	if config.logger.IsDebugEnabled() {
 		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
 	}
@@ -114,30 +115,27 @@ func Detect(detect DetectFunc, options ...Option) {
 
 	compatVersionCheck, _ := semver.NewConstraint(fmt.Sprintf(">= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 	if !compatVersionCheck.Check(API) {
+		if MinSupportedBPVersion == MaxSupportedBPVersion {
+			config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack API == %s", MinSupportedBPVersion))
+			return
+		}
+
 		config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 		return
 	}
 
 	var buildPlanPath string
 
-	if API.LessThan(semver.MustParse("0.8")) {
-		if len(config.arguments) != 3 {
-			config.exitHandler.Error(fmt.Errorf("expected 2 arguments and received %d", len(config.arguments)-1))
-			return
-		}
-		ctx.Platform.Path = config.arguments[1]
-		buildPlanPath = config.arguments[2]
-	} else {
-		ctx.Platform.Path, ok = os.LookupEnv("CNB_PLATFORM_DIR")
-		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
-			return
-		}
-		buildPlanPath, ok = os.LookupEnv("CNB_BUILD_PLAN_PATH")
-		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_BUILD_PLAN_PATH to be set"))
-			return
-		}
+	ctx.Platform.Path, ok = os.LookupEnv(EnvPlatformDirectory)
+	if !ok {
+		config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
+		return
+	}
+
+	buildPlanPath, ok = os.LookupEnv(EnvDetectPlanPath)
+	if !ok {
+		config.exitHandler.Error(fmt.Errorf("expected CNB_BUILD_PLAN_PATH to be set"))
+		return
 	}
 
 	if config.logger.IsDebugEnabled() {
@@ -145,7 +143,7 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
-	if ctx.Platform.Bindings, err = NewBindingsFromPath(file); err != nil {
+	if ctx.Platform.Bindings, err = NewBindings(ctx.Platform.Path); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", file, err))
 		return
 	}
@@ -158,7 +156,7 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 	config.logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
-	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
+	if ctx.StackID, ok = os.LookupEnv(EnvStackID); !ok {
 		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
 		return
 	}

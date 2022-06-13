@@ -127,21 +127,25 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				}))
 			})
 
-			it("returns empty bindings if environment variable is not set", func() {
-				Expect(libcnb.NewBindingsForLaunch()).To(Equal(libcnb.Bindings{}))
+			it("creates an empty binding if path does not exist", func() {
+				Expect(libcnb.NewBindingsFromPath("/path/doesnt/exist")).To(Equal(libcnb.Bindings{}))
+			})
+
+			it("returns empty bindings if SERVICE_BINDING_ROOT and CNB_PLATFORM_DIR are not set and /platform/bindings does not exist", func() {
+				Expect(libcnb.NewBindings(libcnb.DefaultPlatformBindingsLocation)).To(Equal(libcnb.Bindings{}))
 			})
 
 			context("from environment", func() {
-				it.Before(func() {
-					Expect(os.Setenv(libcnb.EnvServiceBindings, path))
-				})
-
 				it.After(func() {
 					Expect(os.Unsetenv(libcnb.EnvServiceBindings))
+					Expect(os.Unsetenv("CNB_PLATFORM_DIR"))
 				})
 
-				it("creates bindings from path in SERVICE_BINDING_ROOT", func() {
-					Expect(libcnb.NewBindingsForLaunch()).To(Equal(libcnb.Bindings{
+				it("creates bindings from path in SERVICE_BINDING_ROOT if both set", func() {
+					Expect(os.Setenv(libcnb.EnvServiceBindings, path))
+					Expect(os.Setenv("CNB_PLATFORM_DIR", "/does/not/exist"))
+
+					Expect(libcnb.NewBindings(libcnb.DefaultPlatformBindingsLocation)).To(Equal(libcnb.Bindings{
 						libcnb.Binding{
 							Name:     "alpha",
 							Path:     filepath.Join(path, "alpha"),
@@ -158,63 +162,26 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 						},
 					}))
 				})
-			})
 
-			context("from environment or path", func() {
-				context("when SERVICE_BINDING_ROOT is defined but the passed path does not exist", func() {
-					it.Before(func() {
-						Expect(os.Setenv(libcnb.EnvServiceBindings, path))
-					})
+				it("creates bindings from path in SERVICE_BINDING_ROOT if SERVICE_BINDING_ROOT not set", func() {
+					Expect(os.Setenv("CNB_PLATFORM_DIR", filepath.Dir(path)))
 
-					it.After(func() {
-						Expect(os.Unsetenv(libcnb.EnvServiceBindings))
-					})
-
-					it("creates bindings from path in SERVICE_BINDING_ROOT", func() {
-						Expect(libcnb.NewBindingsForBuild("random-path-that-does-not-exist")).To(Equal(libcnb.Bindings{
-							libcnb.Binding{
-								Name:     "alpha",
-								Path:     filepath.Join(path, "alpha"),
-								Type:     "test-type",
-								Provider: "test-provider",
-								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
-							},
-							libcnb.Binding{
-								Name:     "bravo",
-								Path:     filepath.Join(path, "bravo"),
-								Type:     "test-type",
-								Provider: "test-provider",
-								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
-							},
-						}))
-					})
-				})
-
-				context("when SERVICE_BINDING_ROOT is not defined but the path exists", func() {
-					it("creates bindings from the given path", func() {
-						Expect(libcnb.NewBindingsForBuild(platformPath)).To(Equal(libcnb.Bindings{
-							libcnb.Binding{
-								Name:     "alpha",
-								Path:     filepath.Join(path, "alpha"),
-								Type:     "test-type",
-								Provider: "test-provider",
-								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
-							},
-							libcnb.Binding{
-								Name:     "bravo",
-								Path:     filepath.Join(path, "bravo"),
-								Type:     "test-type",
-								Provider: "test-provider",
-								Secret:   map[string]string{"test-secret-key": "test-secret-value"},
-							},
-						}))
-					})
-				})
-
-				context("when no valid binding variable is set", func() {
-					it("returns an an empty binding", func() {
-						Expect(libcnb.NewBindingsForBuild("does-not-exist")).To(Equal(libcnb.Bindings{}))
-					})
+					Expect(libcnb.NewBindings(libcnb.DefaultPlatformBindingsLocation)).To(Equal(libcnb.Bindings{
+						libcnb.Binding{
+							Name:     "alpha",
+							Path:     filepath.Join(path, "alpha"),
+							Type:     "test-type",
+							Provider: "test-provider",
+							Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+						},
+						libcnb.Binding{
+							Name:     "bravo",
+							Path:     filepath.Join(path, "bravo"),
+							Type:     "test-type",
+							Provider: "test-provider",
+							Secret:   map[string]string{"test-secret-key": "test-secret-value"},
+						},
+					}))
 				})
 			})
 		})

@@ -17,6 +17,7 @@
 package libcnb_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -305,7 +306,7 @@ test-key = "test-value"
 			Expect(l.Build).To(BeFalse())
 		})
 
-		it("reads existing 0.6 metadata with launch, build and cache all false", func() {
+		it("reads existing metadata with launch, build and cache all false", func() {
 			Expect(os.WriteFile(
 				filepath.Join(path, "test-name.toml"),
 				[]byte(`

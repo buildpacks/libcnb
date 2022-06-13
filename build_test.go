@@ -32,7 +32,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/buildpacks/libcnb"
-	"github.com/buildpacks/libcnb/internal"
 	"github.com/buildpacks/libcnb/log"
 	"github.com/buildpacks/libcnb/mocks"
 )
@@ -108,7 +107,7 @@ test-key = "test-value"
 		Expect(err).ToNot(HaveOccurred())
 
 		var b bytes.Buffer
-		err = buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.7"})
+		err = buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
@@ -192,7 +191,7 @@ test-key = "test-value"
 		it.Before(func() {
 			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
-api = "0.4"
+api = "0.7"
 
 [buildpack]
 id = "test-id"
@@ -210,9 +209,14 @@ version = "1.1.1"
 				libcnb.WithLogger(log.NewDiscard()),
 			)
 
-			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-				fmt.Sprintf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", libcnb.MinSupportedBPVersion, libcnb.MaxSupportedBPVersion),
-			))
+			if libcnb.MinSupportedBPVersion == libcnb.MaxSupportedBPVersion {
+				Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+					fmt.Sprintf("this version of libcnb is only compatible with buildpack API == %s", libcnb.MinSupportedBPVersion)))
+			} else {
+				Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+					fmt.Sprintf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", libcnb.MinSupportedBPVersion, libcnb.MaxSupportedBPVersion),
+				))
+			}
 		})
 	})
 
@@ -277,16 +281,6 @@ version = "1.1.1"
 		}
 	})
 
-	it("encounters the wrong number of arguments", func() {
-		libcnb.Build(buildFunc,
-			libcnb.WithArguments([]string{commandPath}),
-			libcnb.WithExitHandler(exitHandler),
-			libcnb.WithLogger(log.NewDiscard()),
-		)
-
-		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("expected 3 arguments and received 0"))
-	})
-
 	it("doesn't receive CNB_STACK_ID", func() {
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
 
@@ -299,7 +293,7 @@ version = "1.1.1"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("CNB_STACK_ID not set"))
 	})
 
-	context("when BP API >= 0.8", func() {
+	context("has a build environment", func() {
 		var ctx libcnb.BuildContext
 
 		it.Before(func() {
@@ -437,21 +431,16 @@ version = "1.1.1"
 		})
 	})
 
-	it("extracts buildpack path from command path if CNB_BUILDPACK_PATH is not set", func() {
+	it("fails if CNB_BUILDPACK_DIR is not set", func() {
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
-
-		var ctx libcnb.BuildContext
-		buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
-			ctx = context
-			return libcnb.NewBuildResult(), nil
-		}
 
 		libcnb.Build(buildFunc,
 			libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), layersPath, platformPath, buildpackPlanPath}),
+			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
 
-		Expect(ctx.Buildpack.Path).To(Equal(buildpackPath))
+		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to get CNB_BUILDPACK_DIR, not found"))
 	})
 
 	it("handles error from BuildFunc", func() {
@@ -536,44 +525,7 @@ version = "1.1.1"
 		Expect(environmentWriter.Calls[3].Arguments[1]).To(Equal(map[string]string{"test-profile": "test-value"}))
 	})
 
-	it("writes 0.5 layer metadata", func() {
-		var b bytes.Buffer
-		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.5"})
-		Expect(err).ToNot(HaveOccurred())
-
-		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
-
-		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
-			layer := libcnb.Layer{
-				Name: "test-name",
-				Path: filepath.Join(layersPath, "test-name"),
-				LayerTypes: libcnb.LayerTypes{
-					Build:  true,
-					Cache:  true,
-					Launch: true,
-				},
-				Metadata: map[string]interface{}{"test-key": "test-value"},
-			}
-			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
-		}
-
-		libcnb.Build(buildFunc,
-			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-			libcnb.WithTOMLWriter(tomlWriter),
-			libcnb.WithLogger(log.NewDiscard()),
-		)
-
-		Expect(tomlWriter.Calls[0].Arguments[0]).To(Equal(filepath.Join(layersPath, "test-name.toml")))
-
-		layer5, ok := tomlWriter.Calls[0].Arguments[1].(internal.LayerAPI5)
-		Expect(ok).To(BeTrue())
-		Expect(layer5.Build).To(BeTrue())
-		Expect(layer5.Cache).To(BeTrue())
-		Expect(layer5.Launch).To(BeTrue())
-		Expect(layer5.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
-	})
-
-	it("writes 0.6 layer metadata", func() {
+	it("writes layer metadata", func() {
 		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			layer := libcnb.Layer{
 				Name: "test-name",
@@ -604,32 +556,7 @@ version = "1.1.1"
 		Expect(layer.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
 	})
 
-	it("fails when working-directory set (API<0.8)", func() {
-		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
-			return libcnb.BuildResult{
-				Layers: []libcnb.Layer{},
-				Processes: []libcnb.Process{
-					{
-						Type:             "test-type",
-						Command:          "test-command-in-dir",
-						Default:          true,
-						WorkingDirectory: "/my/directory/",
-					},
-				},
-			}, nil
-		}
-
-		libcnb.Build(buildFunc,
-			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-			libcnb.WithTOMLWriter(tomlWriter),
-			libcnb.WithExitHandler(exitHandler))
-
-		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
-			"unable to set working-directory=/my/directory/ because that is not supported until API version 0.8",
-		))
-	})
-
-	it("writes launch.toml with working-directory setting(API>=0.8)", func() {
+	it("writes launch.toml with working-directory setting", func() {
 		var b bytes.Buffer
 		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
 		Expect(err).ToNot(HaveOccurred())

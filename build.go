@@ -81,7 +81,7 @@ type BuildResult struct {
 // Constants to track minimum and maximum supported Buildpack API versions
 const (
 	// MinSupportedBPVersion indicates the minium supported version of the Buildpacks API
-	MinSupportedBPVersion = "0.5"
+	MinSupportedBPVersion = "0.8"
 
 	// MaxSupportedBPVersion indicates the maximum supported version of the Buildpacks API
 	MaxSupportedBPVersion = "0.8"
@@ -140,11 +140,13 @@ func Build(build BuildFunc, options ...Option) {
 		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
 	}
 
-	if s, ok := os.LookupEnv("CNB_BUILDPACK_DIR"); ok {
+	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
 		ctx.Buildpack.Path = filepath.Clean(s)
-	} else { // TODO: Remove branch once lifecycle has been updated to support this
-		ctx.Buildpack.Path = filepath.Clean(strings.TrimSuffix(config.arguments[0], filepath.Join("bin", "build")))
+	} else {
+		config.exitHandler.Error(fmt.Errorf("unable to get CNB_BUILDPACK_DIR, not found"))
+		return
 	}
+
 	if config.logger.IsDebugEnabled() {
 		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
 	}
@@ -164,37 +166,32 @@ func Build(build BuildFunc, options ...Option) {
 
 	compatVersionCheck, _ := semver.NewConstraint(fmt.Sprintf(">= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 	if !compatVersionCheck.Check(API) {
+		if MinSupportedBPVersion == MaxSupportedBPVersion {
+			config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack API == %s", MinSupportedBPVersion))
+			return
+		}
+
 		config.exitHandler.Error(fmt.Errorf("this version of libcnb is only compatible with buildpack APIs >= %s, <= %s", MinSupportedBPVersion, MaxSupportedBPVersion))
 		return
 	}
 
-	var buildpackPlanPath string
+	layersDir, ok := os.LookupEnv(EnvLayersDirectory)
+	if !ok {
+		config.exitHandler.Error(fmt.Errorf("expected CNB_LAYERS_DIR to be set"))
+		return
+	}
+	ctx.Layers = Layers{layersDir}
 
-	if API.LessThan(semver.MustParse("0.8")) {
-		if len(config.arguments) != 4 {
-			config.exitHandler.Error(fmt.Errorf("expected 3 arguments and received %d", len(config.arguments)-1))
-			return
-		}
-		ctx.Layers = Layers{config.arguments[1]}
-		ctx.Platform.Path = config.arguments[2]
-		buildpackPlanPath = config.arguments[3]
-	} else {
-		layersDir, ok := os.LookupEnv("CNB_LAYERS_DIR")
-		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_LAYERS_DIR to be set"))
-			return
-		}
-		ctx.Layers = Layers{layersDir}
-		ctx.Platform.Path, ok = os.LookupEnv("CNB_PLATFORM_DIR")
-		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
-			return
-		}
-		buildpackPlanPath, ok = os.LookupEnv("CNB_BP_PLAN_PATH")
-		if !ok {
-			config.exitHandler.Error(fmt.Errorf("expected CNB_BP_PLAN_PATH to be set"))
-			return
-		}
+	ctx.Platform.Path, ok = os.LookupEnv(EnvPlatformDirectory)
+	if !ok {
+		config.exitHandler.Error(fmt.Errorf("expected CNB_PLATFORM_DIR to be set"))
+		return
+	}
+
+	buildpackPlanPath, ok := os.LookupEnv(EnvBuildPlanPath)
+	if !ok {
+		config.exitHandler.Error(fmt.Errorf("expected CNB_BP_PLAN_PATH to be set"))
+		return
 	}
 
 	config.logger.Debugf("Layers: %+v", ctx.Layers)
@@ -203,7 +200,7 @@ func Build(build BuildFunc, options ...Option) {
 		config.logger.Debug(PlatformFormatter(ctx.Platform))
 	}
 
-	if ctx.Platform.Bindings, err = NewBindingsForBuild(ctx.Platform.Path); err != nil {
+	if ctx.Platform.Bindings, err = NewBindings(ctx.Platform.Path); err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to read platform bindings %s\n%w", ctx.Platform.Path, err))
 		return
 	}
@@ -231,7 +228,7 @@ func Build(build BuildFunc, options ...Option) {
 	}
 	config.logger.Debugf("Buildpack Plan: %+v", ctx.Plan)
 
-	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
+	if ctx.StackID, ok = os.LookupEnv(EnvStackID); !ok {
 		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
 		return
 	}
@@ -298,16 +295,7 @@ func Build(build BuildFunc, options ...Option) {
 
 		file = filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.toml", layer.Name))
 		config.logger.Debugf("Writing layer metadata: %s <= %+v", file, layer)
-		var toWrite interface{} = layer
-		if API.Equal(semver.MustParse("0.5")) {
-			toWrite = internal.LayerAPI5{
-				Build:    layer.LayerTypes.Build,
-				Cache:    layer.LayerTypes.Cache,
-				Launch:   layer.LayerTypes.Launch,
-				Metadata: layer.Metadata,
-			}
-		}
-		if err = config.tomlWriter.Write(file, toWrite); err != nil {
+		if err = config.tomlWriter.Write(file, layer); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write layer metadata %s\n%w", file, err))
 			return
 		}
@@ -336,23 +324,6 @@ func Build(build BuildFunc, options ...Option) {
 	if !launch.isEmpty() {
 		file = filepath.Join(ctx.Layers.Path, "launch.toml")
 		config.logger.Debugf("Writing application metadata: %s <= %+v", file, launch)
-
-		if API.LessThan(semver.MustParse("0.6")) {
-			for _, process := range launch.Processes {
-				if process.Default {
-					config.exitHandler.Error(fmt.Errorf("unable to set default=true as that is not supported until API version 0.6"))
-				}
-			}
-		}
-
-		if API.LessThan(semver.MustParse("0.8")) {
-			for i, process := range launch.Processes {
-				if process.WorkingDirectory != "" {
-					config.exitHandler.Error(fmt.Errorf("unable to set working-directory=%s because that is not supported until API version 0.8", process.WorkingDirectory))
-					launch.Processes[i].WorkingDirectory = ""
-				}
-			}
-		}
 
 		if err = config.tomlWriter.Write(file, launch); err != nil {
 			config.exitHandler.Error(fmt.Errorf("unable to write application metadata %s\n%w", file, err))
