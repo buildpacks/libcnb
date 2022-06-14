@@ -56,7 +56,7 @@ func testMain(t *testing.T, context spec.G, it spec.S) {
 		applicationPath, err = filepath.EvalSymlinks(applicationPath)
 		Expect(err).NotTo(HaveOccurred())
 
-		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
 			return libcnb.NewBuildResult(), nil
 		}
 
@@ -107,7 +107,7 @@ test-key = "test-value"
 			0600),
 		).To(Succeed())
 
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{}, nil
 		}
 
@@ -203,7 +203,7 @@ test-key = "test-value"
 	})
 
 	it("calls detector for detect command", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{Pass: true}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")
@@ -216,7 +216,7 @@ test-key = "test-value"
 	})
 
 	it("calls exitHandler.Pass() on detection pass", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{Pass: true}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")
@@ -231,7 +231,7 @@ test-key = "test-value"
 	})
 
 	it("calls exitHandler.Fail() on detection fail", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{Pass: false}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")

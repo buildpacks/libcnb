@@ -26,7 +26,6 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
 )
 
 // DetectContext contains the inputs to detection.
@@ -57,22 +56,10 @@ type DetectResult struct {
 }
 
 // DetectFunc takes a context and returns a result, performing buildpack detect behaviors.
-type DetectFunc func(context DetectContext) (DetectResult, error)
+type DetectFunc func(context DetectContext, logger Logger) (DetectResult, error)
 
 // Detect is called by the main function of a buildpack, for detection.
-func Detect(detect DetectFunc, options ...Option) {
-	config := Config{
-		arguments:         os.Args,
-		environmentWriter: internal.EnvironmentWriter{},
-		exitHandler:       internal.NewExitHandler(),
-		logger:            log.New(os.Stdout),
-		tomlWriter:        internal.TOMLWriter{},
-	}
-
-	for _, option := range options {
-		config = option(config)
-	}
-
+func Detect(detect DetectFunc, config Config) {
 	var (
 		err  error
 		file string
@@ -162,7 +149,7 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 	config.logger.Debugf("Stack: %s", ctx.StackID)
 
-	result, err := detect(ctx)
+	result, err := detect(ctx, config.logger)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return

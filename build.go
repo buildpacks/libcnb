@@ -28,7 +28,6 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
 )
 
 // BuildContext contains the inputs to build.
@@ -107,22 +106,10 @@ func (b BuildResult) String() string {
 }
 
 // BuildFunc takes a context and returns a result, performing buildpack build behaviors.
-type BuildFunc func(context BuildContext) (BuildResult, error)
+type BuildFunc func(context BuildContext, logger Logger) (BuildResult, error)
 
 // Build is called by the main function of a buildpack, for build.
-func Build(build BuildFunc, options ...Option) {
-	config := Config{
-		arguments:         os.Args,
-		environmentWriter: internal.EnvironmentWriter{},
-		exitHandler:       internal.NewExitHandler(),
-		logger:            log.New(os.Stdout),
-		tomlWriter:        internal.TOMLWriter{},
-	}
-
-	for _, option := range options {
-		config = option(config)
-	}
-
+func Build(build BuildFunc, config Config) {
 	var (
 		err  error
 		file string
@@ -233,7 +220,7 @@ func Build(build BuildFunc, options ...Option) {
 	}
 	config.logger.Debugf("Stack: %s", ctx.StackID)
 
-	result, err := build(ctx)
+	result, err := build(ctx, config.logger)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return
