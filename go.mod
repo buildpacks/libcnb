@@ -10,7 +10,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/onsi/gomega v1.19.0
-	github.com/stretchr/testify v1.7.4
+	github.com/stretchr/testify v1.7.5
 	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
 )
 
