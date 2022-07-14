@@ -62,6 +62,17 @@ func testEnvironmentWriter(t *testing.T, context spec.G, it spec.S) {
 		Expect(string(content)).To(Equal("other-content"))
 	})
 
+	it("writes the given environment with process specific envs to a directory", func() {
+		err := writer.Write(path, map[string]string{
+			"some-proc/some-name": "some-content",
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		content, err := os.ReadFile(filepath.Join(path, "some-proc", "some-name"))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(string(content)).To(Equal("some-content"))
+	})
+
 	it("writes does not create a directory of the env map is empty", func() {
 		err := writer.Write(path, map[string]string{})
 		Expect(err).NotTo(HaveOccurred())
