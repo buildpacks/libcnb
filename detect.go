@@ -38,6 +38,9 @@ type DetectContext struct {
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
 
+	// Logger is the way to write messages to the end user
+	Logger Logger
+
 	// Platform is the contents of the platform.
 	Platform Platform
 
@@ -56,7 +59,7 @@ type DetectResult struct {
 }
 
 // DetectFunc takes a context and returns a result, performing buildpack detect behaviors.
-type DetectFunc func(context DetectContext, logger Logger) (DetectResult, error)
+type DetectFunc func(context DetectContext) (DetectResult, error)
 
 // Detect is called by the main function of a buildpack, for detection.
 func Detect(detect DetectFunc, config Config) {
@@ -65,7 +68,7 @@ func Detect(detect DetectFunc, config Config) {
 		file string
 		ok   bool
 	)
-	ctx := DetectContext{}
+	ctx := DetectContext{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
@@ -149,7 +152,7 @@ func Detect(detect DetectFunc, config Config) {
 	}
 	config.logger.Debugf("Stack: %s", ctx.StackID)
 
-	result, err := detect(ctx, config.logger)
+	result, err := detect(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return

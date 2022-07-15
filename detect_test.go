@@ -97,7 +97,7 @@ test-key = "test-value"
 
 		commandPath = filepath.Join("bin", "detect")
 
-		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{}, nil
 		}
 
@@ -239,7 +239,7 @@ version = "1.1.1"
 				0600),
 			).To(Succeed())
 
-			detectFunc = func(context libcnb.DetectContext, logger libcnb.Logger) (libcnb.DetectResult, error) {
+			detectFunc = func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
 				ctx = context
 				return libcnb.DetectResult{}, nil
 			}
@@ -293,7 +293,7 @@ version = "1.1.1"
 	})
 
 	it("handles error from DetectFunc", func() {
-		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{}, fmt.Errorf("test-error")
 		}
 
@@ -308,7 +308,7 @@ version = "1.1.1"
 	})
 
 	it("does not write empty files", func() {
-		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{Pass: true}, nil
 		}
 
@@ -324,7 +324,7 @@ version = "1.1.1"
 	})
 
 	it("writes one build plan", func() {
-		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{
 				Pass: true,
 				Plans: []libcnb.BuildPlan{
@@ -368,7 +368,7 @@ version = "1.1.1"
 	})
 
 	it("writes two build plans", func() {
-		detectFunc = func(libcnb.DetectContext, libcnb.Logger) (libcnb.DetectResult, error) {
+		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{
 				Pass: true,
 				Plans: []libcnb.BuildPlan{

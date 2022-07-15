@@ -42,6 +42,9 @@ type BuildContext struct {
 	// Layers is the layers available to the buildpack.
 	Layers Layers
 
+	// Logger is the way to write messages to the end user
+	Logger Logger
+
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
 	PersistentMetadata map[string]interface{}
 
@@ -106,7 +109,7 @@ func (b BuildResult) String() string {
 }
 
 // BuildFunc takes a context and returns a result, performing buildpack build behaviors.
-type BuildFunc func(context BuildContext, logger Logger) (BuildResult, error)
+type BuildFunc func(context BuildContext) (BuildResult, error)
 
 // Build is called by the main function of a buildpack, for build.
 func Build(build BuildFunc, config Config) {
@@ -115,7 +118,7 @@ func Build(build BuildFunc, config Config) {
 		file string
 		ok   bool
 	)
-	ctx := BuildContext{}
+	ctx := BuildContext{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
@@ -220,7 +223,7 @@ func Build(build BuildFunc, config Config) {
 	}
 	config.logger.Debugf("Stack: %s", ctx.StackID)
 
-	result, err := build(ctx, config.logger)
+	result, err := build(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return

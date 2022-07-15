@@ -56,7 +56,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.NewBuildResult(), nil
 		}
 
@@ -283,7 +283,7 @@ version = "1.1.1"
 				0600),
 			).To(Succeed())
 
-			buildFunc = func(context libcnb.BuildContext, _ libcnb.Logger) (libcnb.BuildResult, error) {
+			buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
 				ctx = context
 				return libcnb.NewBuildResult(), nil
 			}
@@ -348,7 +348,7 @@ version = "1.1.1"
 	})
 
 	it("handles error from BuildFunc", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.NewBuildResult(), errors.New("test-error")
 		}
 
@@ -363,7 +363,7 @@ version = "1.1.1"
 	})
 
 	it("writes env.build", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), BuildEnvironment: libcnb.Environment{}}
 			layer.BuildEnvironment.Defaultf("test-build", "test-%s", "value")
 			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
@@ -381,7 +381,7 @@ version = "1.1.1"
 	})
 
 	it("writes env.launch", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), LaunchEnvironment: libcnb.Environment{}}
 			layer.LaunchEnvironment.Defaultf("test-launch", "test-%s", "value")
 			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
@@ -399,7 +399,7 @@ version = "1.1.1"
 	})
 
 	it("writes env", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), SharedEnvironment: libcnb.Environment{}}
 			layer.SharedEnvironment.Defaultf("test-shared", "test-%s", "value")
 			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
@@ -417,7 +417,7 @@ version = "1.1.1"
 	})
 
 	it("writes profile.d", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), Profile: libcnb.Profile{}}
 			layer.Profile.Addf("test-profile", "test-%s", "value")
 			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
@@ -435,7 +435,7 @@ version = "1.1.1"
 	})
 
 	it("writes layer metadata", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			layer := libcnb.Layer{
 				Name: "test-name",
 				Path: filepath.Join(layersPath, "test-name"),
@@ -473,7 +473,7 @@ version = "1.1.1"
 
 		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{
 				Layers: []libcnb.Layer{},
 				Processes: []libcnb.Process{
@@ -507,7 +507,7 @@ version = "1.1.1"
 	})
 
 	it("writes launch.toml", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{
 				Labels: []libcnb.Label{
 					{
@@ -563,7 +563,7 @@ version = "1.1.1"
 	it("writes persistent metadata", func() {
 		m := map[string]interface{}{"test-key": "test-value"}
 
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{PersistentMetadata: m}, nil
 		}
 
@@ -596,7 +596,7 @@ version = "1.1.1"
 
 		layer := libcnb.Layer{Name: "alpha"}
 
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
 		}
 
@@ -614,7 +614,7 @@ version = "1.1.1"
 	})
 
 	it("writes build.toml", func() {
-		buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{
 				Unmet: []libcnb.UnmetPlanEntry{
 					{
@@ -656,7 +656,7 @@ sbom-formats = ["application/vnd.cyclonedx+json"]
 				0600),
 			).To(Succeed())
 
-			buildFunc = func(libcnb.BuildContext, libcnb.Logger) (libcnb.BuildResult, error) {
+			buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 				return libcnb.BuildResult{}, nil
 			}
 		})
