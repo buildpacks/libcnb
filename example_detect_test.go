@@ -18,7 +18,7 @@ type Detector struct {
 	Logger libcnb.Logger
 }
 
-func (d Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, error) {
+func (Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, error) {
 	version := "1.0"
 	// Scan the application source folder to see if the example buildpack is
 	// required.  If `version.toml` does not exist we return a failed DetectResult
@@ -61,7 +61,7 @@ func (d Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, err
 	}, nil
 }
 
-func Example() {
+func ExampleDetect() {
 	detector := Detector{log.New(os.Stdout)}
 	libcnb.Main(detector.Detect, nil)
 }
