@@ -2,7 +2,7 @@ name: Synchronize Labels
 "on":
     push:
         branches:
-            - main
+            - release-1.x
         paths:
             - .github/labels.yml
 jobs:
