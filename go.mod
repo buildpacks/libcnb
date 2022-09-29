@@ -3,7 +3,7 @@ module github.com/buildpacks/libcnb
 go 1.18
 
 require (
-	github.com/CycloneDX/cyclonedx-go v0.6.0
+	github.com/CycloneDX/cyclonedx-go v0.7.0
 	github.com/Masterminds/semver v1.5.0
 	github.com/sclevine/spec v1.4.0
 )
