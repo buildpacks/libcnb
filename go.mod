@@ -10,7 +10,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.2.1
-	github.com/onsi/gomega v1.23.0
+	github.com/onsi/gomega v1.24.0
 	github.com/stretchr/testify v1.8.1
 )
 
