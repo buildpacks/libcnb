@@ -22,13 +22,10 @@ type Process struct {
 	Type string `toml:"type"`
 
 	// Command is the command of the process.
-	Command string `toml:"command"`
+	Command []string `toml:"command"`
 
 	// Arguments are arguments to the command.
 	Arguments []string `toml:"args"`
-
-	// Command is exec'd directly by the os (no profile.d scripts run)
-	Direct bool `toml:"direct,omitempty"`
 
 	// WorkingDirectory is a directory to execute the command in, removes the need to use a shell environment to CD into working directory
 	WorkingDirectory string `toml:"working-directory,omitempty"`
