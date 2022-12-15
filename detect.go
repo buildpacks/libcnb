@@ -26,6 +26,7 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/log"
 )
 
 // DetectContext contains the inputs to detection.
@@ -39,7 +40,7 @@ type DetectContext struct {
 	Buildpack Buildpack
 
 	// Logger is the way to write messages to the end user
-	Logger Logger
+	Logger log.Logger
 
 	// Platform is the contents of the platform.
 	Platform Platform
@@ -75,8 +76,11 @@ func Detect(detect DetectFunc, config Config) {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
+
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
+		if err := config.contentWriter.Write("Application contents", ctx.ApplicationPath); err != nil {
+			config.logger.Debugf("unable to write application contents\n%w", err)
+		}
 	}
 
 	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
@@ -87,7 +91,9 @@ func Detect(detect DetectFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
+		if err := config.contentWriter.Write("Buildpack contents", ctx.Buildpack.Path); err != nil {
+			config.logger.Debugf("unable to write buildpack contents\n%w", err)
+		}
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
@@ -129,7 +135,9 @@ func Detect(detect DetectFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(PlatformFormatter(ctx.Platform))
+		if err := config.contentWriter.Write("Platform contents", ctx.Platform.Path); err != nil {
+			config.logger.Debugf("unable to write platform contents\n%w", err)
+		}
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
