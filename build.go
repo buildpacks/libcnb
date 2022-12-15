@@ -28,6 +28,7 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/log"
 )
 
 // BuildContext contains the inputs to build.
@@ -43,7 +44,7 @@ type BuildContext struct {
 	Layers Layers
 
 	// Logger is the way to write messages to the end user
-	Logger Logger
+	Logger log.Logger
 
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
 	PersistentMetadata map[string]interface{}
@@ -127,10 +128,7 @@ func Build(build BuildFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		if internal.NewDirectoryContentsWriter(
-			ctx.ApplicationPath,
-			config.dirContentFormatter,
-			config.logger.DebugWriter()).Write("Application contents"); err != nil {
+		if err := config.contentWriter.Write("Application contents", ctx.ApplicationPath); err != nil {
 			config.logger.Debugf("unable to write application contents\n%w", err)
 		}
 	}
@@ -143,10 +141,7 @@ func Build(build BuildFunc, config Config) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		if internal.NewDirectoryContentsWriter(
-			ctx.Buildpack.Path,
-			config.dirContentFormatter,
-			config.logger.DebugWriter()).Write("Buildpack contents"); err != nil {
+		if err := config.contentWriter.Write("Buildpack contents", ctx.Buildpack.Path); err != nil {
 			config.logger.Debugf("unable to write buildpack contents\n%w", err)
 		}
 	}
@@ -197,10 +192,7 @@ func Build(build BuildFunc, config Config) {
 	config.logger.Debugf("Layers: %+v", ctx.Layers)
 
 	if config.logger.IsDebugEnabled() {
-		if internal.NewDirectoryContentsWriter(
-			ctx.Platform.Path,
-			config.dirContentFormatter,
-			config.logger.DebugWriter()).Write("Platform contents"); err != nil {
+		if err := config.contentWriter.Write("Platform contents", ctx.Platform.Path); err != nil {
 			config.logger.Debugf("unable to write platform contents\n%w", err)
 		}
 	}

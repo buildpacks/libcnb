@@ -27,7 +27,6 @@ import (
 	"github.com/sclevine/spec"
 
 	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
 )
 
 func testDirectoryContentsWriter(t *testing.T, context spec.G, it spec.S) {
@@ -49,7 +48,7 @@ func testDirectoryContentsWriter(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("directory content formats", func() {
-		var fm log.PlainDirectoryContentFormatter
+		fm := internal.NewPlainDirectoryContentFormatter()
 
 		it("formats title", func() {
 			Expect(fm.Title("foo")).To(Equal("foo:\n"))
@@ -69,10 +68,10 @@ func testDirectoryContentsWriter(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("lists empty directory contents", func() {
-		fm := log.NewPlainDirectoryContentFormatter()
-		dc := internal.NewDirectoryContentsWriter(path, &fm, &buf)
+		fm := internal.NewPlainDirectoryContentFormatter()
+		dc := internal.NewDirectoryContentsWriter(fm, &buf)
 
-		Expect(dc.Write("title")).To(Succeed())
+		Expect(dc.Write("title", path)).To(Succeed())
 		Expect(buf.String()).To(Equal("title:\n.\n"))
 	})
 
@@ -81,10 +80,10 @@ func testDirectoryContentsWriter(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 		defer f.Close()
 
-		fm := log.NewPlainDirectoryContentFormatter()
-		dc := internal.NewDirectoryContentsWriter(path, &fm, &buf)
+		fm := internal.NewPlainDirectoryContentFormatter()
+		dc := internal.NewDirectoryContentsWriter(fm, &buf)
 
-		Expect(dc.Write("title")).To(Succeed())
+		Expect(dc.Write("title", path)).To(Succeed())
 		Expect(buf.String()).To(Equal("title:\n.\ntest-file\n"))
 	})
 }

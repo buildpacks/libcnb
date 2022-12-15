@@ -27,26 +27,24 @@ import (
 
 // DirectoryContentsWriter is used write the contents of a directory to the given io.Writer
 type DirectoryContentsWriter struct {
-	path   string
 	format log.DirectoryContentFormatter
 	writer io.Writer
 }
 
 // NewDirectoryContentsWriter returns a new DirectoryContentsWriter initialized and ready to be used
-func NewDirectoryContentsWriter(path string, format log.DirectoryContentFormatter, writer io.Writer) DirectoryContentsWriter {
+func NewDirectoryContentsWriter(format log.DirectoryContentFormatter, writer io.Writer) DirectoryContentsWriter {
 	return DirectoryContentsWriter{
-		path:   path,
 		format: format,
 		writer: writer,
 	}
 }
 
 // Write all the file contents to the writer
-func (d DirectoryContentsWriter) Write(title string) error {
-	d.format.RootPath(d.path)
+func (d DirectoryContentsWriter) Write(title, path string) error {
+	d.format.RootPath(path)
 	d.writer.Write([]byte(d.format.Title(title)))
 
-	if err := filepath.Walk(d.path, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -60,7 +58,7 @@ func (d DirectoryContentsWriter) Write(title string) error {
 
 		return nil
 	}); err != nil {
-		return fmt.Errorf("error walking path %s\n%w", d.path, err)
+		return fmt.Errorf("error walking path %s\n%w", path, err)
 	}
 
 	return nil

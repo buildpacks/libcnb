@@ -31,5 +31,6 @@ func TestUnit(t *testing.T) {
 	suite("ExitHandler", testExitHandler)
 	suite("TOMLWriter", testTOMLWriter)
 	suite("ExecDWriter", testExecDWriter)
+	suite("Formatters", testFormatters)
 	suite.Run(t)
 }

@@ -78,6 +78,7 @@ type Config struct {
 	exitHandler         ExitHandler
 	logger              log.Logger
 	tomlWriter          TOMLWriter
+	contentWriter       internal.DirectoryContentsWriter
 }
 
 // Option is a function for configuring a Config instance.
@@ -94,11 +95,14 @@ func NewConfig(options ...Option) Config {
 		WithExitHandler(internal.NewExitHandler()),
 		WithLogger(log.New(os.Stdout)),
 		WithTOMLWriter(internal.TOMLWriter{}),
+		WithDirectoryContentFormatter(internal.NewPlainDirectoryContentFormatter()),
 	}, options...)
 
 	for _, opt := range options {
 		config = opt(config)
 	}
+
+	config.contentWriter = internal.NewDirectoryContentsWriter(config.dirContentFormatter, config.logger.DebugWriter())
 
 	return config
 }

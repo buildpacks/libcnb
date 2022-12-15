@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package log_test
+package internal_test
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
 
-	"github.com/buildpacks/libcnb/log"
+	"github.com/buildpacks/libcnb/internal"
 )
 
 func testFormatters(t *testing.T, context spec.G, it spec.S) {
@@ -46,7 +46,7 @@ func testFormatters(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("directory content formats", func() {
-		var fm log.PlainDirectoryContentFormatter
+		fm := internal.NewPlainDirectoryContentFormatter()
 
 		it("formats title", func() {
 			Expect(fm.Title("foo")).To(Equal("foo:\n"))

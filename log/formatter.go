@@ -17,9 +17,7 @@
 package log
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 )
 
 //go:generate mockery --name DirectoryContentFormatter --case=underscore
@@ -33,10 +31,16 @@ import (
 //   - call RootPath(string) with the root path that's being walked
 //   - call Title(string) with the given title, the output is logged
 //   - for each file in the directory:
-//       - call File(string, os.FileInfo), the output is logged
+//   - call File(string, os.FileInfo), the output is logged
 //
-// A default implementation, PlainDirectoryContentFormatter is provided. A
-// buildpack author could provide their own implementation through
+// # A default implementation is provided that returns a formatter applies no formatting
+//
+// The returned formatter operates as such:
+//
+//	Title -> returns string followed by `:\n`
+//	File  -> returns file name relative to the root followed by `\n`
+//
+// A buildpack author could provide their own implementation through
 // WithDirectoryContentFormatter when calling Detect or Build.
 //
 // A custom implementation might log in color or might log additional
@@ -52,34 +56,4 @@ type DirectoryContentFormatter interface {
 
 	// Title provides a plain string title which can be embellished
 	Title(title string) string
-}
-
-// PlainDirectoryContentFormatter applies no formatting
-//
-// PlainDirectoryContentFormatter operates as such:
-//    Title -> returns string followed by `:\n`
-//    File  -> returns file name relative to the root followed by `\n`
-type PlainDirectoryContentFormatter struct {
-	rootPath string
-}
-
-func NewPlainDirectoryContentFormatter() PlainDirectoryContentFormatter {
-	return PlainDirectoryContentFormatter{}
-}
-
-func (p PlainDirectoryContentFormatter) File(path string, info os.FileInfo) (string, error) {
-	rel, err := filepath.Rel(p.rootPath, path)
-	if err != nil {
-		return "", fmt.Errorf("unable to calculate relative path %s -> %s\n%w", p.rootPath, path, err)
-	}
-
-	return fmt.Sprintf("%s\n", rel), nil
-}
-
-func (p *PlainDirectoryContentFormatter) RootPath(path string) {
-	p.rootPath = path
-}
-
-func (p PlainDirectoryContentFormatter) Title(title string) string {
-	return fmt.Sprintf("%s:\n", title)
 }
