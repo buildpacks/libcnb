@@ -96,8 +96,8 @@ type Config struct {
 // Option is a function for configuring a Config instance.
 type Option func(config Config) Config
 
-// NewConfigWithOptions will generate a config from the given set of options
-func NewConfigWithOptions(options ...Option) Config {
+// NewConfig will generate a config from the given set of options
+func NewConfig(options ...Option) Config {
 	config := Config{}
 
 	// apply defaults

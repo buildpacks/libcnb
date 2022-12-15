@@ -159,7 +159,7 @@ version = "1.1.1"
 
 		it("fails", func() {
 			libcnb.Detect(detectFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 					libcnb.WithExitHandler(exitHandler),
 					libcnb.WithLogger(log.NewDiscard())),
@@ -180,7 +180,7 @@ version = "1.1.1"
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
 
 		libcnb.Detect(detectFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -211,7 +211,7 @@ version = "1.1.1"
 
 				it("fails", func() {
 					libcnb.Detect(detectFunc,
-						libcnb.NewConfigWithOptions(
+						libcnb.NewConfig(
 							libcnb.WithArguments([]string{commandPath}),
 							libcnb.WithExitHandler(exitHandler)),
 					)
@@ -247,7 +247,7 @@ version = "1.1.1"
 
 		it("creates context", func() {
 			libcnb.Detect(detectFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath}),
 					libcnb.WithExitHandler(exitHandler)),
 			)
@@ -283,7 +283,7 @@ version = "1.1.1"
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 
 		libcnb.Detect(detectFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), platformPath, buildPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -298,7 +298,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Detect(detectFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -313,7 +313,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Detect(detectFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithTOMLWriter(tomlWriter),
@@ -344,7 +344,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Detect(detectFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithTOMLWriter(tomlWriter),
@@ -399,7 +399,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Detect(detectFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithTOMLWriter(tomlWriter),

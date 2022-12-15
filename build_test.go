@@ -203,7 +203,7 @@ version = "1.1.1"
 
 		it("fails", func() {
 			libcnb.Build(buildFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 					libcnb.WithExitHandler(exitHandler),
 					libcnb.WithLogger(log.NewDiscard())),
@@ -242,7 +242,7 @@ version = "1.1.1"
 
 				it("fails", func() {
 					libcnb.Build(buildFunc,
-						libcnb.NewConfigWithOptions(
+						libcnb.NewConfig(
 							libcnb.WithArguments([]string{commandPath}),
 							libcnb.WithExitHandler(exitHandler)),
 					)
@@ -258,7 +258,7 @@ version = "1.1.1"
 		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -291,7 +291,7 @@ version = "1.1.1"
 
 		it("creates context", func() {
 			libcnb.Build(buildFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath})),
 			)
 
@@ -338,7 +338,7 @@ version = "1.1.1"
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{filepath.Join(buildpackPath, commandPath), layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -353,7 +353,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -370,7 +370,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithEnvironmentWriter(environmentWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -388,7 +388,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithEnvironmentWriter(environmentWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -406,7 +406,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithEnvironmentWriter(environmentWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -424,7 +424,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithEnvironmentWriter(environmentWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -450,7 +450,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -488,7 +488,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter)),
 		)
@@ -531,7 +531,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -568,7 +568,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -580,7 +580,7 @@ version = "1.1.1"
 
 	it("does not write empty files", func() {
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -601,7 +601,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -625,7 +625,7 @@ version = "1.1.1"
 		}
 
 		libcnb.Build(buildFunc,
-			libcnb.NewConfigWithOptions(
+			libcnb.NewConfig(
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithTOMLWriter(tomlWriter),
 				libcnb.WithLogger(log.NewDiscard())),
@@ -663,7 +663,7 @@ sbom-formats = ["application/vnd.cyclonedx+json"]
 
 		it("has SBOM files", func() {
 			libcnb.Build(buildFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 					libcnb.WithExitHandler(exitHandler),
 					libcnb.WithLogger(log.NewDiscard())),
@@ -689,7 +689,7 @@ sbom-formats = []
 			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(buildFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 					libcnb.WithExitHandler(exitHandler),
 					libcnb.WithLogger(log.NewDiscard())),
@@ -702,7 +702,7 @@ sbom-formats = []
 			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(buildFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 					libcnb.WithExitHandler(exitHandler),
 					libcnb.WithLogger(log.NewDiscard())),
@@ -715,7 +715,7 @@ sbom-formats = []
 			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			Expect(os.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			libcnb.Build(buildFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 					libcnb.WithExitHandler(exitHandler),
 					libcnb.WithLogger(log.NewDiscard())),
@@ -728,7 +728,7 @@ sbom-formats = []
 			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
 			Expect(os.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			libcnb.Build(buildFunc,
-				libcnb.NewConfigWithOptions(
+				libcnb.NewConfig(
 					libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 					libcnb.WithExitHandler(exitHandler),
 					libcnb.WithLogger(log.NewDiscard())),

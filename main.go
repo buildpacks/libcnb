@@ -23,7 +23,7 @@ import (
 
 // Main is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
 func Main(detect DetectFunc, build BuildFunc, options ...Option) {
-	config := NewConfigWithOptions(options...)
+	config := NewConfig(options...)
 
 	if len(config.arguments) == 0 {
 		config.exitHandler.Error(fmt.Errorf("expected command name"))
