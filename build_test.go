@@ -20,10 +20,11 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"testing/iotest"
 	"text/template"
 
 	. "github.com/onsi/gomega"
@@ -219,13 +220,41 @@ version = "1.1.1"
 		})
 	})
 
-	context("errors if required env vars are not set", func() {
+	context("buildpack API is not valid semver", func() {
+		it.Before(func() {
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+api = "not valid semver"
+
+[buildpack]
+id = "test-id"
+name = "test-name"
+version = "1.1.1"
+`),
+				0600),
+			).To(Succeed())
+		})
+
+		it("fails", func() {
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+				libcnb.WithExitHandler(exitHandler),
+				libcnb.WithLogger(log.NewDiscard()),
+			)
+
+			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
+				"version cannot be parsed",
+			))
+		})
+	})
+
+	context("errors if required env vars are not set for buildpack API >=0.8", func() {
 		for _, e := range []string{"CNB_LAYERS_DIR", "CNB_PLATFORM_DIR", "CNB_BP_PLAN_PATH"} {
 			// We need to do this assignment because of the way that spec binds variables
 			envVar := e
 			context(fmt.Sprintf("when %s is unset", envVar), func() {
 				it.Before(func() {
-					Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+					Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 						[]byte(`
 		api = "0.8"
 		
@@ -243,6 +272,7 @@ version = "1.1.1"
 					libcnb.Build(buildFunc,
 						libcnb.WithArguments([]string{commandPath}),
 						libcnb.WithExitHandler(exitHandler),
+						libcnb.WithLogger(log.NewDiscard()),
 					)
 					Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError(
 						fmt.Sprintf("expected %s to be set", envVar),
@@ -268,7 +298,73 @@ version = "1.1.1"
 		var ctx libcnb.BuildContext
 
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+	api = "0.8"
+	
+	[buildpack]
+	id = "test-id"
+	name = "test-name"
+	version = "1.1.1"
+	`),
+				0600),
+			).To(Succeed())
+
+			buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+				ctx = context
+				return libcnb.NewBuildResult(), nil
+			}
+		})
+
+		it("creates context", func() {
+			libcnb.Build(buildFunc,
+				libcnb.WithArguments([]string{commandPath}),
+			)
+
+			Expect(ctx.ApplicationPath).To(Equal(applicationPath))
+			Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
+				API: "0.8",
+				Info: libcnb.BuildpackInfo{
+					ID:      "test-id",
+					Name:    "test-name",
+					Version: "1.1.1",
+				},
+				Path: buildpackPath,
+			}))
+			Expect(ctx.Layers).To(Equal(libcnb.Layers{Path: layersPath}))
+			Expect(ctx.PersistentMetadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(ctx.Plan).To(Equal(libcnb.BuildpackPlan{
+				Entries: []libcnb.BuildpackPlanEntry{
+					{
+						Name: "test-name",
+						Metadata: map[string]interface{}{
+							"test-key": "test-value",
+						},
+					},
+				},
+			}))
+			Expect(ctx.Platform).To(Equal(libcnb.Platform{
+				Bindings: libcnb.Bindings{
+					libcnb.Binding{
+						Name: "alpha",
+						Path: filepath.Join(platformPath, "bindings", "alpha"),
+						Secret: map[string]string{
+							"test-secret-key": "test-secret-value",
+						},
+					},
+				},
+				Environment: map[string]string{"TEST_ENV": "test-value"},
+				Path:        platformPath,
+			}))
+			Expect(ctx.StackID).To(Equal("test-stack-id"))
+		})
+	})
+
+	context("has a build environment", func() {
+		var ctx libcnb.BuildContext
+
+		it.Before(func() {
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 	api = "0.8"
 	
@@ -460,7 +556,7 @@ version = "1.1.1"
 		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
 		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{
@@ -624,95 +720,73 @@ version = "1.1.1"
 		}))
 	})
 
-	context("Validates SBOM entries", func() {
-		it.Before(func() {
-			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
-				[]byte(`
-api = "0.8"
+	context("Writes SBOMs from formatters on the layers", func() {
+		it("writes them to their specified locations", func() {
+			libcnb.Build(func(ctx libcnb.BuildContext) (libcnb.BuildResult, error) {
+				layerPath := filepath.Join(ctx.Layers.Path, "some-layer")
+				Expect(os.MkdirAll(layerPath, os.ModePerm)).To(Succeed())
 
-[buildpack]
-id = "test-id"
-name = "test-name"
-version = "1.1.1"
-sbom-formats = ["application/vnd.cyclonedx+json"]
-`),
-				0600),
-			).To(Succeed())
-
-			buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
-				return libcnb.BuildResult{}, nil
-			}
-		})
-
-		it("has SBOM files", func() {
-			libcnb.Build(buildFunc,
+				return libcnb.BuildResult{
+					Layers: []libcnb.Layer{
+						libcnb.Layer{
+							Path: layerPath,
+							Name: "some-layer",
+							SBOM: libcnb.SBOMFormats{
+								{
+									Extension: "some.json",
+									Content:   strings.NewReader(`{"some-key": "some-value"}`),
+								},
+								{
+									Extension: "other.yml",
+									Content:   strings.NewReader(`other-key: other-value`),
+								},
+							},
+						},
+					},
+				}, nil
+			},
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
 				libcnb.WithExitHandler(exitHandler),
 				libcnb.WithLogger(log.NewDiscard()),
 			)
 
-			Expect(exitHandler.Calls).To(BeEmpty())
+			contents, err := os.ReadFile(filepath.Join(layersPath, "some-layer.sbom.some.json"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(contents)).To(MatchJSON(`{"some-key": "some-value"}`))
+
+			contents, err = os.ReadFile(filepath.Join(layersPath, "some-layer.sbom.other.yml"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(contents)).To(MatchYAML(`other-key: other-value`))
 		})
 
-		it("has no accepted formats", func() {
-			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
-				[]byte(`
-api = "0.8"
+		context("when it fails to write the SBOM files", func() {
+			it("throws an error", func() {
+				libcnb.Build(func(ctx libcnb.BuildContext) (libcnb.BuildResult, error) {
+					layerPath := filepath.Join(ctx.Layers.Path, "some-layer")
+					Expect(os.MkdirAll(layerPath, os.ModePerm)).To(Succeed())
 
-[buildpack]
-id = "test-id"
-name = "test-name"
-version = "1.1.1"
-sbom-formats = []
-`),
-				0600),
-			).To(Succeed())
+					return libcnb.BuildResult{
+						Layers: []libcnb.Layer{
+							libcnb.Layer{
+								Path: layerPath,
+								Name: "some-layer",
+								SBOM: libcnb.SBOMFormats{
+									{
+										Extension: "some.json",
+										Content:   iotest.ErrReader(errors.New("failed to format layer sbom")),
+									},
+								},
+							},
+						},
+					}, nil
+				},
+					libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
+					libcnb.WithExitHandler(exitHandler),
+					libcnb.WithLogger(log.NewDiscard()),
+				)
 
-			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
-
-			libcnb.Build(buildFunc,
-				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-				libcnb.WithExitHandler(exitHandler),
-				libcnb.WithLogger(log.NewDiscard()),
-			)
-
-			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to find actual SBOM Type application/spdx+json in list of supported SBOM types []"))
-		})
-
-		it("has no matching formats", func() {
-			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
-
-			libcnb.Build(buildFunc,
-				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-				libcnb.WithExitHandler(exitHandler),
-				libcnb.WithLogger(log.NewDiscard()),
-			)
-
-			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to find actual SBOM Type application/spdx+json in list of supported SBOM types [application/vnd.cyclonedx+json]"))
-		})
-
-		it("has a matching format", func() {
-			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
-			Expect(os.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
-			libcnb.Build(buildFunc,
-				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-				libcnb.WithExitHandler(exitHandler),
-				libcnb.WithLogger(log.NewDiscard()),
-			)
-
-			Expect(exitHandler.Calls).To(BeEmpty())
-		})
-
-		it("has a junk format", func() {
-			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
-			Expect(os.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
-			libcnb.Build(buildFunc,
-				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-				libcnb.WithExitHandler(exitHandler),
-				libcnb.WithLogger(log.NewDiscard()),
-			)
-
-			Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("unable to validate SBOM\nunable to parse SBOM unknown\nunable to translate from random.json to SBOMFormat"))
+				Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("failed to format layer sbom"))
+			})
 		})
 	})
 }

@@ -24,16 +24,6 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-const (
-	BOMFormatCycloneDXExtension = "cdx.json"
-	BOMFormatSPDXExtension      = "spdx.json"
-	BOMFormatSyftExtension      = "syft.json"
-	BOMMediaTypeCycloneDX       = "application/vnd.cyclonedx+json"
-	BOMMediaTypeSPDX            = "application/spdx+json"
-	BOMMediaTypeSyft            = "application/vnd.syft+json"
-	BOMUnknown                  = "unknown"
-)
-
 // Exec represents the exec.d layer location
 type Exec struct {
 	// Path is the path to the exec.d directory.
@@ -75,45 +65,6 @@ func (p Profile) ProcessAddf(processType string, name string, format string, a .
 	p.Addf(filepath.Join(processType, name), format, a...)
 }
 
-// BOMFormat indicates the format of the SBOM entry
-type SBOMFormat int
-
-const (
-	CycloneDXJSON SBOMFormat = iota
-	SPDXJSON
-	SyftJSON
-	UnknownFormat
-)
-
-func (b SBOMFormat) String() string {
-	return []string{
-		BOMFormatCycloneDXExtension,
-		BOMFormatSPDXExtension,
-		BOMFormatSyftExtension,
-		BOMUnknown}[b]
-}
-
-func (b SBOMFormat) MediaType() string {
-	return []string{
-		BOMMediaTypeCycloneDX,
-		BOMMediaTypeSPDX,
-		BOMMediaTypeSyft,
-		BOMUnknown}[b]
-}
-
-func SBOMFormatFromString(from string) (SBOMFormat, error) {
-	switch from {
-	case CycloneDXJSON.String():
-		return CycloneDXJSON, nil
-	case SPDXJSON.String():
-		return SPDXJSON, nil
-	case SyftJSON.String():
-		return SyftJSON, nil
-	}
-
-	return UnknownFormat, fmt.Errorf("unable to translate from %s to SBOMFormat", from)
-}
-
 // Contribute represents a layer managed by the buildpack.
 type Layer struct {
 	// LayerTypes indicates the type of layer
@@ -142,6 +93,10 @@ type Layer struct {
 
 	// Exec is the exec.d executables set in the layer.
 	Exec Exec `toml:"-"`
+
+	// SBOM is a type that implements SBOMFormatter and declares the formats that
+	// bill-of-materials should be output for the layer SBoM.
+	SBOM SBOMFormatter
 }
 
 func (l Layer) Reset() (Layer, error) {
@@ -168,11 +123,6 @@ func (l Layer) Reset() (Layer, error) {
 	}
 
 	return l, nil
-}
-
-// SBOMPath returns the path to the layer specific SBOM File
-func (l Layer) SBOMPath(bt SBOMFormat) string {
-	return filepath.Join(filepath.Dir(l.Path), fmt.Sprintf("%s.sbom.%s", l.Name, bt))
 }
 
 // LayerTypes describes which types apply to a given layer. A layer may have any combination of Launch, Build, and
@@ -212,14 +162,4 @@ func (l *Layers) Layer(name string) (Layer, error) {
 	}
 
 	return layer, nil
-}
-
-// BOMBuildPath returns the full path to the build SBoM file for the buildpack
-func (l Layers) BuildSBOMPath(bt SBOMFormat) string {
-	return filepath.Join(l.Path, fmt.Sprintf("build.sbom.%s", bt))
-}
-
-// BOMLaunchPath returns the full path to the launch SBoM file for the buildpack
-func (l Layers) LaunchSBOMPath(bt SBOMFormat) string {
-	return filepath.Join(l.Path, fmt.Sprintf("launch.sbom.%s", bt))
 }

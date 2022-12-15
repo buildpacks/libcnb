@@ -18,7 +18,6 @@ package libcnb_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -193,7 +192,7 @@ version = "1.1.1"
 			envVar := e
 			context(fmt.Sprintf("when %s is unset", envVar), func() {
 				it.Before(func() {
-					Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+					Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 						[]byte(`
 		api = "0.8"
 		
@@ -224,7 +223,7 @@ version = "1.1.1"
 		var ctx libcnb.DetectContext
 
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 	api = "0.8"
 	
