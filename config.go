@@ -16,6 +16,13 @@
 
 package libcnb
 
+import (
+	"os"
+
+	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/log"
+)
+
 //go:generate mockery --name EnvironmentWriter --case=underscore
 
 // EnvironmentWriter is the interface implemented by a type that wants to serialize a map of environment variables to
@@ -88,6 +95,26 @@ type Config struct {
 
 // Option is a function for configuring a Config instance.
 type Option func(config Config) Config
+
+// NewConfig will generate a config from the given set of options
+func NewConfig(options ...Option) Config {
+	config := Config{}
+
+	// apply defaults
+	options = append([]Option{
+		WithArguments(os.Args),
+		WithEnvironmentWriter(internal.EnvironmentWriter{}),
+		WithExitHandler(internal.NewExitHandler()),
+		WithLogger(log.New(os.Stdout)),
+		WithTOMLWriter(internal.TOMLWriter{}),
+	}, options...)
+
+	for _, opt := range options {
+		config = opt(config)
+	}
+
+	return config
+}
 
 // WithArguments creates an Option that sets a collection of arguments.
 func WithArguments(arguments []string) Option {

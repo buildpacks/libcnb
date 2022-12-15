@@ -28,7 +28,6 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
 )
 
 // BuildContext contains the inputs to build.
@@ -42,6 +41,9 @@ type BuildContext struct {
 
 	// Layers is the layers available to the buildpack.
 	Layers Layers
+
+	// Logger is the way to write messages to the end user
+	Logger Logger
 
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
 	PersistentMetadata map[string]interface{}
@@ -110,25 +112,13 @@ func (b BuildResult) String() string {
 type BuildFunc func(context BuildContext) (BuildResult, error)
 
 // Build is called by the main function of a buildpack, for build.
-func Build(build BuildFunc, options ...Option) {
-	config := Config{
-		arguments:         os.Args,
-		environmentWriter: internal.EnvironmentWriter{},
-		exitHandler:       internal.NewExitHandler(),
-		logger:            log.New(os.Stdout),
-		tomlWriter:        internal.TOMLWriter{},
-	}
-
-	for _, option := range options {
-		config = option(config)
-	}
-
+func Build(build BuildFunc, config Config) {
 	var (
 		err  error
 		file string
 		ok   bool
 	)
-	ctx := BuildContext{}
+	ctx := BuildContext{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {

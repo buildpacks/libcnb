@@ -26,7 +26,6 @@ import (
 	"github.com/Masterminds/semver"
 
 	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
 )
 
 // DetectContext contains the inputs to detection.
@@ -38,6 +37,9 @@ type DetectContext struct {
 
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
+
+	// Logger is the way to write messages to the end user
+	Logger Logger
 
 	// Platform is the contents of the platform.
 	Platform Platform
@@ -60,25 +62,13 @@ type DetectResult struct {
 type DetectFunc func(context DetectContext) (DetectResult, error)
 
 // Detect is called by the main function of a buildpack, for detection.
-func Detect(detect DetectFunc, options ...Option) {
-	config := Config{
-		arguments:         os.Args,
-		environmentWriter: internal.EnvironmentWriter{},
-		exitHandler:       internal.NewExitHandler(),
-		logger:            log.New(os.Stdout),
-		tomlWriter:        internal.TOMLWriter{},
-	}
-
-	for _, option := range options {
-		config = option(config)
-	}
-
+func Detect(detect DetectFunc, config Config) {
 	var (
 		err  error
 		file string
 		ok   bool
 	)
-	ctx := DetectContext{}
+	ctx := DetectContext{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {

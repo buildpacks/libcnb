@@ -18,26 +18,12 @@ package libcnb
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
-
-	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
 )
 
 // Main is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
 func Main(detect DetectFunc, build BuildFunc, options ...Option) {
-	config := Config{
-		arguments:         os.Args,
-		environmentWriter: internal.EnvironmentWriter{},
-		exitHandler:       internal.NewExitHandler(),
-		logger:            log.New(os.Stdout),
-		tomlWriter:        internal.TOMLWriter{},
-	}
-
-	for _, option := range options {
-		config = option(config)
-	}
+	config := NewConfig(options...)
 
 	if len(config.arguments) == 0 {
 		config.exitHandler.Error(fmt.Errorf("expected command name"))
@@ -46,9 +32,9 @@ func Main(detect DetectFunc, build BuildFunc, options ...Option) {
 
 	switch c := filepath.Base(config.arguments[0]); c {
 	case "build":
-		Build(build, options...)
+		Build(build, config)
 	case "detect":
-		Detect(detect, options...)
+		Detect(detect, config)
 	default:
 		config.exitHandler.Error(fmt.Errorf("unsupported command %s", c))
 		return
