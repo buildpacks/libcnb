@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/CycloneDX/cyclonedx-go v0.7.0
 	github.com/Masterminds/semver v1.5.0
-	github.com/onsi/gomega v1.25.0
+	github.com/onsi/gomega v1.26.0
 	github.com/sclevine/spec v1.4.0
 	github.com/stretchr/testify v1.8.1
 )
