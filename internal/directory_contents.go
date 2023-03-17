@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,36 +18,48 @@ package internal
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
-	"sort"
+
+	"github.com/buildpacks/libcnb/log"
 )
 
-// DirectoryContents is used to generate a collection of the names of all files within a directory.
-type DirectoryContents struct {
-	Path string
+// DirectoryContentsWriter is used write the contents of a directory to the given io.Writer
+type DirectoryContentsWriter struct {
+	format log.DirectoryContentFormatter
+	writer io.Writer
 }
 
-// Get returns the names of all files within a directory
-func (d DirectoryContents) Get() ([]string, error) {
-	var contents []string
+// NewDirectoryContentsWriter returns a new DirectoryContentsWriter initialized and ready to be used
+func NewDirectoryContentsWriter(format log.DirectoryContentFormatter, writer io.Writer) DirectoryContentsWriter {
+	return DirectoryContentsWriter{
+		format: format,
+		writer: writer,
+	}
+}
 
-	if err := filepath.Walk(d.Path, func(path string, info os.FileInfo, err error) error {
+// Write all the file contents to the writer
+func (d DirectoryContentsWriter) Write(title, path string) error {
+	d.format.RootPath(path)
+	d.writer.Write([]byte(d.format.Title(title)))
+
+	if err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 
-		rel, err := filepath.Rel(d.Path, path)
+		msg, err := d.format.File(path, info)
 		if err != nil {
-			return fmt.Errorf("unable to calculate relative path %s -> %s\n%w", d.Path, path, err)
+			return fmt.Errorf("unable to format\n%w", err)
 		}
 
-		contents = append(contents, rel)
+		d.writer.Write([]byte(msg))
+
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("error walking path %s\n%w", d.Path, err)
+		return fmt.Errorf("error walking path %s\n%w", path, err)
 	}
 
-	sort.Strings(contents)
-	return contents, nil
+	return nil
 }

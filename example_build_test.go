@@ -16,7 +16,7 @@ const (
 )
 
 type Builder struct {
-	Logger libcnb.Logger
+	Logger log.Logger
 }
 
 // BuildpackPlan may contain multiple entries for a single buildpack, resolve

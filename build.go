@@ -43,6 +43,9 @@ type BuildContext struct {
 	// Layers is the layers available to the buildpack.
 	Layers Layers
 
+	// Logger is the way to write messages to the end user
+	Logger log.Logger
+
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
 	PersistentMetadata map[string]interface{}
 
@@ -110,33 +113,24 @@ func (b BuildResult) String() string {
 type BuildFunc func(context BuildContext) (BuildResult, error)
 
 // Build is called by the main function of a buildpack, for build.
-func Build(build BuildFunc, options ...Option) {
-	config := Config{
-		arguments:         os.Args,
-		environmentWriter: internal.EnvironmentWriter{},
-		exitHandler:       internal.NewExitHandler(),
-		logger:            log.New(os.Stdout),
-		tomlWriter:        internal.TOMLWriter{},
-	}
-
-	for _, option := range options {
-		config = option(config)
-	}
-
+func Build(build BuildFunc, config Config) {
 	var (
 		err  error
 		file string
 		ok   bool
 	)
-	ctx := BuildContext{}
+	ctx := BuildContext{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
+
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
+		if err := config.contentWriter.Write("Application contents", ctx.ApplicationPath); err != nil {
+			config.logger.Debugf("unable to write application contents\n%w", err)
+		}
 	}
 
 	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
@@ -147,7 +141,9 @@ func Build(build BuildFunc, options ...Option) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
+		if err := config.contentWriter.Write("Buildpack contents", ctx.Buildpack.Path); err != nil {
+			config.logger.Debugf("unable to write buildpack contents\n%w", err)
+		}
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
@@ -196,7 +192,9 @@ func Build(build BuildFunc, options ...Option) {
 	config.logger.Debugf("Layers: %+v", ctx.Layers)
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(PlatformFormatter(ctx.Platform))
+		if err := config.contentWriter.Write("Platform contents", ctx.Platform.Path); err != nil {
+			config.logger.Debugf("unable to write platform contents\n%w", err)
+		}
 	}
 
 	if ctx.Platform.Bindings, err = NewBindings(ctx.Platform.Path); err != nil {

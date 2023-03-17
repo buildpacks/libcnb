@@ -39,6 +39,9 @@ type DetectContext struct {
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
 	Buildpack Buildpack
 
+	// Logger is the way to write messages to the end user
+	Logger log.Logger
+
 	// Platform is the contents of the platform.
 	Platform Platform
 
@@ -60,33 +63,24 @@ type DetectResult struct {
 type DetectFunc func(context DetectContext) (DetectResult, error)
 
 // Detect is called by the main function of a buildpack, for detection.
-func Detect(detect DetectFunc, options ...Option) {
-	config := Config{
-		arguments:         os.Args,
-		environmentWriter: internal.EnvironmentWriter{},
-		exitHandler:       internal.NewExitHandler(),
-		logger:            log.New(os.Stdout),
-		tomlWriter:        internal.TOMLWriter{},
-	}
-
-	for _, option := range options {
-		config = option(config)
-	}
-
+func Detect(detect DetectFunc, config Config) {
 	var (
 		err  error
 		file string
 		ok   bool
 	)
-	ctx := DetectContext{}
+	ctx := DetectContext{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
 		config.exitHandler.Error(fmt.Errorf("unable to get working directory\n%w", err))
 		return
 	}
+
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(ApplicationPathFormatter(ctx.ApplicationPath))
+		if err := config.contentWriter.Write("Application contents", ctx.ApplicationPath); err != nil {
+			config.logger.Debugf("unable to write application contents\n%w", err)
+		}
 	}
 
 	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
@@ -97,7 +91,9 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(BuildpackPathFormatter(ctx.Buildpack.Path))
+		if err := config.contentWriter.Write("Buildpack contents", ctx.Buildpack.Path); err != nil {
+			config.logger.Debugf("unable to write buildpack contents\n%w", err)
+		}
 	}
 
 	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
@@ -139,7 +135,9 @@ func Detect(detect DetectFunc, options ...Option) {
 	}
 
 	if config.logger.IsDebugEnabled() {
-		config.logger.Debug(PlatformFormatter(ctx.Platform))
+		if err := config.contentWriter.Write("Platform contents", ctx.Platform.Path); err != nil {
+			config.logger.Debugf("unable to write platform contents\n%w", err)
+		}
 	}
 
 	file = filepath.Join(ctx.Platform.Path, "bindings")
