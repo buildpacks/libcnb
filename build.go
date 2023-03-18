@@ -87,7 +87,7 @@ const (
 	MinSupportedBPVersion = "0.8"
 
 	// MaxSupportedBPVersion indicates the maximum supported version of the Buildpacks API
-	MaxSupportedBPVersion = "0.8"
+	MaxSupportedBPVersion = "0.9"
 )
 
 // NewBuildResult creates a new BuildResult instance, initializing empty fields.
