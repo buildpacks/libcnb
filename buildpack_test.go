@@ -28,7 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func testBuildpackTOML(t *testing.T, context spec.G, it spec.S) {
+func testBuildpackTOML(t *testing.T, _ spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 	)

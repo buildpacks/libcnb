@@ -28,7 +28,7 @@ import (
 	"github.com/buildpacks/libcnb/internal"
 )
 
-func testConfigMap(t *testing.T, context spec.G, it spec.S) {
+func testConfigMap(t *testing.T, _ spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
