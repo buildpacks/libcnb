@@ -19,7 +19,6 @@ package libcnb_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -58,15 +57,13 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	it.Before(func() {
 		var err error
 
-		applicationPath, err = ioutil.TempDir("", "build-application-path")
-		Expect(err).NotTo(HaveOccurred())
+		applicationPath = t.TempDir()
 		applicationPath, err = filepath.EvalSymlinks(applicationPath)
 		Expect(err).NotTo(HaveOccurred())
 
 		builder = &mocks.Builder{}
 
-		buildpackPath, err = ioutil.TempDir("", "build-buildpack-path")
-		Expect(err).NotTo(HaveOccurred())
+		buildpackPath = t.TempDir()
 		Expect(os.Setenv("CNB_BUILDPACK_DIR", buildpackPath)).To(Succeed())
 
 		bpTOMLContents = `
@@ -108,14 +105,14 @@ test-key = "test-value"
 		err = buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.6"})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
-		f, err := ioutil.TempFile("", "build-buildpackplan-path")
+		f, err := os.CreateTemp("", "build-buildpackplan-path")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(f.Close()).NotTo(HaveOccurred())
 		buildpackPlanPath = f.Name()
 
-		Expect(ioutil.WriteFile(buildpackPlanPath,
+		Expect(os.WriteFile(buildpackPlanPath,
 			[]byte(`
 [[entries]]
 name = "test-name"
@@ -137,10 +134,9 @@ test-key = "test-value"
 
 		layerContributor = &mocks.LayerContributor{}
 
-		layersPath, err = ioutil.TempDir("", "build-layers-path")
-		Expect(err).NotTo(HaveOccurred())
+		layersPath = t.TempDir()
 
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "store.toml"),
+		Expect(os.WriteFile(filepath.Join(layersPath, "store.toml"),
 			[]byte(`
 [metadata]
 test-key = "test-value"
@@ -148,15 +144,14 @@ test-key = "test-value"
 			0600),
 		).To(Succeed())
 
-		platformPath, err = ioutil.TempDir("", "build-platform-path")
-		Expect(err).NotTo(HaveOccurred())
+		platformPath = t.TempDir()
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "bindings", "alpha", "test-secret-key"),
+		Expect(os.WriteFile(filepath.Join(platformPath, "bindings", "alpha", "test-secret-key"),
 			[]byte("test-secret-value"), 0600)).To(Succeed())
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "env"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
+		Expect(os.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
 			To(Succeed())
 
 		tomlWriter = &mocks.TOMLWriter{}
@@ -189,7 +184,7 @@ test-key = "test-value"
 
 	context("buildpack API is not within the supported range", func() {
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 api = "0.4"
 
@@ -221,7 +216,7 @@ version = "1.1.1"
 			envVar := e
 			context(fmt.Sprintf("when %s is unset", envVar), func() {
 				it.Before(func() {
-					Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+					Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 						[]byte(`
 		api = "0.8"
 		
@@ -276,7 +271,7 @@ version = "1.1.1"
 
 	context("when BP API >= 0.8", func() {
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 	api = "0.8"
 	
@@ -526,7 +521,7 @@ version = "1.1.1"
 		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.5"})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
 		layer := libcnb.Layer{
 			Name: "test-name",
@@ -695,7 +690,7 @@ version = "1.1.1"
 		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 		builder.On("Build", mock.Anything).Return(libcnb.BuildResult{
 			Processes: []libcnb.Process{
 				{
@@ -754,9 +749,9 @@ version = "1.1.1"
 	})
 
 	it("removes stale layers", func() {
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "alpha.toml"), []byte(""), 0600)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "bravo.toml"), []byte(""), 0600)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "store.toml"), []byte(""), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(layersPath, "alpha.toml"), []byte(""), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(layersPath, "bravo.toml"), []byte(""), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(layersPath, "store.toml"), []byte(""), 0600)).To(Succeed())
 
 		layer := libcnb.Layer{Name: "alpha"}
 		layerContributor.On("Contribute", mock.Anything).Return(layer, nil)
@@ -832,7 +827,7 @@ version = "1.1.1"
 			err = buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.7"})
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 		})
 
 		it("writes launch.toml without BOM entries", func() {
@@ -917,7 +912,7 @@ version = "1.1.1"
 
 	context("Validates SBOM entries", func() {
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 api = "0.7"
 
@@ -944,7 +939,7 @@ sbom-formats = ["application/vnd.cyclonedx+json"]
 		})
 
 		it("has no accepted formats", func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 api = "0.7"
 
@@ -957,7 +952,7 @@ sbom-formats = []
 				0600),
 			).To(Succeed())
 
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(builder,
 				libcnb.WithBOMLabel(true),
@@ -969,7 +964,7 @@ sbom-formats = []
 		})
 
 		it("skips if API is not 0.7", func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 api = "0.6"
 
@@ -982,7 +977,7 @@ sbom-formats = []
 				0600),
 			).To(Succeed())
 
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(builder,
 				libcnb.WithBOMLabel(true),
@@ -994,7 +989,7 @@ sbom-formats = []
 		})
 
 		it("has no matching formats", func() {
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.spdx.json"), []byte{}, 0600)).To(Succeed())
 
 			libcnb.Build(builder,
 				libcnb.WithBOMLabel(true),
@@ -1006,8 +1001,8 @@ sbom-formats = []
 		})
 
 		it("has a matching format", func() {
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			libcnb.Build(builder,
 				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
@@ -1018,8 +1013,8 @@ sbom-formats = []
 		})
 
 		it("has a junk format", func() {
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
-			Expect(ioutil.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(layersPath, "launch.sbom.random.json"), []byte{}, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(layersPath, "layer.sbom.cdx.json"), []byte{}, 0600)).To(Succeed())
 			libcnb.Build(builder,
 				libcnb.WithBOMLabel(true),
 				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),

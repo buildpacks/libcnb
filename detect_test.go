@@ -18,7 +18,6 @@ package libcnb_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -50,16 +49,15 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 	it.Before(func() {
 		var err error
 
-		applicationPath, err = ioutil.TempDir("", "detect-application-path")
-		Expect(err).NotTo(HaveOccurred())
+		applicationPath = t.TempDir()
 		applicationPath, err = filepath.EvalSymlinks(applicationPath)
 		Expect(err).NotTo(HaveOccurred())
 
-		buildpackPath, err = ioutil.TempDir("", "detect-buildpack-path")
+		buildpackPath = t.TempDir()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.Setenv("CNB_BUILDPACK_DIR", buildpackPath)).To(Succeed())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
 api = "0.6"
 
@@ -89,7 +87,7 @@ test-key = "test-value"
 			0600),
 		).To(Succeed())
 
-		f, err := ioutil.TempFile("", "detect-buildplan-path")
+		f, err := os.CreateTemp("", "detect-buildplan-path")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(f.Close()).NotTo(HaveOccurred())
 		buildPlanPath = f.Name()
@@ -103,15 +101,14 @@ test-key = "test-value"
 		exitHandler.On("Fail")
 		exitHandler.On("Pass")
 
-		platformPath, err = ioutil.TempDir("", "detect-platform-path")
-		Expect(err).NotTo(HaveOccurred())
+		platformPath = t.TempDir()
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "bindings", "alpha", "test-secret-key"),
+		Expect(os.WriteFile(filepath.Join(platformPath, "bindings", "alpha", "test-secret-key"),
 			[]byte("test-secret-value"), 0600)).To(Succeed())
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "env"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
+		Expect(os.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
 			To(Succeed())
 
 		tomlWriter = &mocks.TOMLWriter{}
@@ -141,7 +138,7 @@ test-key = "test-value"
 
 	context("buildpack API is not within the supported range", func() {
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 api = "0.4"
 
@@ -195,7 +192,7 @@ version = "1.1.1"
 			envVar := e
 			context(fmt.Sprintf("when %s is unset", envVar), func() {
 				it.Before(func() {
-					Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+					Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 						[]byte(`
 		api = "0.8"
 		
@@ -224,7 +221,7 @@ version = "1.1.1"
 
 	context("when BP API >= 0.8", func() {
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 	api = "0.8"
 	

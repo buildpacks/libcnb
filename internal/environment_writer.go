@@ -18,7 +18,6 @@ package internal
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -45,7 +44,7 @@ func (w EnvironmentWriter) Write(path string, environment map[string]string) err
 		}
 
 		// #nosec
-		if err := ioutil.WriteFile(f, []byte(value), 0644); err != nil {
+		if err := os.WriteFile(f, []byte(value), 0644); err != nil {
 			return fmt.Errorf("unable to write file %s\n%w", f, err)
 		}
 	}

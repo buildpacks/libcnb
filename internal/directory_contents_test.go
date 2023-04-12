@@ -17,7 +17,6 @@
 package internal_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -36,13 +35,7 @@ func testDirectoryContents(t *testing.T, _ spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		var err error
-		path, err = ioutil.TempDir("", "directory-contents")
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	it.After(func() {
-		Expect(os.RemoveAll(path)).To(Succeed())
+		path = t.TempDir()
 	})
 
 	it("lists empty directory contents", func() {

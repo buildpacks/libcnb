@@ -17,7 +17,6 @@
 package libcnb_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -52,18 +51,17 @@ func testMain(t *testing.T, _ spec.G, it spec.S) {
 	it.Before(func() {
 		var err error
 
-		applicationPath, err = ioutil.TempDir("", "main-application-path")
-		Expect(err).NotTo(HaveOccurred())
+		applicationPath = t.TempDir()
 		applicationPath, err = filepath.EvalSymlinks(applicationPath)
 		Expect(err).NotTo(HaveOccurred())
 
 		builder = &mocks.Builder{}
 
-		buildpackPath, err = ioutil.TempDir("", "main-buildpack-path")
+		buildpackPath = t.TempDir()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.Setenv("CNB_BUILDPACK_DIR", buildpackPath)).To(Succeed())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 			[]byte(`
 api = "0.6"
 
@@ -89,12 +87,12 @@ test-key = "test-value"
 			0600),
 		).To(Succeed())
 
-		f, err := ioutil.TempFile("", "main-buildpackplan-path")
+		f, err := os.CreateTemp("", "main-buildpackplan-path")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(f.Close()).NotTo(HaveOccurred())
 		buildpackPlanPath = f.Name()
 
-		Expect(ioutil.WriteFile(buildpackPlanPath,
+		Expect(os.WriteFile(buildpackPlanPath,
 			[]byte(`
 [[entries]]
 name = "test-name"
@@ -106,7 +104,7 @@ test-key = "test-value"
 			0600),
 		).To(Succeed())
 
-		f, err = ioutil.TempFile("", "main-buildplan-path")
+		f, err = os.CreateTemp("", "main-buildplan-path")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(f.Close()).NotTo(HaveOccurred())
 		buildPlanPath = f.Name()
@@ -121,10 +119,9 @@ test-key = "test-value"
 		exitHandler.On("Pass", mock.Anything)
 		exitHandler.On("Fail", mock.Anything)
 
-		layersPath, err = ioutil.TempDir("", "main-layers-path")
-		Expect(err).NotTo(HaveOccurred())
+		layersPath = t.TempDir()
 
-		Expect(ioutil.WriteFile(filepath.Join(layersPath, "store.toml"),
+		Expect(os.WriteFile(filepath.Join(layersPath, "store.toml"),
 			[]byte(`
 [metadata]
 test-key = "test-value"
@@ -132,24 +129,23 @@ test-key = "test-value"
 			0600),
 		).To(Succeed())
 
-		platformPath, err = ioutil.TempDir("", "main-platform-path")
-		Expect(err).NotTo(HaveOccurred())
+		platformPath = t.TempDir()
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha", "metadata"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(
+		Expect(os.WriteFile(
 			filepath.Join(platformPath, "bindings", "alpha", "metadata", "test-metadata-key"),
 			[]byte("test-metadata-value"),
 			0600,
 		)).To(Succeed())
 		Expect(os.MkdirAll(filepath.Join(platformPath, "bindings", "alpha", "secret"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(
+		Expect(os.WriteFile(
 			filepath.Join(platformPath, "bindings", "alpha", "secret", "test-secret-key"),
 			[]byte("test-secret-value"),
 			0600,
 		)).To(Succeed())
 
 		Expect(os.MkdirAll(filepath.Join(platformPath, "env"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
+		Expect(os.WriteFile(filepath.Join(platformPath, "env", "TEST_ENV"), []byte("test-value"), 0600)).
 			To(Succeed())
 
 		tomlWriter = &mocks.TOMLWriter{}

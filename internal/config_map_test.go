@@ -17,7 +17,6 @@
 package internal_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -36,13 +35,7 @@ func testConfigMap(t *testing.T, _ spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		var err error
-		path, err = ioutil.TempDir("", "config-map")
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	it.After(func() {
-		Expect(os.RemoveAll(path)).To(Succeed())
+		path = t.TempDir()
 	})
 
 	it("returns an empty ConfigMap when directory does not exist", func() {
@@ -55,7 +48,7 @@ func testConfigMap(t *testing.T, _ spec.G, it spec.S) {
 	})
 
 	it("loads the ConfigMap from a directory", func() {
-		Expect(ioutil.WriteFile(filepath.Join(path, "test-key"), []byte("test-value"), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(path, "test-key"), []byte("test-value"), 0600)).To(Succeed())
 
 		cm, err := internal.NewConfigMapFromPath(path)
 		Expect(err).NotTo(HaveOccurred())
@@ -66,7 +59,7 @@ func testConfigMap(t *testing.T, _ spec.G, it spec.S) {
 	it("ignores dirs and follows symlinks", func() {
 		// this is necessary to support bindings mounted as k8s config maps & secrets
 		Expect(os.MkdirAll(filepath.Join(path, ".hidden"), 0755)).To(Succeed())
-		Expect(ioutil.WriteFile(
+		Expect(os.WriteFile(
 			filepath.Join(path, ".hidden", "test-key"),
 			[]byte("test-value"),
 			0600,
@@ -82,7 +75,7 @@ func testConfigMap(t *testing.T, _ spec.G, it spec.S) {
 	})
 
 	it("ignores hidden files", func() {
-		Expect(ioutil.WriteFile(filepath.Join(path, ".hidden-key"), []byte("hidden-value"), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(path, ".hidden-key"), []byte("hidden-value"), 0600)).To(Succeed())
 
 		cm, err := internal.NewConfigMapFromPath(path)
 		Expect(err).NotTo(HaveOccurred())

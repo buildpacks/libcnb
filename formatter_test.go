@@ -17,7 +17,6 @@
 package libcnb_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,13 +38,7 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 		)
 
 		it.Before(func() {
-			var err error
-			app, err = ioutil.TempDir("", "application-path-formatter")
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		it.After(func() {
-			Expect(os.RemoveAll(app)).To(Succeed())
+			app = t.TempDir()
 		})
 
 		it("lists empty directory contents", func() {
@@ -67,9 +60,7 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 		)
 
 		it.Before(func() {
-			var err error
-			bp, err = ioutil.TempDir("", "buildpack-path-formatter")
-			Expect(err).NotTo(HaveOccurred())
+			bp = t.TempDir()
 		})
 
 		it.After(func() {
@@ -95,9 +86,7 @@ func testFormatter(t *testing.T, context spec.G, it spec.S) {
 		)
 
 		it.Before(func() {
-			var err error
-			plat.Path, err = ioutil.TempDir("", "platform-formatter")
-			Expect(err).NotTo(HaveOccurred())
+			plat.Path = t.TempDir()
 		})
 
 		it.After(func() {
