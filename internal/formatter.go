@@ -20,7 +20,7 @@ func NewPlainDirectoryContentFormatter() *PlainDirectoryContentFormatter {
 	return &PlainDirectoryContentFormatter{}
 }
 
-func (p *PlainDirectoryContentFormatter) File(path string, info os.FileInfo) (string, error) {
+func (p *PlainDirectoryContentFormatter) File(path string, _ os.FileInfo) (string, error) {
 	rel, err := filepath.Rel(p.rootPath, path)
 	if err != nil {
 		return "", fmt.Errorf("unable to calculate relative path %s -> %s\n%w", p.rootPath, path, err)

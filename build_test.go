@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -226,7 +225,7 @@ version = "1.1.1"
 			envVar := e
 			context(fmt.Sprintf("when %s is unset", envVar), func() {
 				it.Before(func() {
-					Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+					Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 						[]byte(`
 		api = "0.8"
 		
@@ -271,7 +270,7 @@ version = "1.1.1"
 		var ctx libcnb.BuildContext
 
 		it.Before(func() {
-			Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
 				[]byte(`
 	api = "0.8"
 	
@@ -471,7 +470,7 @@ version = "1.1.1"
 		err := buildpackTOML.Execute(&b, map[string]string{"APIVersion": "0.8"})
 		Expect(err).ToNot(HaveOccurred())
 
-		Expect(ioutil.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
+		Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"), b.Bytes(), 0600)).To(Succeed())
 
 		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
 			return libcnb.BuildResult{

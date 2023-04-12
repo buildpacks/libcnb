@@ -17,7 +17,6 @@
 package libcnb_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -85,15 +84,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 		var layer libcnb.Layer
 
 		it.Before(func() {
-			var err error
-			path, err = ioutil.TempDir("", "layers")
-			Expect(err).NotTo(HaveOccurred())
-
-			layers = libcnb.Layers{Path: path}
-		})
-
-		it.After(func() {
-			Expect(os.RemoveAll(path)).To(Succeed())
+			layers = libcnb.Layers{Path: t.TempDir()}
 		})
 
 		context("when there is no previous build", func() {

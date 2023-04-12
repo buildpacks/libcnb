@@ -28,7 +28,7 @@ import (
 	"github.com/buildpacks/libcnb/mocks"
 )
 
-func testExecD(t *testing.T, context spec.G, it spec.S) {
+func testExecD(t *testing.T, _ spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 

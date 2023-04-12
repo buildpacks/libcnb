@@ -26,7 +26,7 @@ import (
 	"github.com/buildpacks/libcnb/internal"
 )
 
-func testExecDWriter(t *testing.T, context spec.G, it spec.S) {
+func testExecDWriter(t *testing.T, _ spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
