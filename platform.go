@@ -17,6 +17,7 @@
 package libcnb
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -42,6 +43,9 @@ const (
 
 	// EnvBuildpackDirectory is the name of the environment variable that contains the path to the buildpack
 	EnvBuildpackDirectory = "CNB_BUILDPACK_DIR"
+
+	// EnvVcapServices is the name of the environment variable that contains the bindings in cloudfoundry
+	EnvVcapServices = "VCAP_SERVICES"
 
 	// EnvLayersDirectory is the name of the environment variable that contains the root path to all buildpack layers
 	EnvLayersDirectory = "CNB_LAYERS_DIR"
@@ -166,8 +170,37 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 	return bindings, nil
 }
 
+type vcapServicesBinding struct {
+	Name        string            `json:"name"`
+	Credentials map[string]string `json:"credentials"`
+}
+
+// NewBindingsFromVcapServicesEnv creates a new instance from all the bindings given from the VCAP_SERVICES.
+func NewBindingsFromVcapServicesEnv(content string) (Bindings, error) {
+	var contentTyped map[string][]vcapServicesBinding
+
+	err := json.Unmarshal([]byte(content), &contentTyped)
+	if err != nil {
+		return Bindings{}, nil
+	}
+
+	bindings := Bindings{}
+	for t, bArray := range contentTyped {
+		for _, b := range bArray {
+			bindings = append(bindings, Binding{
+				Name:   b.Name,
+				Type:   t,
+				Secret: b.Credentials,
+			})
+		}
+	}
+
+	return bindings, nil
+}
+
 // NewBindings creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT.
 // If that isn't defined, bindings are read from <platform>/bindings.
+// If that isn't defined, bindings are read from $VCAP_SERVICES.
 // If that isn't defined, the specified platform path will be used
 func NewBindings(platformDir string) (Bindings, error) {
 	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
@@ -176,6 +209,10 @@ func NewBindings(platformDir string) (Bindings, error) {
 
 	if path, ok := os.LookupEnv(EnvPlatformDirectory); ok {
 		return NewBindingsFromPath(filepath.Join(path, "bindings"))
+	}
+
+	if content, ok := os.LookupEnv(EnvVcapServices); ok {
+		return NewBindingsFromVcapServicesEnv(content)
 	}
 
 	return NewBindingsFromPath(filepath.Join(platformDir, "bindings"))
