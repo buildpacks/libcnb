@@ -46,6 +46,30 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.RemoveAll(path)).To(Succeed())
 	})
 
+	context("Cloudfoundry VCAP_SERVICES", func() {
+		it("creates a bindings from VCAP_SERVICES", func() {
+			content, err := os.ReadFile("testdata/vcap_services.json")
+			Expect(err).NotTo(HaveOccurred())
+			t.Setenv(libcnb.EnvVcapServices, string(content))
+
+			bindings, err := libcnb.NewBindings("")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(bindings).To(HaveLen(2))
+			Expect(bindings[0].Type).To(Equal("elephantsql"))
+			Expect(bindings[1].Type).To(Equal("sendgrid"))
+		})
+
+		it("creates empty bindings from empty VCAP_SERVICES", func() {
+			t.Setenv(libcnb.EnvVcapServices, "{}")
+
+			bindings, err := libcnb.NewBindings("")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(bindings).To(HaveLen(0))
+		})
+	})
+
 	context("Kubernetes Service Bindings", func() {
 		it.Before(func() {
 			Expect(os.MkdirAll(filepath.Join(path, "alpha"), 0755)).To(Succeed())
