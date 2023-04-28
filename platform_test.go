@@ -40,6 +40,57 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 		path = filepath.Join(platformPath, "bindings")
 	})
 
+	context("Cloudfoundry VCAP_SERVICES", func() {
+		context("Build", func() {
+			it("creates a bindings from VCAP_SERVICES", func() {
+				content, err := os.ReadFile("testdata/vcap_services.json")
+				Expect(err).NotTo(HaveOccurred())
+				t.Setenv(libcnb.EnvVcapServices, string(content))
+
+				bindings, err := libcnb.NewBindingsForBuild("")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bindings).To(HaveLen(2))
+
+				types := []string{bindings[0].Type, bindings[1].Type}
+				Expect(types).To(ContainElements("elephantsql", "sendgrid"))
+			})
+
+			it("creates empty bindings from empty VCAP_SERVICES", func() {
+				t.Setenv(libcnb.EnvVcapServices, "{}")
+
+				bindings, err := libcnb.NewBindingsForBuild("")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bindings).To(HaveLen(0))
+			})
+		})
+
+		context("Launch", func() {
+			it("creates a bindings from VCAP_SERVICES", func() {
+				content, err := os.ReadFile("testdata/vcap_services.json")
+				Expect(err).NotTo(HaveOccurred())
+				t.Setenv(libcnb.EnvVcapServices, string(content))
+
+				bindings, err := libcnb.NewBindingsForLaunch()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bindings).To(HaveLen(2))
+				types := []string{bindings[0].Type, bindings[1].Type}
+				Expect(types).To(ContainElements("elephantsql", "sendgrid"))
+			})
+
+			it("creates empty bindings from empty VCAP_SERVICES", func() {
+				t.Setenv(libcnb.EnvVcapServices, "{}")
+
+				bindings, err := libcnb.NewBindingsForLaunch()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(bindings).To(HaveLen(0))
+			})
+		})
+	})
+
 	context("CNB Bindings", func() {
 		it.Before(func() {
 			Expect(os.MkdirAll(filepath.Join(path, "alpha", "metadata"), 0755)).To(Succeed())
