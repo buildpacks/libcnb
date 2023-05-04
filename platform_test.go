@@ -56,8 +56,8 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(bindings).To(HaveLen(2))
-			Expect(bindings[0].Type).To(Equal("elephantsql"))
-			Expect(bindings[1].Type).To(Equal("sendgrid"))
+			types := []string{bindings[0].Type, bindings[1].Type}
+			Expect(types).To(ContainElements("elephantsql", "sendgrid"))
 		})
 
 		it("creates empty bindings from empty VCAP_SERVICES", func() {
