@@ -17,6 +17,7 @@
 package libcnb
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -40,6 +41,9 @@ const (
 	//
 	// See the Service Binding Specification for Kubernetes for more details - https://k8s-service-bindings.github.io/spec/
 	EnvServiceBindings = "SERVICE_BINDING_ROOT"
+
+	// EnvVcapServices is the name of the environment variable that contains the bindings in cloudfoundry
+	EnvVcapServices = "VCAP_SERVICES"
 
 	// EnvCNBBindings is the name of the environment variable that contains the path to the CNB bindings directory.
 	// See the CNB bindings extension spec for more details - https://github.com/buildpacks/spec/blob/main/extensions/bindings.md
@@ -113,6 +117,34 @@ func NewBindingFromPath(path string) (Binding, error) {
 	return NewBinding(filepath.Base(path), path, secret), nil
 }
 
+type vcapServicesBinding struct {
+	Name        string            `json:"name"`
+	Credentials map[string]string `json:"credentials"`
+}
+
+// NewBindingsFromVcapServicesEnv creates a new instance from all the bindings given from the VCAP_SERVICES.
+func NewBindingsFromVcapServicesEnv(content string) (Bindings, error) {
+	var contentTyped map[string][]vcapServicesBinding
+
+	err := json.Unmarshal([]byte(content), &contentTyped)
+	if err != nil {
+		return Bindings{}, nil
+	}
+
+	bindings := Bindings{}
+	for t, bArray := range contentTyped {
+		for _, b := range bArray {
+			bindings = append(bindings, Binding{
+				Name:   b.Name,
+				Type:   t,
+				Secret: b.Credentials,
+			})
+		}
+	}
+
+	return bindings, nil
+}
+
 func (b Binding) String() string {
 	var s []string
 	for k := range b.Secret {
@@ -163,6 +195,10 @@ func NewBindingsForLaunch() (Bindings, error) {
 		return NewBindingsFromPath(path)
 	}
 
+	if content, ok := os.LookupEnv(EnvVcapServices); ok {
+		return NewBindingsFromVcapServicesEnv(content)
+	}
+
 	return Bindings{}, nil
 }
 
@@ -200,6 +236,10 @@ func NewBindingsForBuild(platformDir string) (Bindings, error) {
 	// TODO: Remove as CNB_BINDINGS ages out
 	if path, ok := os.LookupEnv(EnvCNBBindings); ok {
 		return NewBindingsFromPath(path)
+	}
+
+	if content, ok := os.LookupEnv(EnvVcapServices); ok {
+		return NewBindingsFromVcapServicesEnv(content)
 	}
 	return NewBindingsFromPath(filepath.Join(platformDir, "bindings"))
 }
