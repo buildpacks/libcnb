@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,11 +44,17 @@ const (
 	// EnvBuildpackDirectory is the name of the environment variable that contains the path to the buildpack
 	EnvBuildpackDirectory = "CNB_BUILDPACK_DIR"
 
+	// EnvExtensionDirectory is the name of the environment variable that contains the path to the extension
+	EnvExtensionDirectory = "CNB_EXTENSION_DIR"
+
 	// EnvVcapServices is the name of the environment variable that contains the bindings in cloudfoundry
 	EnvVcapServices = "VCAP_SERVICES"
 
 	// EnvLayersDirectory is the name of the environment variable that contains the root path to all buildpack layers
 	EnvLayersDirectory = "CNB_LAYERS_DIR"
+
+	// EnvOutputDirectory is the name of the environment variable that contains the path to the output directory
+	EnvOutputDirectory = "CNB_OUTPUT_DIR"
 
 	// EnvPlatformDirectory is the name of the environment variable that contains the path to the platform directory
 	EnvPlatformDirectory = "CNB_PLATFORM_DIR"

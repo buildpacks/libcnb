@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ func testMain(t *testing.T, _ spec.G, it spec.S) {
 		detectFunc        libcnb.DetectFunc
 		environmentWriter *mocks.EnvironmentWriter
 		exitHandler       *mocks.ExitHandler
+		generateFunc      libcnb.GenerateFunc
 		layersPath        string
 		platformPath      string
 		tomlWriter        *mocks.TOMLWriter
@@ -109,6 +110,10 @@ test-key = "test-value"
 
 		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
 			return libcnb.DetectResult{}, nil
+		}
+
+		generateFunc = func(libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+			return libcnb.GenerateResult{}, nil
 		}
 
 		environmentWriter = &mocks.EnvironmentWriter{}
@@ -181,7 +186,7 @@ test-key = "test-value"
 	})
 
 	it("encounters the wrong number of arguments", func() {
-		libcnb.Main(detectFunc, buildFunc,
+		libcnb.Main(detectFunc, buildFunc, generateFunc,
 			libcnb.WithArguments([]string{}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -193,7 +198,7 @@ test-key = "test-value"
 	it("calls builder for build command", func() {
 		commandPath := filepath.Join("bin", "build")
 
-		libcnb.Main(detectFunc, buildFunc,
+		libcnb.Main(detectFunc, buildFunc, generateFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -208,11 +213,26 @@ test-key = "test-value"
 		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detectFunc, buildFunc,
+		libcnb.Main(detectFunc, buildFunc, generateFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
+
+	})
+
+	it("calls generator for generate command", func() {
+		generateFunc = func(libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+			return libcnb.GenerateResult{}, nil
+		}
+		commandPath := filepath.Join("bin", "generate")
+
+		libcnb.Main(nil, nil, generateFunc,
+			libcnb.WithArguments([]string{commandPath}),
+			libcnb.WithExitHandler(exitHandler),
+			libcnb.WithLogger(log.NewDiscard()),
+		)
+
 	})
 
 	it("calls exitHandler.Pass() on detection pass", func() {
@@ -221,7 +241,7 @@ test-key = "test-value"
 		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detectFunc, buildFunc,
+		libcnb.Main(detectFunc, buildFunc, generateFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -236,7 +256,7 @@ test-key = "test-value"
 		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detectFunc, buildFunc,
+		libcnb.Main(detectFunc, buildFunc, generateFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -248,7 +268,7 @@ test-key = "test-value"
 	it("encounters an unknown command", func() {
 		commandPath := filepath.Join("bin", "test-command")
 
-		libcnb.Main(detectFunc, buildFunc,
+		libcnb.Main(detectFunc, buildFunc, generateFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),

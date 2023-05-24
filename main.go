@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import (
 )
 
 // Main is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
-func Main(detect DetectFunc, build BuildFunc, options ...Option) {
+func Main(detect DetectFunc, build BuildFunc, generate GenerateFunc, options ...Option) {
 	config := NewConfig(options...)
 
 	if len(config.arguments) == 0 {
@@ -35,6 +35,8 @@ func Main(detect DetectFunc, build BuildFunc, options ...Option) {
 		Build(build, config)
 	case "detect":
 		Detect(detect, config)
+	case "generate":
+		Generate(generate, config)
 	default:
 		config.exitHandler.Error(fmt.Errorf("unsupported command %s", c))
 		return

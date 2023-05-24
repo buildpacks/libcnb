@@ -63,5 +63,5 @@ func (Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, error
 
 func ExampleDetect() {
 	detector := Detector{log.New(os.Stdout)}
-	libcnb.Main(detector.Detect, nil)
+	libcnb.Main(detector.Detect, nil, nil)
 }
