@@ -95,6 +95,5 @@ func (b Builder) Build(context libcnb.BuildContext) (libcnb.BuildResult, error) 
 func ExampleBuild() {
 	detector := Detector{log.New(os.Stdout)}
 	builder := Builder{log.New(os.Stdout)}
-	generator := Generator{log.New(os.Stdout)}
-	libcnb.Main(detector.Detect, builder.Build, generator.Generate)
+	libcnb.BuildpackMain(detector.Detect, builder.Build)
 }

@@ -186,7 +186,7 @@ test-key = "test-value"
 	})
 
 	it("encounters the wrong number of arguments", func() {
-		libcnb.Main(detectFunc, buildFunc, generateFunc,
+		libcnb.BuildpackMain(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -198,7 +198,7 @@ test-key = "test-value"
 	it("calls builder for build command", func() {
 		commandPath := filepath.Join("bin", "build")
 
-		libcnb.Main(detectFunc, buildFunc, generateFunc,
+		libcnb.BuildpackMain(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -213,7 +213,7 @@ test-key = "test-value"
 		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detectFunc, buildFunc, generateFunc,
+		libcnb.BuildpackMain(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -227,7 +227,7 @@ test-key = "test-value"
 		}
 		commandPath := filepath.Join("bin", "generate")
 
-		libcnb.Main(nil, nil, generateFunc,
+		libcnb.ExtensionMain(nil, generateFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -241,7 +241,7 @@ test-key = "test-value"
 		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detectFunc, buildFunc, generateFunc,
+		libcnb.BuildpackMain(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -256,7 +256,7 @@ test-key = "test-value"
 		}
 		commandPath := filepath.Join("bin", "detect")
 
-		libcnb.Main(detectFunc, buildFunc, generateFunc,
+		libcnb.BuildpackMain(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -268,7 +268,7 @@ test-key = "test-value"
 	it("encounters an unknown command", func() {
 		commandPath := filepath.Join("bin", "test-command")
 
-		libcnb.Main(detectFunc, buildFunc, generateFunc,
+		libcnb.BuildpackMain(detectFunc, buildFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),

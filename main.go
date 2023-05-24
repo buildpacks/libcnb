@@ -21,8 +21,7 @@ import (
 	"path/filepath"
 )
 
-// Main is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
-func Main(detect DetectFunc, build BuildFunc, generate GenerateFunc, options ...Option) {
+func main(detect DetectFunc, build BuildFunc, generate GenerateFunc, options ...Option) {
 	config := NewConfig(options...)
 
 	if len(config.arguments) == 0 {
@@ -41,4 +40,14 @@ func Main(detect DetectFunc, build BuildFunc, generate GenerateFunc, options ...
 		config.exitHandler.Error(fmt.Errorf("unsupported command %s", c))
 		return
 	}
+}
+
+// BuildpackMain is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
+func BuildpackMain(detect DetectFunc, build BuildFunc, options ...Option) {
+	main(detect, build, nil, options...)
+}
+
+// ExtensionMain is called by the main function of a extension, encapsulating both detection and generation in the same binary.
+func ExtensionMain(detect DetectFunc, generate GenerateFunc, options ...Option) {
+	main(detect, nil, generate, options...)
 }

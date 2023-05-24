@@ -21,5 +21,5 @@ func (Generator) Generate(context libcnb.GenerateContext) (libcnb.GenerateResult
 
 func ExampleGeneratre() {
 	generator := Generator{log.New(os.Stdout)}
-	libcnb.Main(nil, nil, generator.Generate)
+	libcnb.ExtensionMain(nil, generator.Generate)
 }
