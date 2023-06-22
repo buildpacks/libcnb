@@ -218,7 +218,6 @@ test-key = "test-value"
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
-
 	})
 
 	it("calls generator for generate command", func() {
@@ -232,7 +231,6 @@ test-key = "test-value"
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
 		)
-
 	})
 
 	it("calls exitHandler.Pass() on detection pass", func() {
