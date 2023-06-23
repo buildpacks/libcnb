@@ -36,10 +36,10 @@ type DetectContext struct {
 	// the lifecycle.
 	ApplicationPath string
 
-	// Buildpack is metadata about the buildpack from buildpack.toml
+	// Buildpack is metadata about the buildpack from buildpack.toml (empty when processing an extension)
 	Buildpack Buildpack
 
-	// Buildpack is metadata about the buildpack from buildpack.toml
+	// Extension is metadata about the extension from extension.toml (empty when processing a buildpack)
 	Extension Extension
 
 	// Logger is the way to write messages to the end user
