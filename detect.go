@@ -36,8 +36,11 @@ type DetectContext struct {
 	// the lifecycle.
 	ApplicationPath string
 
-	// Buildpack is metadata about the buildpack, from buildpack.toml.
+	// Buildpack is metadata about the buildpack from buildpack.toml
 	Buildpack Buildpack
+
+	// Buildpack is metadata about the buildpack from buildpack.toml
+	Extension Extension
 
 	// Logger is the way to write messages to the end user
 	Logger log.Logger
@@ -65,11 +68,19 @@ type DetectFunc func(context DetectContext) (DetectResult, error)
 // Detect is called by the main function of a buildpack, for detection.
 func Detect(detect DetectFunc, config Config) {
 	var (
-		err  error
-		file string
-		ok   bool
+		err         error
+		file        string
+		ok          bool
+		api         string
+		path        string
+		destination interface{}
 	)
 	ctx := DetectContext{Logger: config.logger}
+
+	var moduletype = "buildpack"
+	if config.extension {
+		moduletype = "extension"
+	}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
@@ -83,27 +94,46 @@ func Detect(detect DetectFunc, config Config) {
 		}
 	}
 
-	if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
-		ctx.Buildpack.Path = filepath.Clean(s)
+	if !config.extension {
+		if s, ok := os.LookupEnv(EnvBuildpackDirectory); ok {
+			path = filepath.Clean(s)
+		} else {
+			config.exitHandler.Error(fmt.Errorf("unable to get CNB_BUILDPACK_DIR, not found"))
+			return
+		}
+		ctx.Buildpack.Path = path
+		destination = &ctx.Buildpack
+		file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
 	} else {
-		config.exitHandler.Error(fmt.Errorf("unable to get CNB_BUILDPACK_DIR, not found"))
-		return
+		if s, ok := os.LookupEnv(EnvExtensionDirectory); ok {
+			path = filepath.Clean(s)
+		} else {
+			config.exitHandler.Error(fmt.Errorf("unable to get CNB_EXTENSION_DIR, not found"))
+			return
+		}
+		ctx.Extension.Path = path
+		destination = &ctx.Extension
+		file = filepath.Join(ctx.Extension.Path, "extension.toml")
 	}
 
+	if _, err = toml.DecodeFile(file, destination); err != nil && !os.IsNotExist(err) {
+		config.exitHandler.Error(fmt.Errorf("unable to decode %s %s\n%w", moduletype, file, err))
+		return
+	}
+	config.logger.Debugf("%s: %+v", moduletype, ctx.Buildpack)
+
 	if config.logger.IsDebugEnabled() {
-		if err := config.contentWriter.Write("Buildpack contents", ctx.Buildpack.Path); err != nil {
-			config.logger.Debugf("unable to write buildpack contents\n%w", err)
+		if err := config.contentWriter.Write(moduletype+" contents", path); err != nil {
+			config.logger.Debugf("unable to write %s contents\n%w", moduletype, err)
 		}
 	}
 
-	file = filepath.Join(ctx.Buildpack.Path, "buildpack.toml")
-	if _, err = toml.DecodeFile(file, &ctx.Buildpack); err != nil && !os.IsNotExist(err) {
-		config.exitHandler.Error(fmt.Errorf("unable to decode buildpack %s\n%w", file, err))
-		return
+	if config.extension {
+		api = ctx.Extension.API
+	} else {
+		api = ctx.Buildpack.API
 	}
-	config.logger.Debugf("Buildpack: %+v", ctx.Buildpack)
-
-	API, err := semver.NewVersion(ctx.Buildpack.API)
+	API, err := semver.NewVersion(api)
 	if err != nil {
 		config.exitHandler.Error(errors.New("version cannot be parsed"))
 		return

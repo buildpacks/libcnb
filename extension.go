@@ -46,9 +46,6 @@ type Extension struct {
 	API string `toml:"api"`
 
 	// Info is information about the extension.
-	// The format is the same as the BuildpackInfo today
-	// it's beneficial to leave the type the same for now, to allow
-	// passing it to places that expect a BuildpackInfo
 	Info ExtensionInfo `toml:"extension"`
 
 	// Path is the path to the extension.

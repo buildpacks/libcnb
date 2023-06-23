@@ -356,4 +356,5 @@ version = "1.1.1"
 
 		Expect(filepath.Join(outputPath, "build.Dockerfile")).To(BeARegularFile())
 	})
+
 }

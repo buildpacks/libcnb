@@ -29,6 +29,8 @@ func main(detect DetectFunc, build BuildFunc, generate GenerateFunc, options ...
 		return
 	}
 
+	config.extension = build == nil && generate != nil
+
 	switch c := filepath.Base(config.arguments[0]); c {
 	case "build":
 		Build(build, config)

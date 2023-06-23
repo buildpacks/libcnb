@@ -79,6 +79,7 @@ type Config struct {
 	logger              log.Logger
 	tomlWriter          TOMLWriter
 	contentWriter       internal.DirectoryContentsWriter
+	extension           bool
 }
 
 // Option is a function for configuring a Config instance.
