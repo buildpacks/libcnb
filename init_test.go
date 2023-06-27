@@ -27,11 +27,13 @@ func TestUnit(t *testing.T) {
 	suite := spec.New("libcnb", spec.Report(report.Terminal{}))
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
+	suite("Generate", testGenerate)
 	suite("Environment", testEnvironment)
 	suite("Layer", testLayer)
 	suite("Main", testMain)
 	suite("Platform", testPlatform)
 	suite("ExecD", testExecD)
 	suite("BuildpackTOML", testBuildpackTOML)
+	suite("ExtensionTOML", testExtensionTOML)
 	suite.Run(t)
 }

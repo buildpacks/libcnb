@@ -93,7 +93,7 @@ func (b Builder) Build(context libcnb.BuildContext) (libcnb.BuildResult, error) 
 }
 
 func ExampleBuild() {
-	detetector := Detector{log.New(os.Stdout)}
+	detector := Detector{log.New(os.Stdout)}
 	builder := Builder{log.New(os.Stdout)}
-	libcnb.Main(detetector.Detect, builder.Build)
+	libcnb.BuildpackMain(detector.Detect, builder.Build)
 }
