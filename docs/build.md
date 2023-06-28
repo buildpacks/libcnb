@@ -1,6 +1,6 @@
 # Building
 
-A buildpack is suitably packaged `detect` binary, a `build` binary and a `buildpack.toml`.  Here we look at how the implementation logic of the build binary.  We declare a `struct` that we call `Builder`.  The purpose of our struct is to satisfy `libcnb`s [`Builder`](https://pkg.go.dev/github.com/buildpacks/libcnb?utm_source=gopls#Builder) interface providing a receiver with signature `func Build(context BuildContext) (BuildResult, error)`.  An implementation of `Builder` is passed to `libcnb.Main` as the main entry point to the `build` binary.
+A buildpack is suitably packaged `detect` binary, a `build` binary and a `buildpack.toml`.  Here we look at the implementation logic of the build binary for our buildpack.  This starts by declaring a `struct` that we call `Builder`.  The purpose of our struct is to satisfy `libcnb`s [`Builder`](https://pkg.go.dev/github.com/buildpacks/libcnb?utm_source=gopls#Builder) interface providing a receiver with signature `func Build(context BuildContext) (BuildResult, error)`.  An implementation of `Builder` is passed to `libcnb.Main` as the main entry point to the `build` binary.
 
 In our `Detector` we use a [`poet`](https://pkg.go.dev/github.com/buildpacks/libcnb/poet) logger instance.  The logger instance will be used to inform the user of the progress of our `detect` phase.
 
