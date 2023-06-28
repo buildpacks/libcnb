@@ -127,54 +127,9 @@ func (d Detector) Detect(context DetectContext) (DetectResult, error) {
 }
 ```
 
-However, it is often the case that a `detect` binary passes even if some file is not found.  In such a case the buildpack is passing if the file is found or if the file is not found.  This allows the buildpack to be re-used in an order group that detects and reads `example.txt` and in an order group that does not expect `example.txt` to be present but a subsequent buildpack requires the functionality of our example buildpack.  As an example, we modify our `Example` buildpack to pass even if `example.txt` is not found.
+We have defined a `detect` binary that passes if `example.txt` is present in the source application and fails otherwise.
 
-
-```go
-func (d Detector) Detect(context DetectContext) (DetectResult, error) {
-	const exampleFile := "example.txt"
-	// Construct a path to exampleFile in the Application source project
-	requirementsFile := filepath.Join(context.Application.Path, exampleFile)
-	// Test for the existance of exampleFile
-	if _, err := os.Stat(exampleFile); err != nil && os.IsNotExist(err) {
-		return libcnb.DetectResult{Pass: true}, err
-	}
-	d.Logger.Debugf("Found %s example file -> %s", exampleFile)
-	...
-}
-```
-
-This allows a another buildpack, `UsingExample`, to require the presence of `Example` in the build and pass metadata:
-
-```go
-const (
-    UsingExample = "using-example"
-)
-
-func (d Detector) Detect(context DetectContext) (DetectResult, error) {
-	return DetectResult{
-		Pass: true,
-		Plans: []libcnb.BuildPlan{
-			{
-				Provides: []libcnb.BuildPlanProvide{
-					{Name: UsingExample},
-				},
-				Requires: []libcmb.BuildPlanRequire{
-					{
-						Name: Example,
-						// Pass arbitrary metadata to the Example build phase
-						Metadata: {
-							"version": "1.0",
-						}
-					},
-				}
-			}
-		}
-	}, nil
-}
-```
-
-In the detect phase the buildpack has access to static metadata declared in the `buildpack.toml` file.
+During the detect phase the buildpack has access to static metadata declared in the `buildpack.toml` file.
 
 ## Accessing buildpack metadata
 
