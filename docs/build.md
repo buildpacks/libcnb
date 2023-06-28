@@ -22,7 +22,7 @@ func (d Builder) Build(context libcnb.BuildContext) (libcnb.BuildResult, error) 
 
 The trivial passing implementation of `Build` contributes no layers to the result.
 
-These two trivial cases ignore the `Plans` field of the `DetectResult` struct.  In order to understand the `Plans` field we look at the concept of provides and requires.
+This trivial case ignores the `Plans` field of the `DetectResult` struct.  In order to understand the `Plans` field we look at the concept of provides and requires.
 
 ### Builders and Contributors
 
