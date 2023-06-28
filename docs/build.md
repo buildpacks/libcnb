@@ -110,7 +110,7 @@ Now that we know our download URL, we are in a position to contribute a layer co
 
 ### Contributing a Layer
 
-To contribute a layer we implement the [`LayerContributor`](https://pkg.go.dev/github.com/buildpacks/libcnb#LayerContributor) interface.  Our `Contributor` will download an archive from the provided URL.  Again, we borrow a utility function from `libpak` to extract the archive to an output layer.
+To contribute a layer we implement the [`LayerContributor`](https://pkg.go.dev/github.com/buildpacks/libcnb#LayerContributor) interface.  Our `Contributor` will download an archive from the provided URL.  Again, we borrow a utility function from `libpak` to extract the archive to an output layer. You could use standard Go archive functions to do this, but it's more work.
 
 ```go
 type Contributor struct {
