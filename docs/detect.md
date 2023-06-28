@@ -1,6 +1,6 @@
 # Detection
 
-A buildpack is suitably packaged `detect` binary, a `build` binary and a `buildpack.toml`.  Here we look at how the implementation logic of the detect binary.  We declare a `struct` that we call `Detector`.  The purpose of our struct is to satisfy `libcnb`s [`Detector`](https://pkg.go.dev/github.com/buildpacks/libcnb?utm_source=gopls#Detector) interface providing a receiver with signature `func Detect(context DetectContext) (DetectResult, error)`.  An implementation of `Detector` is passed to `libcnb.Main` as the main entry point to the `detect` binary.
+A buildpack is suitably packaged `detect` binary, a `build` binary and a `buildpack.toml`.  Here we look at the implementation logic of the detect binary for our example buildpack.  This starts by declaring a `struct` that we call `Detector`.  The purpose of our struct is to satisfy `libcnb`s [`Detector`](https://pkg.go.dev/github.com/buildpacks/libcnb?utm_source=gopls#Detector) interface providing a receiver with signature `func Detect(context DetectContext) (DetectResult, error)`.  An implementation of `Detector` is passed to `libcnb.Main` as the main entry point to the `detect` binary.
 
 In our `Detector` we use a [`poet`](https://pkg.go.dev/github.com/buildpacks/libcnb/poet) logger instance.  The logger instance will be used to inform the user of the progress of our `detect` phase.
 
