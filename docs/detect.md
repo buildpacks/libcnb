@@ -83,7 +83,7 @@ func (d Detector) Detect(context DetectContext) (DetectResult, error) {
 }
 ```
 
-Here we pass the key-value pair `(version, 1.0)` as metadata from the detect phase of the example buildpack to the build phase.
+Here we pass the key-value pair `(version, 1.0)` as metadata from the detect phase of the example buildpack to the build phase. Metadata can be arbitrarily nested, but it must be textual as it is serialized to TOML at the end of the detect phase.
 
 ```go
 func (d Detector) Detect(context DetectContext) (DetectResult, error) {
