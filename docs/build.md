@@ -30,7 +30,7 @@ It is recommended that a single `Builder` provides each layer using a `Contribut
 
 ### Accessing `BuildPlan` Metadata
 
-The `detect` phases passes metadata to the `build` phase in the [`BuildpackPlan`](https://pkg.go.dev/github.com/buildpacks/libcnb#BuildpackPlan) (note: not to be confused with the more general [`BuildPlan`](https://pkg.go.dev/github.com/buildpacks/libcnb#BuildPlan)).  Multiple buildpack `Detect` executions can require that the `Build` of our example buildpack executes.  As there may be requirements from multiple `detect` binaries, we must merge all the entries in the buildplan that correspond to our "example" buildpack.  To resolve the build plan we choose to use a [utility function from `libpak`](https://github.com/paketo-buildpacks/libpak/blob/f24422191fc6a2a02178337d96dda1210faaae9f/buildpack_plan.go#L69).
+The `detect` phases passes metadata to the `build` phase in the [`BuildpackPlan`](https://pkg.go.dev/github.com/buildpacks/libcnb#BuildpackPlan) (note: not to be confused with the more general [`BuildPlan`](https://pkg.go.dev/github.com/buildpacks/libcnb#BuildPlan)).  Multiple buildpack `Detect` executions can require that the `Build` of our example buildpack executes.  As there may be requirements from multiple `detect` binaries, we must merge all the entries in the buildplan that correspond to our "example" buildpack.
 
 ```go
 func (b Builder) Build(context libcnb.BuildContext) (libcnb.BuildResult, error) {
@@ -48,24 +48,27 @@ func (b Builder) Build(context libcnb.BuildContext) (libcnb.BuildResult, error) 
     return libcnb.NewBuildResult(), nil
 }
 
-// resolveVersion first merges all libcnb.BuildpackPlan entries releated to the
-// "example" buildpack.  It then returrns the "version" information extracted
-// from the metadata.
+// resolveVersion takes the buildpack plan and resolves the version metadata
+// It then returrns the "version" information extracted from the metadata.
 func resolveVersion(plan libcnb.BuildpackPlan) (string, error) {
-	resolver := libpak.PlanEntryResolver{Plan: plan}
-	resolvedPlan, resolved, err := resolver.Resolve("example")
-	if err != nil {
-		return "", fmt.Errorf("unable to resolve version from metadata. Error %w", err)
+	exampleBuildPlan := libcnb.BuildpackPlanEntry{}
+
+	// Find the buildpack plan entry that releates to our "example" buildpack
+	for _, e := range plan.Entries {
+		if e.Name == "example" {
+			exampleBuildPlan = e
+		}
 	}
-	if !resolved {
-		return "", nil
-	}
-	if version, ok := resolvedPlan.Metadata["version"].(string); ok {
+
+	// Extract the "version" metadata if present
+	if version, ok := exampleBuildPlan.Metadata["version"].(string); ok {
 		return version, nil
 	}
-    return "", nil
+	return "", fmt.Errorf("unable to resolve version from metadata.")
 }
 ```
+
+In general, multiple buildpacks could `Require` our example buildpack.  In that general case there may be multiple `BuildpackPlan` entries referring to our `example` buildpack.  A production-level utility function to resolve the build plan can be found in [`libpak`](https://github.com/paketo-buildpacks/libpak/blob/f24422191fc6a2a02178337d96dda1210faaae9f/buildpack_plan.go#L69).
 
 ### Parsing the Buildpack Metadata
 
