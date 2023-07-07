@@ -2,7 +2,7 @@ name: Update Pipeline
 "on":
     push:
         branches:
-            - main
+            - release-1.x
         paths:
             - .github/pipeline-descriptor.yml
     schedule:
