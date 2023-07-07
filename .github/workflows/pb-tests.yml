@@ -8,7 +8,7 @@ name: Tests
     pull_request: {}
     push:
         branches:
-            - release-1.x
+            - main
 jobs:
     unit:
         name: Unit Test
