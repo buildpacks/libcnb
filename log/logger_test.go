@@ -18,6 +18,7 @@ package log_test
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"testing"
 
@@ -46,6 +47,14 @@ func testLogger(t *testing.T, context spec.G, it spec.S) {
 
 		it("does not configure debug", func() {
 			Expect(l.IsDebugEnabled()).To(BeFalse())
+		})
+
+		it("does not return nil debug writer", func() {
+			Expect(l.DebugWriter()).To(Not(BeNil()))
+		})
+
+		it("does not return non-discard writer", func() {
+			Expect(l.DebugWriter()).To(Equal(io.Discard))
 		})
 	})
 

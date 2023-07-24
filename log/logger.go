@@ -90,7 +90,10 @@ func (l PlainLogger) Debugf(format string, a ...interface{}) {
 
 // DebugWriter returns the configured debug writer.
 func (l PlainLogger) DebugWriter() io.Writer {
-	return l.debug
+	if l.IsDebugEnabled() {
+		return l.debug
+	}
+	return io.Discard
 }
 
 // IsDebugEnabled indicates whether debug logging is enabled.
