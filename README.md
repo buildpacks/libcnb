@@ -14,6 +14,12 @@
 go get github.com/buildpacks/libcnb
 ```
 
+or for the v2 alpha
+
+```
+go get github.com/buildpacks/libcnb@v2.0.0-alpha.1
+```
+
 #### Docs
 
 https://pkg.go.dev/github.com/buildpacks/libcnb?tab=doc

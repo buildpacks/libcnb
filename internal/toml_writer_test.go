@@ -24,7 +24,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
 
-	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/v2/internal"
 )
 
 func testTOMLWriter(t *testing.T, _ spec.G, it spec.S) {

@@ -1,4 +1,4 @@
-module github.com/buildpacks/libcnb/tools
+module github.com/buildpacks/libcnb/v2/tools
 
 go 1.20
 

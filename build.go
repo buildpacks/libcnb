@@ -27,8 +27,8 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/semver"
 
-	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
+	"github.com/buildpacks/libcnb/v2/internal"
+	"github.com/buildpacks/libcnb/v2/log"
 )
 
 // BuildContext contains the inputs to build.

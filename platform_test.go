@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
 
-	"github.com/buildpacks/libcnb"
+	"github.com/buildpacks/libcnb/v2"
 )
 
 func testPlatform(t *testing.T, context spec.G, it spec.S) {
