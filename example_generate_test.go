@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/buildpacks/libcnb"
-	"github.com/buildpacks/libcnb/log"
+	"github.com/buildpacks/libcnb/v2"
+	"github.com/buildpacks/libcnb/v2/log"
 )
 
 type Generator struct {

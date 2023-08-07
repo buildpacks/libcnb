@@ -19,8 +19,8 @@ package libcnb
 import (
 	"os"
 
-	"github.com/buildpacks/libcnb/internal"
-	"github.com/buildpacks/libcnb/log"
+	"github.com/buildpacks/libcnb/v2/internal"
+	"github.com/buildpacks/libcnb/v2/log"
 )
 
 //go:generate mockery --name EnvironmentWriter --case=underscore
