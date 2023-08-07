@@ -26,7 +26,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/v2/internal"
 )
 
 const (

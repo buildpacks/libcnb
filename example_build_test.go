@@ -6,8 +6,8 @@ import (
 
 	cdx "github.com/CycloneDX/cyclonedx-go"
 
-	"github.com/buildpacks/libcnb"
-	"github.com/buildpacks/libcnb/log"
+	"github.com/buildpacks/libcnb/v2"
+	"github.com/buildpacks/libcnb/v2/log"
 )
 
 const (

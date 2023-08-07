@@ -24,8 +24,8 @@ import (
 	"github.com/sclevine/spec"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/buildpacks/libcnb"
-	"github.com/buildpacks/libcnb/mocks"
+	"github.com/buildpacks/libcnb/v2"
+	"github.com/buildpacks/libcnb/v2/mocks"
 )
 
 func testExecD(t *testing.T, _ spec.G, it spec.S) {

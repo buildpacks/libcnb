@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/buildpacks/libcnb/internal"
+	"github.com/buildpacks/libcnb/v2/internal"
 )
 
 //go:generate mockery --name ExecD --case=underscore

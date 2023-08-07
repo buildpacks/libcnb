@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/buildpacks/libcnb/log"
+	"github.com/buildpacks/libcnb/v2/log"
 )
 
 // DirectoryContentsWriter is used write the contents of a directory to the given io.Writer

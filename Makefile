@@ -1,7 +1,7 @@
 # Go parameters
 GOCMD?=go
 GO_VERSION=$(shell go list -m -f "{{.GoVersion}}")
-PACKAGE_BASE=github.com/buildpacks/libcnb
+PACKAGE_BASE=github.com/buildpacks/libcnb/v2
 
 all: test
 

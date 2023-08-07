@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/sclevine/spec"
 
-	"github.com/buildpacks/libcnb/log"
+	"github.com/buildpacks/libcnb/v2/log"
 )
 
 func testLogger(t *testing.T, context spec.G, it spec.S) {
