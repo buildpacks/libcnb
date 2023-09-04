@@ -55,11 +55,38 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			bindings, err := libcnb.NewBindings("")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(bindings).To(HaveLen(2))
-			types := []string{bindings[0].Type, bindings[1].Type}
-			Expect(types).To(ContainElements("elephantsql-type", "sendgrid-type"))
-			providers := []string{bindings[0].Provider, bindings[1].Provider}
-			Expect(providers).To(ContainElements("elephantsql-provider", "sendgrid-provider"))
+			Expect(bindings).To(ConsistOf(libcnb.Bindings{
+				{
+					Name:     "elephantsql-binding-c6c60",
+					Type:     "elephantsql-type",
+					Provider: "elephantsql-provider",
+					Secret: map[string]string{
+						"bool": "true",
+						"int":  "1",
+						"uri":  "postgres://exampleuser:examplepass@postgres.example.com:5432/exampleuser",
+					},
+				},
+				{
+					Name:     "mysendgrid",
+					Type:     "sendgrid-type",
+					Provider: "sendgrid-provider",
+					Secret: map[string]string{
+						"username": "QvsXMbJ3rK",
+						"password": "HCHMOYluTv",
+						"hostname": "smtp.example.com",
+					},
+				},
+				{
+					Name:     "postgres",
+					Type:     "postgres",
+					Provider: "postgres",
+					Secret: map[string]string{
+						"urls":     "{\"example\":\"http://example.com\"}",
+						"username": "foo",
+						"password": "bar",
+					},
+				},
+			}))
 		})
 
 		it("creates empty bindings from empty VCAP_SERVICES", func() {

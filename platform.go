@@ -177,9 +177,22 @@ func NewBindingsFromPath(path string) (Bindings, error) {
 }
 
 type vcapServicesBinding struct {
-	Name        string            `json:"name"`
-	Label       string            `json:"label"`
-	Credentials map[string]string `json:"credentials"`
+	Name        string                 `json:"name"`
+	Label       string                 `json:"label"`
+	Credentials map[string]interface{} `json:"credentials"`
+}
+
+func toJSONString(input interface{}) (string, error) {
+	switch in := input.(type) {
+	case string:
+		return in, nil
+	default:
+		jsonProperty, err := json.Marshal(in)
+		if err != nil {
+			return "", err
+		}
+		return string(jsonProperty), nil
+	}
 }
 
 // NewBindingsFromVcapServicesEnv creates a new instance from all the bindings given from the VCAP_SERVICES.
@@ -188,17 +201,24 @@ func NewBindingsFromVcapServicesEnv(content string) (Bindings, error) {
 
 	err := json.Unmarshal([]byte(content), &contentTyped)
 	if err != nil {
-		return Bindings{}, nil
+		return Bindings{}, err
 	}
 
 	bindings := Bindings{}
 	for p, bArray := range contentTyped {
 		for _, b := range bArray {
+			secret := map[string]string{}
+			for k, v := range b.Credentials {
+				secret[k], err = toJSONString(v)
+				if err != nil {
+					return nil, err
+				}
+			}
 			bindings = append(bindings, Binding{
 				Name:     b.Name,
 				Type:     b.Label,
 				Provider: p,
-				Secret:   b.Credentials,
+				Secret:   secret,
 			})
 		}
 	}
