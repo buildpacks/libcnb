@@ -119,6 +119,7 @@ func NewBindingFromPath(path string) (Binding, error) {
 
 type vcapServicesBinding struct {
 	Name        string            `json:"name"`
+	Label       string            `json:"label"`
 	Credentials map[string]string `json:"credentials"`
 }
 
@@ -132,12 +133,13 @@ func NewBindingsFromVcapServicesEnv(content string) (Bindings, error) {
 	}
 
 	bindings := Bindings{}
-	for t, bArray := range contentTyped {
+	for p, bArray := range contentTyped {
 		for _, b := range bArray {
 			bindings = append(bindings, Binding{
-				Name:   b.Name,
-				Type:   t,
-				Secret: b.Credentials,
+				Name:     b.Name,
+				Type:     b.Label,
+				Provider: p,
+				Secret:   b.Credentials,
 			})
 		}
 	}
