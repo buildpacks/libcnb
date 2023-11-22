@@ -28,7 +28,7 @@ type Process struct {
 	Arguments []string `toml:"args"`
 
 	// WorkingDirectory is a directory to execute the command in, removes the need to use a shell environment to CD into working directory
-	WorkingDirectory string `toml:"working-directory,omitempty"`
+	WorkingDirectory string `toml:"working-dir,omitempty"`
 
 	// Default can be set to true to indicate that the process
 	// type being defined should be the default process type for the app image.
