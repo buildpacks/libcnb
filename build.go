@@ -19,6 +19,7 @@ package libcnb
 import (
 	"errors"
 	"fmt"
+	"mime"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -371,10 +372,29 @@ func validateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error 
 			return fmt.Errorf("unable to parse SBOM %s\n%w", sbomFormat, err)
 		}
 
-		if !contains(acceptedSBOMFormats, sbomFormat.MediaType()) {
-			return fmt.Errorf("unable to find actual SBOM Type %s in list of supported SBOM types %s", sbomFormat.MediaType(), acceptedSBOMFormats)
+		mimeType := sbomFormat.MediaType()
+
+		if !(contains(acceptedSBOMFormats, mimeType)) {
+			return fmt.Errorf("unable to find actual SBOM Type %s in list of supported SBOM types %v", mimeType, acceptedSBOMFormats)
+		}
+
+		if err := ensureDeclared(acceptedSBOMFormats, mimeType); err != nil {
+			return fmt.Errorf("error validating SBOM Type %s: %w", mimeType, err)
 		}
 	}
 
 	return nil
+}
+
+func ensureDeclared(declaredTypes []string, foundType string) error {
+	for _, declaredType := range declaredTypes {
+		dType, _, err := mime.ParseMediaType(declaredType)
+		if err != nil {
+			return fmt.Errorf("parsing declared media type: %w", err)
+		}
+		if foundType == dType {
+			return nil
+		}
+	}
+	return fmt.Errorf("undeclared SBOM media type: '%s'", foundType)
 }
