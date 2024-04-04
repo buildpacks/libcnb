@@ -55,6 +55,12 @@ jobs:
                 )
 
                 git add .github/
+                git add .gitignore
+
+                if [ -f scripts/build.sh ]; then
+                  git add scripts/build.sh
+                fi
+
                 git checkout -- .
 
                 echo "old-version=${OLD_VERSION}" >> "$GITHUB_OUTPUT"
@@ -65,7 +71,7 @@ jobs:
               env:
                 DESCRIPTOR: .github/pipeline-descriptor.yml
                 GITHUB_TOKEN: ${{ secrets.IMPLEMENTATION_GITHUB_TOKEN }}
-            - uses: peter-evans/create-pull-request@v5
+            - uses: peter-evans/create-pull-request@v6
               with:
                 author: ${{ secrets.IMPLEMENTATION_GITHUB_USERNAME }} <${{ secrets.IMPLEMENTATION_GITHUB_USERNAME }}@users.noreply.github.com>
                 body: |-
