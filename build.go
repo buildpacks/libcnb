@@ -249,10 +249,10 @@ func Build(builder Builder, options ...Option) {
 	logger.Debugf("Buildpack Plan: %+v", ctx.Plan)
 
 	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
-		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
-		return
+		logger.Debug("CNB_STACK_ID not set")
+	} else {
+		logger.Debugf("Stack: %s", ctx.StackID)
 	}
-	logger.Debugf("Stack: %s", ctx.StackID)
 
 	result, err := builder.Build(ctx)
 	if err != nil {

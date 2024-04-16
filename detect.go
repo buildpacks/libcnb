@@ -163,10 +163,10 @@ func Detect(detector Detector, options ...Option) {
 	logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
 	if ctx.StackID, ok = os.LookupEnv("CNB_STACK_ID"); !ok {
-		config.exitHandler.Error(fmt.Errorf("CNB_STACK_ID not set"))
-		return
+		logger.Debug("CNB_STACK_ID not set")
+	} else {
+		logger.Debugf("Stack: %s", ctx.StackID)
 	}
-	logger.Debugf("Stack: %s", ctx.StackID)
 
 	result, err := detector.Detect(ctx)
 	if err != nil {
