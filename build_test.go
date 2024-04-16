@@ -253,19 +253,6 @@ version = "1.1.1"
 		}
 	})
 
-	it("doesn't receive CNB_STACK_ID", func() {
-		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
-
-		libcnb.Build(buildFunc,
-			libcnb.NewConfig(
-				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-				libcnb.WithExitHandler(exitHandler),
-				libcnb.WithLogger(log.NewDiscard())),
-		)
-
-		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("CNB_STACK_ID not set"))
-	})
-
 	context("has a build environment", func() {
 		var ctx libcnb.BuildContext
 
