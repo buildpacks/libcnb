@@ -256,19 +256,6 @@ version = "1.1.1"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("expected 3 arguments and received 0"))
 	})
 
-	it("doesn't receive CNB_STACK_ID", func() {
-		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
-		builder.On("Build", mock.Anything).Return(libcnb.NewBuildResult(), nil)
-
-		libcnb.Build(builder,
-			libcnb.WithBOMLabel(true),
-			libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-			libcnb.WithExitHandler(exitHandler),
-		)
-
-		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("CNB_STACK_ID not set"))
-	})
-
 	context("when BP API >= 0.8", func() {
 		it.Before(func() {
 			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),

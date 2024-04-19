@@ -174,18 +174,6 @@ version = "1.1.1"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("expected 2 arguments and received 0"))
 	})
 
-	it("doesn't receive CNB_STACK_ID", func() {
-		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
-		detector.On("Detect", mock.Anything).Return(libcnb.DetectResult{}, nil)
-
-		libcnb.Detect(detector,
-			libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
-			libcnb.WithExitHandler(exitHandler),
-		)
-
-		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("CNB_STACK_ID not set"))
-	})
-
 	context("errors if required env vars are not set for buildpack API >=0.8", func() {
 		for _, e := range []string{"CNB_PLATFORM_DIR", "CNB_BUILD_PLAN_PATH"} {
 			// We need to do this assignment because of the way that spec binds variables
