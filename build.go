@@ -55,7 +55,7 @@ type BuildContext struct {
 	// Platform is the contents of the platform.
 	Platform Platform
 
-	// StackID is the ID of the stack.
+	// Deprecated: StackID is the ID of the stack.
 	StackID string
 }
 

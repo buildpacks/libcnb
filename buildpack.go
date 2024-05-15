@@ -76,7 +76,7 @@ type BuildpackOrder struct {
 	Groups []BuildpackOrderBuildpack `toml:"group"`
 }
 
-// BuildpackStack is a stack supported by the buildpack.
+// Deprecated: BuildpackStack is a stack supported by the buildpack.
 type BuildpackStack struct {
 	// ID is the id of the stack.
 	ID string `toml:"id"`
@@ -96,7 +96,7 @@ type Buildpack struct {
 	// Path is the path to the buildpack.
 	Path string `toml:"-"`
 
-	// Stacks is the collection of stacks supported by the buildpack.
+	// Deprecated: Stacks is the collection of stacks supported by the buildpack.
 	Stacks []BuildpackStack `toml:"stacks"`
 
 	// Metadata is arbitrary metadata attached to the buildpack.

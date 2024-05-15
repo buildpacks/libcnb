@@ -65,7 +65,7 @@ const (
 	// EnvBuildPlanPath is the name of the environment variable that contains the path to the build plan
 	EnvBuildPlanPath = "CNB_BP_PLAN_PATH"
 
-	// EnvStackID is the name of the environment variable that contains the stack id
+	// Deprecated: EnvStackID is the name of the environment variable that contains the stack id
 	EnvStackID = "CNB_STACK_ID"
 
 	// DefaultPlatformBindingsLocation is the typical location for bindings, which exists under the platform directory
