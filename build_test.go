@@ -320,6 +320,61 @@ version = "1.1.1"
 		})
 	})
 
+	context("has a build environment specifying target metadata", func() {
+		var ctx libcnb.BuildContext
+
+		it.Before(func() {
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+						api = "0.10"
+
+						[buildpack]
+						id = "test-id"
+						name = "test-name"
+						version = "1.1.1"
+
+						[[targets]]
+						os = "linux"
+						arch = "amd64"
+
+						[[targets.distros]]
+						name = "ubuntu"
+						version = "18.04"
+
+						[[targets.distros]]
+						name = "debian"
+
+						[[targets]]
+						os = "linux"
+						arch = "arm"
+						variant = "v6"
+					`), 0600),
+			).To(Succeed())
+
+			buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+				ctx = context
+				return libcnb.NewBuildResult(), nil
+			}
+		})
+
+		it("provides target information", func() {
+			libcnb.Build(buildFunc,
+				libcnb.NewConfig(
+					libcnb.WithArguments([]string{commandPath})),
+			)
+
+			Expect(ctx.Buildpack.Targets).To(HaveLen(2))
+			Expect(ctx.Buildpack.Targets[0].OS).To(Equal("linux"))
+			Expect(ctx.Buildpack.Targets[0].Arch).To(Equal("amd64"))
+			Expect(ctx.Buildpack.Targets[0].Distros).To(HaveLen(2))
+			Expect(ctx.Buildpack.Targets[0].Distros[0].Name).To(Equal("ubuntu"))
+			Expect(ctx.Buildpack.Targets[0].Distros[0].Version).To(Equal("18.04"))
+			Expect(ctx.Buildpack.Targets[0].Distros[1].Name).To(Equal("debian"))
+
+			Expect(ctx.Buildpack.Targets[1].Variant).To(Equal("v6"))
+		})
+	})
+
 	it("fails if CNB_BUILDPACK_DIR is not set", func() {
 		Expect(os.Unsetenv("CNB_BUILDPACK_DIR")).To(Succeed())
 

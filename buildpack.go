@@ -85,6 +85,30 @@ type BuildpackStack struct {
 	Mixins []string `toml:"mixins"`
 }
 
+// BuildpackTargetDistro is the supported target distro
+type BuildpackTargetDistro struct {
+	// Name is the name of the supported distro.
+	Name string `toml:"name"`
+
+	// Version is the version of the supported distro.
+	Version string `toml:"version"`
+}
+
+// BuildpackTarget is a target supported by the buildpack.
+type BuildpackTarget struct {
+	// OS is the supported os.
+	OS string `toml:"os"`
+
+	// Arch is the supported architecture.
+	Arch string `toml:"arch"`
+
+	// Variant is the supported variant of the architecture.
+	Variant string `toml:"variant"`
+
+	// Distros is the collection of distros associated with the target.
+	Distros []BuildpackTargetDistro `toml:"distros"`
+}
+
 // Buildpack is the contents of the buildpack.toml file.
 type Buildpack struct {
 	// API is the api version expected by the buildpack.
@@ -98,6 +122,9 @@ type Buildpack struct {
 
 	// Deprecated: Stacks is the collection of stacks supported by the buildpack.
 	Stacks []BuildpackStack `toml:"stacks"`
+
+	// Targets is the collection of targets supported by the buildpack.
+	Targets []BuildpackTarget `toml:"targets"`
 
 	// Metadata is arbitrary metadata attached to the buildpack.
 	Metadata map[string]interface{} `toml:"metadata"`
