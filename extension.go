@@ -51,6 +51,9 @@ type Extension struct {
 	// Path is the path to the extension.
 	Path string `toml:"-"`
 
+	// Targets is the collection of targets supported by the buildpack.
+	Targets []Target `toml:"targets"`
+
 	// Metadata is arbitrary metadata attached to the extension.
 	Metadata map[string]interface{} `toml:"metadata"`
 }

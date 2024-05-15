@@ -68,6 +68,21 @@ const (
 	// Deprecated: EnvStackID is the name of the environment variable that contains the stack id
 	EnvStackID = "CNB_STACK_ID"
 
+	// EnvTargetOS contains the name of the os
+	EnvTargetOS = "CNB_TARGET_OS"
+
+	// EnvTargetArch contains the architecture
+	EnvTargetArch = "CNB_TARGET_ARCH"
+
+	// EnvTargetOS contains the variant of the architecture
+	EnvTargetArchVariant = "CNB_TARGET_ARCH_VARIANT"
+
+	// EnvTargetDistroName contains the name of the ditro
+	EnvTargetDistroName = "CNB_TARGET_DISTRO_NAME"
+
+	// EnvTargetDistroVersion contains the version of the distro
+	EnvTargetDistroVersion = "CNB_TARGET_DISTRO_VERSION"
+
 	// DefaultPlatformBindingsLocation is the typical location for bindings, which exists under the platform directory
 	//
 	// Not guaranteed to exist, but often does. This should only be used as a fallback if EnvServiceBindings and EnvPlatformDirectory are not set

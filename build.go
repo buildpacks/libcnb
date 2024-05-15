@@ -57,6 +57,12 @@ type BuildContext struct {
 
 	// Deprecated: StackID is the ID of the stack.
 	StackID string
+
+	// TargetInfo contains info of the target (os, arch, ...).
+	TargetInfo TargetInfo
+
+	// TargetDistro is the target distribution (name, version).
+	TargetDistro TargetDistro
 }
 
 // BuildResult contains the results of detection.
@@ -229,6 +235,19 @@ func Build(build BuildFunc, config Config) {
 		config.logger.Debug("CNB_STACK_ID not set")
 	} else {
 		config.logger.Debugf("Stack: %s", ctx.StackID)
+	}
+
+	if API.GreaterThan(semver.MustParse("0.9")) {
+		ctx.TargetInfo = TargetInfo{}
+		ctx.TargetInfo.OS, _ = os.LookupEnv(EnvTargetOS)
+		ctx.TargetInfo.Arch, _ = os.LookupEnv(EnvTargetArch)
+		ctx.TargetInfo.Variant, _ = os.LookupEnv(EnvTargetArchVariant)
+		config.logger.Debugf("System: %+v", ctx.TargetInfo)
+
+		ctx.TargetDistro = TargetDistro{}
+		ctx.TargetDistro.Name, _ = os.LookupEnv(EnvTargetDistroName)
+		ctx.TargetDistro.Version, _ = os.LookupEnv(EnvTargetDistroVersion)
+		config.logger.Debugf("Distro: %+v", ctx.TargetDistro)
 	}
 
 	result, err := build(ctx)

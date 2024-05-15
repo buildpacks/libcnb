@@ -50,6 +50,12 @@ type GenerateContext struct {
 	// Platform is the contents of the platform.
 	Platform Platform
 
+	// TargetInfo contains info of the target (os, arch, ...).
+	TargetInfo TargetInfo
+
+	// TargetDistro is the target distribution (name, version).
+	TargetDistro TargetDistro
+
 	// Deprecated: StackID is the ID of the stack.
 	StackID string
 }
@@ -182,6 +188,19 @@ func Generate(generate GenerateFunc, config Config) {
 		config.logger.Debug("CNB_STACK_ID not set")
 	} else {
 		config.logger.Debugf("Stack: %s", ctx.StackID)
+	}
+
+	if API.GreaterThan(semver.MustParse("0.9")) {
+		ctx.TargetInfo = TargetInfo{}
+		ctx.TargetInfo.OS, _ = os.LookupEnv(EnvTargetOS)
+		ctx.TargetInfo.Arch, _ = os.LookupEnv(EnvTargetArch)
+		ctx.TargetInfo.Variant, _ = os.LookupEnv(EnvTargetArchVariant)
+		config.logger.Debugf("System: %+v", ctx.TargetInfo)
+
+		ctx.TargetDistro = TargetDistro{}
+		ctx.TargetDistro.Name, _ = os.LookupEnv(EnvTargetDistroName)
+		ctx.TargetDistro.Version, _ = os.LookupEnv(EnvTargetDistroVersion)
+		config.logger.Debugf("Distro: %+v", ctx.TargetDistro)
 	}
 
 	result, err := generate(ctx)
