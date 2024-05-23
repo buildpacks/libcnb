@@ -3,7 +3,7 @@ module github.com/buildpacks/libcnb/v2
 go 1.20
 
 require (
-	github.com/BurntSushi/toml v1.3.2
+	github.com/BurntSushi/toml v1.4.0
 	github.com/CycloneDX/cyclonedx-go v0.8.0
 	github.com/Masterminds/semver v1.5.0
 	github.com/onsi/gomega v1.33.0
