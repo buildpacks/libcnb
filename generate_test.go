@@ -403,10 +403,12 @@ version = "1.1.1"
 		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("test-error"))
 	})
 
-	it("writes a Dockerfile", func() {
+	it("writes Dockerfiles", func() {
 		generateFunc = func(ctx libcnb.GenerateContext) (libcnb.GenerateResult, error) {
-			os.WriteFile(filepath.Join(ctx.OutputDirectory, "build.Dockerfile"), []byte(""), 0600)
-			return libcnb.NewGenerateResult(), nil
+			result := libcnb.NewGenerateResult()
+			result.BuildDockerfile = []byte(`FROM foo:latest`)
+			result.RunDockerfile = []byte(`FROM bar:latest`)
+			return result, nil
 		}
 
 		libcnb.Generate(generateFunc,
@@ -417,5 +419,40 @@ version = "1.1.1"
 		)
 
 		Expect(filepath.Join(outputPath, "build.Dockerfile")).To(BeARegularFile())
+		Expect(filepath.Join(outputPath, "run.Dockerfile")).To(BeARegularFile())
+	})
+
+	it("writes extend-config.toml", func() {
+		generateFunc = func(ctx libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+			result := libcnb.NewGenerateResult()
+			result.Config = &libcnb.ExtendConfig{
+				Build: libcnb.BuildConfig{
+					Args: []libcnb.DockerfileArg{
+						{
+							Name:  "foo",
+							Value: "bar",
+						},
+					},
+				},
+				Run: libcnb.BuildConfig{
+					Args: []libcnb.DockerfileArg{
+						{
+							Name:  "bar",
+							Value: "bazz",
+						},
+					},
+				},
+			}
+			return result, nil
+		}
+
+		libcnb.Generate(generateFunc,
+			libcnb.NewConfig(
+				libcnb.WithArguments([]string{commandPath, outputPath, platformPath, buildpackPlanPath}),
+				libcnb.WithTOMLWriter(tomlWriter),
+				libcnb.WithLogger(log.NewDiscard())),
+		)
+
+		Expect(filepath.Join(outputPath, "extend-config.toml")).To(BeARegularFile())
 	})
 }
