@@ -50,7 +50,13 @@ type GenerateContext struct {
 	// Platform is the contents of the platform.
 	Platform Platform
 
-	// StackID is the ID of the stack.
+	// TargetInfo contains info of the target (os, arch, ...).
+	TargetInfo TargetInfo
+
+	// TargetDistro is the target distribution (name, version).
+	TargetDistro TargetDistro
+
+	// Deprecated: StackID is the ID of the stack.
 	StackID string
 }
 
@@ -58,10 +64,30 @@ type GenerateContext struct {
 type GenerateResult struct {
 	// Unmet contains buildpack plan entries that were not satisfied by the buildpack and therefore should be
 	// passed to subsequent providers.
-	Unmet []UnmetPlanEntry
+	Unmet           []UnmetPlanEntry
+	RunDockerfile   []byte
+	BuildDockerfile []byte
+	Config          *ExtendConfig
 }
 
-// NewBuildResult creates a new BuildResult instance, initializing empty fields.
+// DockerfileArg is a Dockerfile argument
+type DockerfileArg struct {
+	Name  string `toml:"name"`
+	Value string `toml:"value"`
+}
+
+// BuildConfig contains additional arguments passed to the generated Dockerfiles
+type BuildConfig struct {
+	Args []DockerfileArg `toml:"args"`
+}
+
+// ExtendConfig contains additional configuration for the Dockerfiles
+type ExtendConfig struct {
+	Build BuildConfig `toml:"build"`
+	Run   BuildConfig `toml:"run"`
+}
+
+// NewGenerateResult creates a new BuildResult instance, initializing empty fields.
 func NewGenerateResult() GenerateResult {
 	return GenerateResult{}
 }
@@ -73,7 +99,7 @@ func (b GenerateResult) String() string {
 	)
 }
 
-// BuildFunc takes a context and returns a result, performing extension generate behaviors.
+// GenerateFunc takes a context and returns a result, performing extension generate behaviors.
 type GenerateFunc func(context GenerateContext) (GenerateResult, error)
 
 // Generate is called by the main function of a extension, for generate phase
@@ -184,10 +210,52 @@ func Generate(generate GenerateFunc, config Config) {
 		config.logger.Debugf("Stack: %s", ctx.StackID)
 	}
 
+	if API.GreaterThan(semver.MustParse("0.9")) {
+		ctx.TargetInfo = TargetInfo{}
+		ctx.TargetInfo.OS, _ = os.LookupEnv(EnvTargetOS)
+		ctx.TargetInfo.Arch, _ = os.LookupEnv(EnvTargetArch)
+		ctx.TargetInfo.Variant, _ = os.LookupEnv(EnvTargetArchVariant)
+		config.logger.Debugf("System: %+v", ctx.TargetInfo)
+
+		ctx.TargetDistro = TargetDistro{}
+		ctx.TargetDistro.Name, _ = os.LookupEnv(EnvTargetDistroName)
+		ctx.TargetDistro.Version, _ = os.LookupEnv(EnvTargetDistroVersion)
+		config.logger.Debugf("Distro: %+v", ctx.TargetDistro)
+	}
+
 	result, err := generate(ctx)
 	if err != nil {
 		config.exitHandler.Error(err)
 		return
 	}
 	config.logger.Debugf("Result: %+v", result)
+
+	if len(result.RunDockerfile) > 0 {
+		// #nosec
+		if err := os.WriteFile(filepath.Join(ctx.OutputDirectory, "run.Dockerfile"), result.RunDockerfile, 0644); err != nil {
+			config.exitHandler.Error(err)
+			return
+		}
+	}
+
+	if len(result.BuildDockerfile) > 0 {
+		// #nosec
+		if err := os.WriteFile(filepath.Join(ctx.OutputDirectory, "build.Dockerfile"), result.BuildDockerfile, 0644); err != nil {
+			config.exitHandler.Error(err)
+			return
+		}
+	}
+
+	if result.Config != nil {
+		configFile, err := os.Create(filepath.Join(ctx.OutputDirectory, "extend-config.toml"))
+		if err != nil {
+			config.exitHandler.Error(err)
+			return
+		}
+
+		if err := toml.NewEncoder(configFile).Encode(result.Config); err != nil {
+			config.exitHandler.Error(err)
+			return
+		}
+	}
 }

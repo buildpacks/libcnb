@@ -165,6 +165,12 @@ test-key = "test-value"
 		Expect(os.Setenv("CNB_PLATFORM_DIR", platformPath)).To(Succeed())
 		Expect(os.Setenv("CNB_BP_PLAN_PATH", buildpackPlanPath)).To(Succeed())
 
+		Expect(os.Setenv("CNB_TARGET_OS", "linux")).To(Succeed())
+		Expect(os.Setenv("CNB_TARGET_ARCH", "arm")).To(Succeed())
+		Expect(os.Setenv("CNB_TARGET_ARCH_VARIANT", "v6")).To(Succeed())
+		Expect(os.Setenv("CNB_TARGET_DISTRO_NAME", "ubuntu")).To(Succeed())
+		Expect(os.Setenv("CNB_TARGET_DISTRO_VERSION", "24.04")).To(Succeed())
+
 		workingDir, err = os.Getwd()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.Chdir(applicationPath)).To(Succeed())
@@ -177,6 +183,12 @@ test-key = "test-value"
 		Expect(os.Unsetenv("CNB_PLATFORM_DIR")).To(Succeed())
 		Expect(os.Unsetenv("CNB_BP_PLAN_PATH")).To(Succeed())
 		Expect(os.Unsetenv("CNB_LAYERS_DIR")).To(Succeed())
+
+		Expect(os.Unsetenv("CNB_TARGET_OS"))
+		Expect(os.Unsetenv("CNB_TARGET_ARCH"))
+		Expect(os.Unsetenv("CNB_TARGET_ARCH_VARIANT"))
+		Expect(os.Unsetenv("CNB_TARGET_DISTRO_NAME"))
+		Expect(os.Unsetenv("CNB_TARGET_DISTRO_VERSION"))
 
 		Expect(os.RemoveAll(applicationPath)).To(Succeed())
 		Expect(os.RemoveAll(buildpackPath)).To(Succeed())
@@ -317,6 +329,69 @@ version = "1.1.1"
 				Path:        platformPath,
 			}))
 			Expect(ctx.StackID).To(Equal("test-stack-id"))
+		})
+	})
+
+	context("has a build environment specifying target metadata", func() {
+		var ctx libcnb.BuildContext
+
+		it.Before(func() {
+			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
+				[]byte(`
+						api = "0.10"
+
+						[buildpack]
+						id = "test-id"
+						name = "test-name"
+						version = "1.1.1"
+
+						[[targets]]
+						os = "linux"
+						arch = "amd64"
+
+						[[targets.distros]]
+						name = "ubuntu"
+						version = "18.04"
+
+						[[targets.distros]]
+						name = "debian"
+
+						[[targets]]
+						os = "linux"
+						arch = "arm"
+						variant = "v6"
+					`), 0600),
+			).To(Succeed())
+
+			buildFunc = func(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+				ctx = context
+				return libcnb.NewBuildResult(), nil
+			}
+		})
+
+		it("provides target information", func() {
+			libcnb.Build(buildFunc,
+				libcnb.NewConfig(
+					libcnb.WithArguments([]string{commandPath}),
+					libcnb.WithLogger(log.New(os.Stdout)),
+				),
+			)
+
+			Expect(ctx.Buildpack.Targets).To(HaveLen(2))
+			Expect(ctx.Buildpack.Targets[0].OS).To(Equal("linux"))
+			Expect(ctx.Buildpack.Targets[0].Arch).To(Equal("amd64"))
+			Expect(ctx.Buildpack.Targets[0].Distros).To(HaveLen(2))
+			Expect(ctx.Buildpack.Targets[0].Distros[0].Name).To(Equal("ubuntu"))
+			Expect(ctx.Buildpack.Targets[0].Distros[0].Version).To(Equal("18.04"))
+			Expect(ctx.Buildpack.Targets[0].Distros[1].Name).To(Equal("debian"))
+
+			Expect(ctx.Buildpack.Targets[1].Variant).To(Equal("v6"))
+
+			Expect(ctx.TargetInfo.OS).To(Equal("linux"))
+			Expect(ctx.TargetInfo.Arch).To(Equal("arm"))
+			Expect(ctx.TargetInfo.Variant).To(Equal("v6"))
+			Expect(ctx.TargetDistro.Name).To(Equal("ubuntu"))
+			Expect(ctx.TargetDistro.Version).To(Equal("24.04"))
 		})
 	})
 
