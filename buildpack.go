@@ -76,13 +76,42 @@ type BuildpackOrder struct {
 	Groups []BuildpackOrderBuildpack `toml:"group"`
 }
 
-// BuildpackStack is a stack supported by the buildpack.
+// Deprecated: BuildpackStack is a stack supported by the buildpack.
 type BuildpackStack struct {
 	// ID is the id of the stack.
 	ID string `toml:"id"`
 
 	// Mixins is the collection of mixins associated with the stack.
 	Mixins []string `toml:"mixins"`
+}
+
+// TargetDistro is the supported target distro
+type TargetDistro struct {
+	// Name is the name of the supported distro.
+	Name string `toml:"name"`
+
+	// Version is the version of the supported distro.
+	Version string `toml:"version"`
+}
+
+// TargetInfo is the supported target
+type TargetInfo struct {
+	// OS is the supported os.
+	OS string `toml:"os"`
+
+	// Arch is the supported architecture.
+	Arch string `toml:"arch"`
+
+	// Variant is the supported variant of the architecture.
+	Variant string `toml:"variant"`
+}
+
+// Target is a target supported by the buildpack.
+type Target struct {
+	TargetInfo
+
+	// Distros is the collection of distros associated with the target.
+	Distros []TargetDistro `toml:"distros"`
 }
 
 // Buildpack is the contents of the buildpack.toml file.
@@ -96,8 +125,11 @@ type Buildpack struct {
 	// Path is the path to the buildpack.
 	Path string `toml:"-"`
 
-	// Stacks is the collection of stacks supported by the buildpack.
+	// Deprecated: Stacks is the collection of stacks supported by the buildpack.
 	Stacks []BuildpackStack `toml:"stacks"`
+
+	// Targets is the collection of targets supported by the buildpack.
+	Targets []Target `toml:"targets"`
 
 	// Metadata is arbitrary metadata attached to the buildpack.
 	Metadata map[string]interface{} `toml:"metadata"`

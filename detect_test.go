@@ -175,19 +175,6 @@ version = "1.1.1"
 		})
 	})
 
-	it("doesn't receive CNB_STACK_ID", func() {
-		Expect(os.Unsetenv("CNB_STACK_ID")).To(Succeed())
-
-		libcnb.Detect(detectFunc,
-			libcnb.NewConfig(
-				libcnb.WithArguments([]string{commandPath, platformPath, buildPlanPath}),
-				libcnb.WithExitHandler(exitHandler),
-				libcnb.WithLogger(log.NewDiscard())),
-		)
-
-		Expect(exitHandler.Calls[0].Arguments.Get(0)).To(MatchError("CNB_STACK_ID not set"))
-	})
-
 	context("errors if required env vars are not set", func() {
 		for _, e := range []string{"CNB_PLATFORM_DIR", "CNB_BUILD_PLAN_PATH"} {
 			// We need to do this assignment because of the way that spec binds variables
