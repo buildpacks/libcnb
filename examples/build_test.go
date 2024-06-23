@@ -1,6 +1,7 @@
-package libcnb_test
+package examples
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -35,7 +36,10 @@ func resolve(plan libcnb.BuildpackPlan, name string) libcnb.BuildpackPlanEntry {
 
 func populateLayer(layer libcnb.Layer, version string) (libcnb.Layer, error) {
 	exampleFile := filepath.Join(layer.Path, "example.txt")
-	os.WriteFile(exampleFile, []byte(version), 0600)
+	if err := os.WriteFile(exampleFile, []byte(version), 0600); err != nil {
+		return libcnb.Layer{}, fmt.Errorf("unable to write example file: %w", err)
+	}
+
 	layer.SharedEnvironment.Default("EXAMPLE_FILE", exampleFile)
 
 	// Provide an SBOM

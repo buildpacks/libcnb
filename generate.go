@@ -231,7 +231,7 @@ func Generate(generate GenerateFunc, config Config) {
 	config.logger.Debugf("Result: %+v", result)
 
 	if len(result.RunDockerfile) > 0 {
-		// #nosec
+		//nolint:gosec
 		if err := os.WriteFile(filepath.Join(ctx.OutputDirectory, "run.Dockerfile"), result.RunDockerfile, 0644); err != nil {
 			config.exitHandler.Error(err)
 			return
@@ -239,7 +239,7 @@ func Generate(generate GenerateFunc, config Config) {
 	}
 
 	if len(result.BuildDockerfile) > 0 {
-		// #nosec
+		//nolint:gosec
 		if err := os.WriteFile(filepath.Join(ctx.OutputDirectory, "build.Dockerfile"), result.BuildDockerfile, 0644); err != nil {
 			config.exitHandler.Error(err)
 			return

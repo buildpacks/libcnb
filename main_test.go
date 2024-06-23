@@ -83,7 +83,6 @@ optional = true
 
 [[stacks]]
 id = "test-id"
-mixins = ["test-name"]
 
 [metadata]
 test-key = "test-value"

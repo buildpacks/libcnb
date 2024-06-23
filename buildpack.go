@@ -80,9 +80,6 @@ type BuildpackOrder struct {
 type BuildpackStack struct {
 	// ID is the id of the stack.
 	ID string `toml:"id"`
-
-	// Mixins is the collection of mixins associated with the stack.
-	Mixins []string `toml:"mixins"`
 }
 
 // TargetDistro is the supported target distro
