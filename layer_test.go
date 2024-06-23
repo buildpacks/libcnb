@@ -31,7 +31,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
-		layers libcnb.Layers
+		layers libcnb.Layers[string]
 		path   string
 	)
 
@@ -53,15 +53,15 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	context("Reset", func() {
-		var layer libcnb.Layer
+		var layer libcnb.Layer[string]
 
 		it.Before(func() {
-			layers = libcnb.Layers{Path: t.TempDir()}
+			layers = libcnb.Layers[string]{Path: t.TempDir()}
 		})
 
 		context("when there is no previous build", func() {
 			it.Before(func() {
-				layer = libcnb.Layer{
+				layer = libcnb.Layer[string]{
 					Name: "test-name",
 					Path: filepath.Join(layers.Path, "test-name"),
 					LayerTypes: libcnb.LayerTypes{
@@ -77,7 +77,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 				layer, err = layer.Reset()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(layer).To(Equal(libcnb.Layer{
+				Expect(layer).To(Equal(libcnb.Layer[string]{
 					Name: "test-name",
 					Path: filepath.Join(layers.Path, "test-name"),
 					LayerTypes: libcnb.LayerTypes{
@@ -120,7 +120,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 				err = os.WriteFile(filepath.Join(launchEnvDir, "APPEND_VAR.delim"), []byte("!"), 0600)
 				Expect(err).NotTo(HaveOccurred())
 
-				layer = libcnb.Layer{
+				layer = libcnb.Layer[string]{
 					Name: "test-name",
 					Path: filepath.Join(layers.Path, "test-name"),
 					LayerTypes: libcnb.LayerTypes{
@@ -138,7 +138,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 						"APPEND_VAR.append": "append-value",
 						"APPEND_VAR.delim":  "!",
 					},
-					Metadata: map[string]interface{}{
+					Metadata: map[string]string{
 						"some-key": "some-value",
 					},
 				}
@@ -149,7 +149,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 					layer, err := layer.Reset()
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(layer).To(Equal(libcnb.Layer{
+					Expect(layer).To(Equal(libcnb.Layer[string]{
 						Name: "test-name",
 						Path: filepath.Join(layers.Path, "test-name"),
 						LayerTypes: libcnb.LayerTypes{
@@ -182,7 +182,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("return an error", func() {
-				layer := libcnb.Layer{
+				layer := libcnb.Layer[string]{
 					Name: "some-layer",
 					Path: filepath.Join(layers.Path, "some-layer"),
 				}
@@ -200,7 +200,7 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			path, err = os.MkdirTemp("", "layers")
 			Expect(err).NotTo(HaveOccurred())
 
-			layers = libcnb.Layers{Path: path}
+			layers = libcnb.Layers[string]{Path: path}
 		})
 
 		it.After(func() {
@@ -269,7 +269,7 @@ test-key = "test-value"
 			l, err := layers.Layer("test-name")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(l.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(l.Metadata).To(Equal(map[string]string{"test-key": "test-value"}))
 			Expect(l.Launch).To(BeTrue())
 			Expect(l.Build).To(BeFalse())
 		})
@@ -292,7 +292,7 @@ test-key = "test-value"
 			l, err := layers.Layer("test-name")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(l.Metadata).To(Equal(map[string]interface{}{"test-key": "test-value"}))
+			Expect(l.Metadata).To(Equal(map[string]string{"test-key": "test-value"}))
 			Expect(l.Launch).To(BeFalse())
 			Expect(l.Build).To(BeFalse())
 			Expect(l.Cache).To(BeFalse())

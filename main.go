@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 )
 
-func main(detect DetectFunc, build BuildFunc, generate GenerateFunc, options ...Option) {
+func main[DPL any, BPL any, PM any, LM any, EM any, BM any](detect DetectFunc[DPL, EM, BM], build BuildFunc[BPL, PM, LM, BM], generate GenerateFunc[BPL, EM], options ...Option) {
 	config := NewConfig(options...)
 
 	if len(config.arguments) == 0 {
@@ -45,11 +45,11 @@ func main(detect DetectFunc, build BuildFunc, generate GenerateFunc, options ...
 }
 
 // BuildpackMain is called by the main function of a buildpack, encapsulating both detection and build in the same binary.
-func BuildpackMain(detect DetectFunc, build BuildFunc, options ...Option) {
+func BuildpackMain[DPL any, BPL any, PM any, LM any, EM any, BM any](detect DetectFunc[DPL, EM, BM], build BuildFunc[BPL, PM, LM, BM], options ...Option) {
 	main(detect, build, nil, options...)
 }
 
 // ExtensionMain is called by the main function of a extension, encapsulating both detection and generation in the same binary.
-func ExtensionMain(detect DetectFunc, generate GenerateFunc, options ...Option) {
-	main(detect, nil, generate, options...)
+func ExtensionMain[DPL any, BPL any, PM any, LM any, EM any, BM any](detect DetectFunc[DPL, EM, BM], generate GenerateFunc[BPL, EM], options ...Option) {
+	main(detect, EmptyBuildFunc[BPL, PM, LM], generate, options...)
 }

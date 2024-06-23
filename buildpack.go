@@ -112,7 +112,7 @@ type Target struct {
 }
 
 // Buildpack is the contents of the buildpack.toml file.
-type Buildpack struct {
+type Buildpack[BM any] struct {
 	// API is the api version expected by the buildpack.
 	API string `toml:"api"`
 
@@ -129,5 +129,5 @@ type Buildpack struct {
 	Targets []Target `toml:"targets"`
 
 	// Metadata is arbitrary metadata attached to the buildpack.
-	Metadata map[string]interface{} `toml:"metadata"`
+	Metadata map[string]BM `toml:"metadata"`
 }

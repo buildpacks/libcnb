@@ -35,13 +35,13 @@ func testMain(t *testing.T, _ spec.G, it spec.S) {
 		Expect = NewWithT(t).Expect
 
 		applicationPath   string
-		buildFunc         libcnb.BuildFunc
+		buildFunc         libcnb.BuildFunc[string, string, string, string]
 		buildpackPath     string
 		buildpackPlanPath string
-		detectFunc        libcnb.DetectFunc
+		detectFunc        libcnb.DetectFunc[string, string, string]
 		environmentWriter *mocks.EnvironmentWriter
 		exitHandler       *mocks.ExitHandler
-		generateFunc      libcnb.GenerateFunc
+		generateFunc      libcnb.GenerateFunc[string, string]
 		layersPath        string
 		platformPath      string
 		tomlWriter        *mocks.TOMLWriter
@@ -57,9 +57,7 @@ func testMain(t *testing.T, _ spec.G, it spec.S) {
 		applicationPath, err = filepath.EvalSymlinks(applicationPath)
 		Expect(err).NotTo(HaveOccurred())
 
-		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
-			return libcnb.NewBuildResult(), nil
-		}
+		buildFunc = libcnb.EmptyBuildFunc[string, string]
 
 		buildpackPath, err = os.MkdirTemp("", "main-buildpack-path")
 		Expect(err).NotTo(HaveOccurred())
@@ -107,11 +105,11 @@ test-key = "test-value"
 			0600),
 		).To(Succeed())
 
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{}, nil
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{}, nil
 		}
 
-		generateFunc = func(libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 			return libcnb.GenerateResult{}, nil
 		}
 
@@ -207,8 +205,8 @@ test-key = "test-value"
 	})
 
 	it("calls detector for detect command", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: true}, nil
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{Pass: true}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")
 
@@ -220,12 +218,12 @@ test-key = "test-value"
 	})
 
 	it("calls generator for generate command", func() {
-		generateFunc = func(libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 			return libcnb.GenerateResult{}, nil
 		}
 		commandPath := filepath.Join("bin", "generate")
 
-		libcnb.ExtensionMain(nil, generateFunc,
+		libcnb.ExtensionMain[string, string, string, string, string, string](nil, generateFunc,
 			libcnb.WithArguments([]string{commandPath}),
 			libcnb.WithExitHandler(exitHandler),
 			libcnb.WithLogger(log.NewDiscard()),
@@ -233,8 +231,8 @@ test-key = "test-value"
 	})
 
 	it("calls exitHandler.Pass() on detection pass", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: true}, nil
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{Pass: true}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")
 
@@ -248,8 +246,8 @@ test-key = "test-value"
 	})
 
 	it("calls exitHandler.Fail() on detection fail", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: false}, nil
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{Pass: false}, nil
 		}
 		commandPath := filepath.Join("bin", "detect")
 

@@ -17,8 +17,8 @@
 package libcnb
 
 // Store represents the contents of store.toml
-type Store struct {
+type Store[PM any] struct {
 
 	// Metadata represents the persistent metadata.
-	Metadata map[string]interface{} `toml:"metadata"`
+	Metadata map[string]PM `toml:"metadata"`
 }

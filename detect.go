@@ -30,17 +30,17 @@ import (
 )
 
 // DetectContext contains the inputs to detection.
-type DetectContext struct {
+type DetectContext[EM any, BM any] struct {
 
 	// ApplicationPath is the location of the application source code as provided by
 	// the lifecycle.
 	ApplicationPath string
 
 	// Buildpack is metadata about the buildpack from buildpack.toml (empty when processing an extension)
-	Buildpack Buildpack
+	Buildpack Buildpack[BM]
 
 	// Extension is metadata about the extension from extension.toml (empty when processing a buildpack)
-	Extension Extension
+	Extension Extension[EM]
 
 	// Logger is the way to write messages to the end user
 	Logger log.Logger
@@ -53,20 +53,20 @@ type DetectContext struct {
 }
 
 // DetectResult contains the results of detection.
-type DetectResult struct {
+type DetectResult[DPL any] struct {
 
 	// Pass indicates whether detection has passed.
 	Pass bool
 
 	// Plans are the build plans contributed by the buildpack.
-	Plans []BuildPlan
+	Plans []BuildPlan[DPL]
 }
 
 // DetectFunc takes a context and returns a result, performing buildpack detect behaviors.
-type DetectFunc func(context DetectContext) (DetectResult, error)
+type DetectFunc[DPL any, EM any, BM any] func(context DetectContext[EM, BM]) (DetectResult[DPL], error)
 
 // Detect is called by the main function of a buildpack, for detection.
-func Detect(detect DetectFunc, config Config) {
+func Detect[DPL any, EM any, BM any](detect DetectFunc[DPL, EM, BM], config Config) {
 	var (
 		err         error
 		file        string
@@ -75,7 +75,7 @@ func Detect(detect DetectFunc, config Config) {
 		path        string
 		destination interface{}
 	)
-	ctx := DetectContext{Logger: config.logger}
+	ctx := DetectContext[EM, BM]{Logger: config.logger}
 
 	var moduletype = "buildpack"
 	if config.extension {
@@ -203,7 +203,7 @@ func Detect(detect DetectFunc, config Config) {
 	}
 
 	if len(result.Plans) > 0 {
-		var plans BuildPlans
+		var plans BuildPlans[DPL]
 		if len(result.Plans) > 0 {
 			plans.BuildPlan = result.Plans[0]
 		}

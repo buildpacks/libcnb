@@ -34,7 +34,7 @@ func testExtensionTOML(t *testing.T, _ spec.G, it spec.S) {
 	)
 
 	it("does not serialize the Path field", func() {
-		extn := libcnb.Extension{
+		extn := libcnb.Extension[string]{
 			API: "0.8",
 			Info: libcnb.ExtensionInfo{
 				ID:   "test-buildpack/sample",

@@ -41,7 +41,7 @@ type ExtensionInfo struct {
 }
 
 // Extension is the contents of the extension.toml file.
-type Extension struct {
+type Extension[EM any] struct {
 	// API is the api version expected by the extension.
 	API string `toml:"api"`
 
@@ -55,5 +55,5 @@ type Extension struct {
 	Targets []Target `toml:"targets"`
 
 	// Metadata is arbitrary metadata attached to the extension.
-	Metadata map[string]interface{} `toml:"metadata"`
+	Metadata map[string]EM `toml:"metadata"`
 }

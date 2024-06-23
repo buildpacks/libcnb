@@ -30,13 +30,13 @@ import (
 )
 
 // GenerateContext contains the inputs to generate.
-type GenerateContext struct {
+type GenerateContext[PL any, EM any] struct {
 	// ApplicationPath is the location of the application source code as provided by
 	// the lifecycle.
 	ApplicationPath string
 
 	// Extension is metadata about the extension, from extension.toml.
-	Extension Extension
+	Extension Extension[EM]
 
 	// OutputDirectory is the location Dockerfiles should be written to.
 	OutputDirectory string
@@ -45,7 +45,7 @@ type GenerateContext struct {
 	Logger log.Logger
 
 	// Plan is the buildpack plan provided to the buildpack.
-	Plan BuildpackPlan
+	Plan BuildpackPlan[PL]
 
 	// Platform is the contents of the platform.
 	Platform Platform
@@ -100,16 +100,16 @@ func (b GenerateResult) String() string {
 }
 
 // GenerateFunc takes a context and returns a result, performing extension generate behaviors.
-type GenerateFunc func(context GenerateContext) (GenerateResult, error)
+type GenerateFunc[PL any, EM any] func(context GenerateContext[PL, EM]) (GenerateResult, error)
 
 // Generate is called by the main function of a extension, for generate phase
-func Generate(generate GenerateFunc, config Config) {
+func Generate[PL any, EM any](generate GenerateFunc[PL, EM], config Config) {
 	var (
 		err  error
 		file string
 		ok   bool
 	)
-	ctx := GenerateContext{Logger: config.logger}
+	ctx := GenerateContext[PL, EM]{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {

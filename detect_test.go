@@ -39,7 +39,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		buildpackPath   string
 		buildPlanPath   string
 		commandPath     string
-		detectFunc      libcnb.DetectFunc
+		detectFunc      libcnb.DetectFunc[string, string, string]
 		exitHandler     *mocks.ExitHandler
 		platformPath    string
 		tomlWriter      *mocks.TOMLWriter
@@ -95,8 +95,8 @@ test-key = "test-value"
 
 		commandPath = filepath.Join("bin", "detect")
 
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{}, nil
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{}, nil
 		}
 
 		exitHandler = &mocks.ExitHandler{}
@@ -209,7 +209,7 @@ version = "1.1.1"
 	})
 
 	context("has a detect environment", func() {
-		var ctx libcnb.DetectContext
+		var ctx libcnb.DetectContext[string, string]
 
 		it.Before(func() {
 			Expect(os.WriteFile(filepath.Join(buildpackPath, "buildpack.toml"),
@@ -224,9 +224,9 @@ version = "1.1.1"
 				0600),
 			).To(Succeed())
 
-			detectFunc = func(context libcnb.DetectContext) (libcnb.DetectResult, error) {
+			detectFunc = func(context libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
 				ctx = context
-				return libcnb.DetectResult{}, nil
+				return libcnb.DetectResult[string]{}, nil
 			}
 		})
 
@@ -238,7 +238,7 @@ version = "1.1.1"
 			)
 
 			Expect(ctx.ApplicationPath).To(Equal(applicationPath))
-			Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack{
+			Expect(ctx.Buildpack).To(Equal(libcnb.Buildpack[string]{
 				API: "0.8",
 				Info: libcnb.BuildpackInfo{
 					ID:      "test-id",
@@ -278,8 +278,8 @@ version = "1.1.1"
 	})
 
 	it("handles error from DetectFunc", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{}, fmt.Errorf("test-error")
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{}, fmt.Errorf("test-error")
 		}
 
 		libcnb.Detect(detectFunc,
@@ -293,8 +293,8 @@ version = "1.1.1"
 	})
 
 	it("does not write empty files", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{Pass: true}, nil
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{Pass: true}, nil
 		}
 
 		libcnb.Detect(detectFunc,
@@ -309,18 +309,18 @@ version = "1.1.1"
 	})
 
 	it("writes one build plan", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{
 				Pass: true,
-				Plans: []libcnb.BuildPlan{
+				Plans: []libcnb.BuildPlan[string]{
 					{
 						Provides: []libcnb.BuildPlanProvide{
 							{Name: "test-name"},
 						},
-						Requires: []libcnb.BuildPlanRequire{
+						Requires: []libcnb.BuildPlanRequire[string]{
 							{
 								Name:     "test-name",
-								Metadata: map[string]interface{}{"test-key": "test-value"},
+								Metadata: map[string]string{"test-key": "test-value"},
 							},
 						},
 					},
@@ -337,15 +337,15 @@ version = "1.1.1"
 		)
 
 		Expect(tomlWriter.Calls[0].Arguments.Get(0)).To(Equal(buildPlanPath))
-		Expect(tomlWriter.Calls[0].Arguments.Get(1)).To(Equal(libcnb.BuildPlans{
-			BuildPlan: libcnb.BuildPlan{
+		Expect(tomlWriter.Calls[0].Arguments.Get(1)).To(Equal(libcnb.BuildPlans[string]{
+			BuildPlan: libcnb.BuildPlan[string]{
 				Provides: []libcnb.BuildPlanProvide{
 					{Name: "test-name"},
 				},
-				Requires: []libcnb.BuildPlanRequire{
+				Requires: []libcnb.BuildPlanRequire[string]{
 					{
 						Name:     "test-name",
-						Metadata: map[string]interface{}{"test-key": "test-value"},
+						Metadata: map[string]string{"test-key": "test-value"},
 					},
 				},
 			},
@@ -353,18 +353,18 @@ version = "1.1.1"
 	})
 
 	it("writes two build plans", func() {
-		detectFunc = func(libcnb.DetectContext) (libcnb.DetectResult, error) {
-			return libcnb.DetectResult{
+		detectFunc = func(libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
+			return libcnb.DetectResult[string]{
 				Pass: true,
-				Plans: []libcnb.BuildPlan{
+				Plans: []libcnb.BuildPlan[string]{
 					{
 						Provides: []libcnb.BuildPlanProvide{
 							{Name: "test-name-1"},
 						},
-						Requires: []libcnb.BuildPlanRequire{
+						Requires: []libcnb.BuildPlanRequire[string]{
 							{
 								Name:     "test-name-1",
-								Metadata: map[string]interface{}{"test-key-1": "test-value-1"},
+								Metadata: map[string]string{"test-key-1": "test-value-1"},
 							},
 						},
 					},
@@ -372,10 +372,10 @@ version = "1.1.1"
 						Provides: []libcnb.BuildPlanProvide{
 							{Name: "test-name-2"},
 						},
-						Requires: []libcnb.BuildPlanRequire{
+						Requires: []libcnb.BuildPlanRequire[string]{
 							{
 								Name:     "test-name-2",
-								Metadata: map[string]interface{}{"test-key-2": "test-value-2"},
+								Metadata: map[string]string{"test-key-2": "test-value-2"},
 							},
 						},
 					},
@@ -392,27 +392,27 @@ version = "1.1.1"
 		)
 
 		Expect(tomlWriter.Calls[0].Arguments.Get(0)).To(Equal(buildPlanPath))
-		Expect(tomlWriter.Calls[0].Arguments.Get(1)).To(Equal(libcnb.BuildPlans{
-			BuildPlan: libcnb.BuildPlan{
+		Expect(tomlWriter.Calls[0].Arguments.Get(1)).To(Equal(libcnb.BuildPlans[string]{
+			BuildPlan: libcnb.BuildPlan[string]{
 				Provides: []libcnb.BuildPlanProvide{
 					{Name: "test-name-1"},
 				},
-				Requires: []libcnb.BuildPlanRequire{
+				Requires: []libcnb.BuildPlanRequire[string]{
 					{
 						Name:     "test-name-1",
-						Metadata: map[string]interface{}{"test-key-1": "test-value-1"},
+						Metadata: map[string]string{"test-key-1": "test-value-1"},
 					},
 				},
 			},
-			Or: []libcnb.BuildPlan{
+			Or: []libcnb.BuildPlan[string]{
 				{
 					Provides: []libcnb.BuildPlanProvide{
 						{Name: "test-name-2"},
 					},
-					Requires: []libcnb.BuildPlanRequire{
+					Requires: []libcnb.BuildPlanRequire[string]{
 						{
 							Name:     "test-name-2",
-							Metadata: map[string]interface{}{"test-key-2": "test-value-2"},
+							Metadata: map[string]string{"test-key-2": "test-value-2"},
 						},
 					},
 				},

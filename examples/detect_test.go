@@ -18,29 +18,29 @@ type Detector struct {
 	Logger log.Logger
 }
 
-func (Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, error) {
+func (Detector) Detect(context libcnb.DetectContext[string, string]) (libcnb.DetectResult[string], error) {
 	version := "1.0"
 	// Scan the application source folder to see if the example buildpack is
 	// required.  If `version.toml` does not exist we return a failed DetectResult
 	// but no runtime error has occurred, so we return an empty error.
 	versionPath := filepath.Join(context.ApplicationPath, "version.toml")
 	if _, err := os.Open(versionPath); errors.Is(err, os.ErrNotExist) {
-		return libcnb.DetectResult{}, nil
+		return libcnb.DetectResult[string]{}, nil
 	}
 	// Read the version number from the buildpack definition
 	if exampleVersion, exists := context.Buildpack.Metadata["version"]; exists {
-		version = exampleVersion.(string)
+		version = exampleVersion
 	}
 	// Accept version number from the environment if the user provides it
 	if exampleVersion, exists := context.Platform.Environment[BpExampleVersion]; exists {
 		version = exampleVersion
 	}
-	metadata := map[string]interface{}{
+	metadata := map[string]string{
 		"version": version,
 	}
-	return libcnb.DetectResult{
+	return libcnb.DetectResult[string]{
 		Pass: true,
-		Plans: []libcnb.BuildPlan{
+		Plans: []libcnb.BuildPlan[string]{
 			{
 				// Let the system know that if other buildpacks Require "example"
 				// then this buildpack Provides the implementation logic.
@@ -50,7 +50,7 @@ func (Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, error
 				// It is common for a buildpack to Require itself if the build phase
 				// needs information from the detect phase. Here we pass the version number
 				// as metadata to the build phase.
-				Requires: []libcnb.BuildPlanRequire{
+				Requires: []libcnb.BuildPlanRequire[string]{
 					{
 						Name:     Provides,
 						Metadata: metadata,
@@ -63,5 +63,5 @@ func (Detector) Detect(context libcnb.DetectContext) (libcnb.DetectResult, error
 
 func ExampleDetect() {
 	detector := Detector{log.New(os.Stdout)}
-	libcnb.BuildpackMain(detector.Detect, nil)
+	libcnb.BuildpackMain(detector.Detect, libcnb.EmptyBuildFunc[string, string, string])
 }
