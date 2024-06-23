@@ -23,28 +23,28 @@ type BuildPlanProvide struct {
 }
 
 // BuildPlanRequire represents a dependency required by a buildpack.
-type BuildPlanRequire struct {
+type BuildPlanRequire[PL any] struct {
 	// Name is the name of the dependency.
 	Name string `toml:"name"`
 
 	// Metadata is the metadata for the dependency. Optional.
-	Metadata map[string]interface{} `toml:"metadata,omitempty"`
+	Metadata map[string]PL `toml:"metadata,omitempty"`
 }
 
 // BuildPlan represents the provisions and requirements of a buildpack during detection.
-type BuildPlan struct {
+type BuildPlan[PL any] struct {
 	// Provides is the dependencies provided by the buildpack.
 	Provides []BuildPlanProvide `toml:"provides,omitempty"`
 
 	// Requires is the dependencies required by the buildpack.
-	Requires []BuildPlanRequire `toml:"requires,omitempty"`
+	Requires []BuildPlanRequire[PL] `toml:"requires,omitempty"`
 }
 
 // BuildPlans represents a collection of build plans produced by a buildpack during detection.
-type BuildPlans struct {
+type BuildPlans[PL any] struct {
 	// BuildPlan is the first build plan.
-	BuildPlan
+	BuildPlan[PL]
 
 	// Or is the collection of other build plans.
-	Or []BuildPlan `toml:"or,omitempty"`
+	Or []BuildPlan[PL] `toml:"or,omitempty"`
 }

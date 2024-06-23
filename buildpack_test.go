@@ -34,7 +34,7 @@ func testBuildpackTOML(t *testing.T, _ spec.G, it spec.S) {
 	)
 
 	it("does not serialize the Path field", func() {
-		bp := libcnb.Buildpack{
+		bp := libcnb.Buildpack[string]{
 			API: "0.8",
 			Info: libcnb.BuildpackInfo{
 				ID:   "test-buildpack/sample",

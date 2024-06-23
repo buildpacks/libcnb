@@ -90,12 +90,12 @@ func SBOMFormatFromString(from string) (SBOMFormat, error) {
 }
 
 // Contribute represents a layer managed by the buildpack.
-type Layer struct {
+type Layer[LM any] struct {
 	// LayerTypes indicates the type of layer
 	LayerTypes `toml:"types"`
 
 	// Metadata is the metadata associated with the layer.
-	Metadata map[string]interface{} `toml:"metadata"`
+	Metadata map[string]LM `toml:"metadata"`
 
 	// Name is the name of the layer.
 	Name string `toml:"-"`
@@ -116,7 +116,7 @@ type Layer struct {
 	Exec Exec `toml:"-"`
 }
 
-func (l Layer) Reset() (Layer, error) {
+func (l Layer[LM]) Reset() (Layer[LM], error) {
 	l.LayerTypes = LayerTypes{
 		Build:  false,
 		Launch: false,
@@ -130,19 +130,19 @@ func (l Layer) Reset() (Layer, error) {
 
 	err := os.RemoveAll(l.Path)
 	if err != nil {
-		return Layer{}, fmt.Errorf("error could not remove file: %s", err)
+		return Layer[LM]{}, fmt.Errorf("error could not remove file: %s", err)
 	}
 
 	err = os.MkdirAll(l.Path, os.ModePerm)
 	if err != nil {
-		return Layer{}, fmt.Errorf("error could not create directory: %s", err)
+		return Layer[LM]{}, fmt.Errorf("error could not create directory: %s", err)
 	}
 
 	return l, nil
 }
 
 // SBOMPath returns the path to the layer specific SBOM File
-func (l Layer) SBOMPath(bt SBOMFormat) string {
+func (l Layer[LM]) SBOMPath(bt SBOMFormat) string {
 	return filepath.Join(filepath.Dir(l.Path), fmt.Sprintf("%s.sbom.%s", l.Name, bt))
 }
 
@@ -160,14 +160,14 @@ type LayerTypes struct {
 }
 
 // Layers represents the layers part of the specification.
-type Layers struct {
+type Layers[LM any] struct {
 	// Path is the layers filesystem location.
 	Path string
 }
 
 // Layer creates a new layer, loading metadata if it exists.
-func (l *Layers) Layer(name string) (Layer, error) {
-	layer := Layer{
+func (l *Layers[LM]) Layer(name string) (Layer[LM], error) {
+	layer := Layer[LM]{
 		Name:              name,
 		Path:              filepath.Join(l.Path, name),
 		BuildEnvironment:  Environment{},
@@ -178,18 +178,18 @@ func (l *Layers) Layer(name string) (Layer, error) {
 
 	f := filepath.Join(l.Path, fmt.Sprintf("%s.toml", name))
 	if _, err := toml.DecodeFile(f, &layer); err != nil && !os.IsNotExist(err) {
-		return Layer{}, fmt.Errorf("unable to decode layer metadata %s\n%w", f, err)
+		return Layer[LM]{}, fmt.Errorf("unable to decode layer metadata %s\n%w", f, err)
 	}
 
 	return layer, nil
 }
 
 // BOMBuildPath returns the full path to the build SBoM file for the buildpack
-func (l Layers) BuildSBOMPath(bt SBOMFormat) string {
+func (l Layers[LM]) BuildSBOMPath(bt SBOMFormat) string {
 	return filepath.Join(l.Path, fmt.Sprintf("build.sbom.%s", bt))
 }
 
 // BOMLaunchPath returns the full path to the launch SBoM file for the buildpack
-func (l Layers) LaunchSBOMPath(bt SBOMFormat) string {
+func (l Layers[LM]) LaunchSBOMPath(bt SBOMFormat) string {
 	return filepath.Join(l.Path, fmt.Sprintf("launch.sbom.%s", bt))
 }

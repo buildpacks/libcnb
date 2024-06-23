@@ -21,10 +21,10 @@ type Builder struct {
 
 // BuildpackPlan may contain multiple entries for a single buildpack, resolve
 // into a single entry.
-func resolve(plan libcnb.BuildpackPlan, name string) libcnb.BuildpackPlanEntry {
-	entry := libcnb.BuildpackPlanEntry{
+func resolve(plan libcnb.BuildpackPlan[string], name string) libcnb.BuildpackPlanEntry[string] {
+	entry := libcnb.BuildpackPlanEntry[string]{
 		Name:     name,
-		Metadata: map[string]interface{}{},
+		Metadata: map[string]string{},
 	}
 	for _, e := range plan.Entries {
 		for k, v := range e.Metadata {
@@ -34,10 +34,10 @@ func resolve(plan libcnb.BuildpackPlan, name string) libcnb.BuildpackPlanEntry {
 	return entry
 }
 
-func populateLayer(layer libcnb.Layer, version string) (libcnb.Layer, error) {
+func populateLayer(layer libcnb.Layer[string], version string) (libcnb.Layer[string], error) {
 	exampleFile := filepath.Join(layer.Path, "example.txt")
 	if err := os.WriteFile(exampleFile, []byte(version), 0600); err != nil {
-		return libcnb.Layer{}, fmt.Errorf("unable to write example file: %w", err)
+		return libcnb.Layer[string]{}, fmt.Errorf("unable to write example file: %w", err)
 	}
 
 	layer.SharedEnvironment.Default("EXAMPLE_FILE", exampleFile)
@@ -64,15 +64,15 @@ func populateLayer(layer libcnb.Layer, version string) (libcnb.Layer, error) {
 	return layer, nil
 }
 
-func (b Builder) Build(context libcnb.BuildContext) (libcnb.BuildResult, error) {
+func (b Builder) Build(context libcnb.BuildContext[string, string, string, string]) (libcnb.BuildResult[string, string], error) {
 	// Reduce possible multiple buildpack plan entries to a single entry
 	entry := resolve(context.Plan, Provides)
-	result := libcnb.NewBuildResult()
+	result := libcnb.NewBuildResult[string, string]()
 
 	// Read metadata from the buildpack plan, often contributed by libcnb.Requires
 	// of the Detect phase
 	version := DefaultVersion
-	if v, ok := entry.Metadata["version"].(string); ok {
+	if v, ok := entry.Metadata["version"]; ok {
 		version = v
 	}
 

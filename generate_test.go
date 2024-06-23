@@ -38,7 +38,7 @@ func testGenerate(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
-		generateFunc      libcnb.GenerateFunc
+		generateFunc      libcnb.GenerateFunc[string, string]
 		applicationPath   string
 		extensionPath     string
 		outputPath        string
@@ -55,7 +55,7 @@ func testGenerate(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		generateFunc = func(libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 			return libcnb.NewGenerateResult(), nil
 		}
 
@@ -248,7 +248,7 @@ version = "1.1.1"
 	})
 
 	context("has a build environment", func() {
-		var ctx libcnb.GenerateContext
+		var ctx libcnb.GenerateContext[string, string]
 
 		it.Before(func() {
 			Expect(os.WriteFile(filepath.Join(extensionPath, "extension.toml"),
@@ -263,7 +263,7 @@ version = "1.1.1"
 				0600),
 			).To(Succeed())
 
-			generateFunc = func(context libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+			generateFunc = func(context libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 				ctx = context
 				return libcnb.NewGenerateResult(), nil
 			}
@@ -275,7 +275,7 @@ version = "1.1.1"
 					libcnb.WithArguments([]string{commandPath})),
 			)
 			Expect(ctx.ApplicationPath).To(Equal(applicationPath))
-			Expect(ctx.Extension).To(Equal(libcnb.Extension{
+			Expect(ctx.Extension).To(Equal(libcnb.Extension[string]{
 				API: "0.8",
 				Info: libcnb.ExtensionInfo{
 					ID:      "test-id",
@@ -285,11 +285,11 @@ version = "1.1.1"
 				Path: extensionPath,
 			}))
 			Expect(ctx.OutputDirectory).To(Equal(outputPath))
-			Expect(ctx.Plan).To(Equal(libcnb.BuildpackPlan{
-				Entries: []libcnb.BuildpackPlanEntry{
+			Expect(ctx.Plan).To(Equal(libcnb.BuildpackPlan[string]{
+				Entries: []libcnb.BuildpackPlanEntry[string]{
 					{
 						Name: "test-name",
-						Metadata: map[string]interface{}{
+						Metadata: map[string]string{
 							"test-key": "test-value",
 						},
 					},
@@ -313,7 +313,7 @@ version = "1.1.1"
 	})
 
 	context("has a build environment specifying target metadata", func() {
-		var ctx libcnb.GenerateContext
+		var ctx libcnb.GenerateContext[string, string]
 
 		it.Before(func() {
 			Expect(os.WriteFile(filepath.Join(extensionPath, "extension.toml"),
@@ -343,7 +343,7 @@ version = "1.1.1"
 					`), 0600),
 			).To(Succeed())
 
-			generateFunc = func(context libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+			generateFunc = func(context libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 				ctx = context
 				return libcnb.NewGenerateResult(), nil
 			}
@@ -389,7 +389,7 @@ version = "1.1.1"
 	})
 
 	it("handles error from GenerateFunc", func() {
-		generateFunc = func(libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 			return libcnb.NewGenerateResult(), errors.New("test-error")
 		}
 
@@ -404,7 +404,7 @@ version = "1.1.1"
 	})
 
 	it("writes Dockerfiles", func() {
-		generateFunc = func(_ libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(_ libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 			result := libcnb.NewGenerateResult()
 			result.BuildDockerfile = []byte(`FROM foo:latest`)
 			result.RunDockerfile = []byte(`FROM bar:latest`)
@@ -423,7 +423,7 @@ version = "1.1.1"
 	})
 
 	it("writes extend-config.toml", func() {
-		generateFunc = func(_ libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(_ libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 			result := libcnb.NewGenerateResult()
 			result.Config = &libcnb.ExtendConfig{
 				Build: libcnb.BuildConfig{

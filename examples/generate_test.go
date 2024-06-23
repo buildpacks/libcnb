@@ -12,7 +12,7 @@ type Generator struct {
 	Logger log.Logger
 }
 
-func (Generator) Generate(context libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+func (Generator) Generate(context libcnb.GenerateContext[string, string]) (libcnb.GenerateResult, error) {
 	// here you can read the context.ApplicationPath folder
 	// and create run.Dockerfile and build.Dockerfile in the context.OutputPath folder
 	// and read metadata from the context.Extension struct
@@ -26,5 +26,5 @@ func (Generator) Generate(context libcnb.GenerateContext) (libcnb.GenerateResult
 
 func ExampleGenerate() {
 	generator := Generator{log.New(os.Stdout)}
-	libcnb.ExtensionMain(nil, generator.Generate)
+	libcnb.ExtensionMain[string, string, string, string, string, string](nil, generator.Generate)
 }

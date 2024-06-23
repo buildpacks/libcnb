@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -32,25 +33,25 @@ import (
 )
 
 // BuildContext contains the inputs to build.
-type BuildContext struct {
+type BuildContext[PL any, PM any, LM any, BM any] struct {
 	// ApplicationPath is the location of the application source code as provided by
 	// the lifecycle.
 	ApplicationPath string
 
 	// Buildpack is metadata about the buildpack, from buildpack.toml.
-	Buildpack Buildpack
+	Buildpack Buildpack[BM]
 
 	// Layers is the layers available to the buildpack.
-	Layers Layers
+	Layers Layers[LM]
 
 	// Logger is the way to write messages to the end user
 	Logger log.Logger
 
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
-	PersistentMetadata map[string]interface{}
+	PersistentMetadata map[string]PM
 
 	// Plan is the buildpack plan provided to the buildpack.
-	Plan BuildpackPlan
+	Plan BuildpackPlan[PL]
 
 	// Platform is the contents of the platform.
 	Platform Platform
@@ -66,15 +67,15 @@ type BuildContext struct {
 }
 
 // BuildResult contains the results of detection.
-type BuildResult struct {
+type BuildResult[PM any, LM any] struct {
 	// Labels are the image labels contributed by the buildpack.
 	Labels []Label
 
 	// Layers is the collection of LayerCreators contributed by the buildpack.
-	Layers []Layer
+	Layers []Layer[LM]
 
 	// PersistentMetadata is metadata that is persisted even across cache cleaning.
-	PersistentMetadata map[string]interface{}
+	PersistentMetadata map[string]PM
 
 	// Processes are the process types contributed by the buildpack.
 	Processes []Process
@@ -97,13 +98,13 @@ const (
 )
 
 // NewBuildResult creates a new BuildResult instance, initializing empty fields.
-func NewBuildResult() BuildResult {
-	return BuildResult{
-		PersistentMetadata: make(map[string]interface{}),
+func NewBuildResult[PM any, LM any]() BuildResult[PM, LM] {
+	return BuildResult[PM, LM]{
+		PersistentMetadata: make(map[string]PM),
 	}
 }
 
-func (b BuildResult) String() string {
+func (b BuildResult[PM, LM]) String() string {
 	var l []string
 	for _, c := range b.Layers {
 		l = append(l, reflect.TypeOf(c).Name())
@@ -116,16 +117,20 @@ func (b BuildResult) String() string {
 }
 
 // BuildFunc takes a context and returns a result, performing buildpack build behaviors.
-type BuildFunc func(context BuildContext) (BuildResult, error)
+type BuildFunc[PL any, PM any, LM any, BM any] func(context BuildContext[PL, PM, LM, BM]) (BuildResult[PM, LM], error)
+
+func EmptyBuildFunc[BPL any, PM any, LM any, BM any](context BuildContext[BPL, PM, LM, BM]) (BuildResult[PM, LM], error) {
+	return BuildResult[PM, LM]{}, nil
+}
 
 // Build is called by the main function of a buildpack, for build.
-func Build(build BuildFunc, config Config) {
+func Build[PL any, PM any, LM any, BM any](build BuildFunc[PL, PM, LM, BM], config Config) {
 	var (
 		err  error
 		file string
 		ok   bool
 	)
-	ctx := BuildContext{Logger: config.logger}
+	ctx := BuildContext[PL, PM, LM, BM]{Logger: config.logger}
 
 	ctx.ApplicationPath, err = os.Getwd()
 	if err != nil {
@@ -181,7 +186,7 @@ func Build(build BuildFunc, config Config) {
 		config.exitHandler.Error(fmt.Errorf("expected CNB_LAYERS_DIR to be set"))
 		return
 	}
-	ctx.Layers = Layers{layersDir}
+	ctx.Layers = Layers[LM]{layersDir}
 
 	ctx.Platform.Path, ok = os.LookupEnv(EnvPlatformDirectory)
 	if !ok {
@@ -216,7 +221,7 @@ func Build(build BuildFunc, config Config) {
 	}
 	config.logger.Debugf("Platform Environment: %s", ctx.Platform.Environment)
 
-	var store Store
+	var store Store[PM]
 	file = filepath.Join(ctx.Layers.Path, "store.toml")
 	if _, err = toml.DecodeFile(file, &store); err != nil && !os.IsNotExist(err) {
 		config.exitHandler.Error(fmt.Errorf("unable to decode persistent metadata %s\n%w", file, err))
@@ -297,7 +302,7 @@ func Build(build BuildFunc, config Config) {
 	}
 
 	for _, e := range existing {
-		if strings.HasSuffix(e, "store.toml") || contains(contributed, e) {
+		if strings.HasSuffix(e, "store.toml") || slices.Contains(contributed, e) {
 			continue
 		}
 
@@ -345,7 +350,7 @@ func Build(build BuildFunc, config Config) {
 	}
 
 	if len(result.PersistentMetadata) > 0 {
-		store = Store{
+		store = Store[PM]{
 			Metadata: result.PersistentMetadata,
 		}
 		file = filepath.Join(ctx.Layers.Path, "store.toml")
@@ -355,16 +360,6 @@ func Build(build BuildFunc, config Config) {
 			return
 		}
 	}
-}
-
-func contains(candidates []string, s string) bool {
-	for _, c := range candidates {
-		if s == c {
-			return true
-		}
-	}
-
-	return false
 }
 
 func validateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error {
@@ -383,7 +378,7 @@ func validateSBOMFormats(layersPath string, acceptedSBOMFormats []string) error 
 			return fmt.Errorf("unable to parse SBOM %s\n%w", sbomFormat, err)
 		}
 
-		if !contains(acceptedSBOMFormats, sbomFormat.MediaType()) {
+		if !slices.Contains(acceptedSBOMFormats, sbomFormat.MediaType()) {
 			return fmt.Errorf("unable to find actual SBOM Type %s in list of supported SBOM types %s", sbomFormat.MediaType(), acceptedSBOMFormats)
 		}
 	}
