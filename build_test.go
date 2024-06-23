@@ -96,7 +96,6 @@ optional = true
 
 [[stacks]]
 id = "test-id"
-mixins = ["test-name"]
 
 [metadata]
 test-key = "test-value"
@@ -475,24 +474,6 @@ version = "1.1.1"
 
 		Expect(environmentWriter.Calls[2].Arguments[0]).To(Equal(filepath.Join(layersPath, "test-name", "env")))
 		Expect(environmentWriter.Calls[2].Arguments[1]).To(Equal(map[string]string{"test-shared.default": "test-value"}))
-	})
-
-	it("writes profile.d", func() {
-		buildFunc = func(libcnb.BuildContext) (libcnb.BuildResult, error) {
-			layer := libcnb.Layer{Path: filepath.Join(layersPath, "test-name"), Profile: libcnb.Profile{}}
-			layer.Profile.Addf("test-profile", "test-%s", "value")
-			return libcnb.BuildResult{Layers: []libcnb.Layer{layer}}, nil
-		}
-
-		libcnb.Build(buildFunc,
-			libcnb.NewConfig(
-				libcnb.WithArguments([]string{commandPath, layersPath, platformPath, buildpackPlanPath}),
-				libcnb.WithEnvironmentWriter(environmentWriter),
-				libcnb.WithLogger(log.NewDiscard())),
-		)
-
-		Expect(environmentWriter.Calls[3].Arguments[0]).To(Equal(filepath.Join(layersPath, "test-name", "profile.d")))
-		Expect(environmentWriter.Calls[3].Arguments[1]).To(Equal(map[string]string{"test-profile": "test-value"}))
 	})
 
 	it("writes layer metadata", func() {

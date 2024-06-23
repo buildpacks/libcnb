@@ -6,6 +6,7 @@ linters:
   enable:
     - bodyclose
     - dogsled
+    - errcheck
     - exportloopref
     - gocritic
     - goimports
@@ -24,5 +25,9 @@ linters:
     - whitespace
 
 linters-settings:
+  revive:
+    rules:
+      - name: dot-imports
+        disabled: true
   goimports:
     local-prefixes: github.com/buildpacks/libcnb/v2

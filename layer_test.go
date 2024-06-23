@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,34 +52,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 		})
 	})
 
-	context("Profile", func() {
-		var profile libcnb.Profile
-
-		it.Before(func() {
-			profile = libcnb.Profile{}
-		})
-
-		it("adds content", func() {
-			profile.Add("test-name", "test-value")
-			Expect(profile).To(Equal(libcnb.Profile{"test-name": "test-value"}))
-		})
-
-		it("adds formatted content", func() {
-			profile.Addf("test-name", "test-%s", "value")
-			Expect(profile).To(Equal(libcnb.Profile{"test-name": "test-value"}))
-		})
-
-		it("adds process-specific content", func() {
-			profile.ProcessAdd("test-process", "test-name", "test-value")
-			Expect(profile).To(Equal(libcnb.Profile{filepath.Join("test-process", "test-name"): "test-value"}))
-		})
-
-		it("adds process-specific formatted content", func() {
-			profile.ProcessAddf("test-process", "test-name", "test-%s", "value")
-			Expect(profile).To(Equal(libcnb.Profile{filepath.Join("test-process", "test-name"): "test-value"}))
-		})
-	})
-
 	context("Reset", func() {
 		var layer libcnb.Layer
 
@@ -116,7 +88,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 					SharedEnvironment: libcnb.Environment{},
 					BuildEnvironment:  libcnb.Environment{},
 					LaunchEnvironment: libcnb.Environment{},
-					Profile:           libcnb.Profile{},
 				}))
 
 				Expect(filepath.Join(layers.Path, "test-name")).To(BeADirectory())
@@ -170,7 +141,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 					Metadata: map[string]interface{}{
 						"some-key": "some-value",
 					},
-					Profile: libcnb.Profile{"name": "value"},
 				}
 			})
 
@@ -190,7 +160,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 						SharedEnvironment: libcnb.Environment{},
 						BuildEnvironment:  libcnb.Environment{},
 						LaunchEnvironment: libcnb.Environment{},
-						Profile:           libcnb.Profile{},
 					}))
 
 					Expect(filepath.Join(layers.Path, "test-name")).To(BeADirectory())
@@ -251,7 +220,6 @@ func testLayer(t *testing.T, context spec.G, it spec.S) {
 			Expect(l.BuildEnvironment).To(Equal(libcnb.Environment{}))
 			Expect(l.LaunchEnvironment).To(Equal(libcnb.Environment{}))
 			Expect(l.SharedEnvironment).To(Equal(libcnb.Environment{}))
-			Expect(l.Profile).To(Equal(libcnb.Profile{}))
 		})
 
 		it("generates SBOM paths", func() {

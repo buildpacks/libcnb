@@ -404,7 +404,7 @@ version = "1.1.1"
 	})
 
 	it("writes Dockerfiles", func() {
-		generateFunc = func(ctx libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(_ libcnb.GenerateContext) (libcnb.GenerateResult, error) {
 			result := libcnb.NewGenerateResult()
 			result.BuildDockerfile = []byte(`FROM foo:latest`)
 			result.RunDockerfile = []byte(`FROM bar:latest`)
@@ -423,7 +423,7 @@ version = "1.1.1"
 	})
 
 	it("writes extend-config.toml", func() {
-		generateFunc = func(ctx libcnb.GenerateContext) (libcnb.GenerateResult, error) {
+		generateFunc = func(_ libcnb.GenerateContext) (libcnb.GenerateResult, error) {
 			result := libcnb.NewGenerateResult()
 			result.Config = &libcnb.ExtendConfig{
 				Build: libcnb.BuildConfig{

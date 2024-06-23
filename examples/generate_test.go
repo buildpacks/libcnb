@@ -1,4 +1,4 @@
-package libcnb_test
+package examples
 
 import (
 	"fmt"

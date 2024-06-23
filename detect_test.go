@@ -81,7 +81,6 @@ uri = "https://spdx.org/licenses/Apache-1.1.html"
 
 [[stacks]]
 id = "test-id"
-mixins = ["test-name"]
 
 [metadata]
 test-key = "test-value"

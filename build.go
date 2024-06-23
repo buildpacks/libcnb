@@ -287,13 +287,6 @@ func Build(build BuildFunc, config Config) {
 			return
 		}
 
-		file = filepath.Join(layer.Path, "profile.d")
-		config.logger.Debugf("Writing layer profile.d: %s <= %+v", file, layer.Profile)
-		if err = config.environmentWriter.Write(file, layer.Profile); err != nil {
-			config.exitHandler.Error(fmt.Errorf("unable to write layer profile.d %s\n%w", file, err))
-			return
-		}
-
 		file = filepath.Join(ctx.Layers.Path, fmt.Sprintf("%s.toml", layer.Name))
 		config.logger.Debugf("Writing layer metadata: %s <= %+v", file, layer)
 		if err = config.tomlWriter.Write(file, layer); err != nil {

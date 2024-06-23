@@ -42,7 +42,10 @@ func NewDirectoryContentsWriter(format log.DirectoryContentFormatter, writer io.
 // Write all the file contents to the writer
 func (d DirectoryContentsWriter) Write(title, path string) error {
 	d.format.RootPath(path)
-	d.writer.Write([]byte(d.format.Title(title)))
+
+	if _, err := d.writer.Write([]byte(d.format.Title(title))); err != nil {
+		return fmt.Errorf("unable to write title\n%w", err)
+	}
 
 	if err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -54,7 +57,9 @@ func (d DirectoryContentsWriter) Write(title, path string) error {
 			return fmt.Errorf("unable to format\n%w", err)
 		}
 
-		d.writer.Write([]byte(msg))
+		if _, err := d.writer.Write([]byte(msg)); err != nil {
+			return fmt.Errorf("unable to write\n%w", err)
+		}
 
 		return nil
 	}); err != nil {

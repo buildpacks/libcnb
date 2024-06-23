@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,31 +48,6 @@ func (e Exec) FilePath(name string) string {
 // ProcessFilePath returns the fully qualified file path for a given name.
 func (e Exec) ProcessFilePath(processType string, name string) string {
 	return filepath.Join(e.Path, processType, name)
-}
-
-// Profile is the collection of values to be written into profile.d
-type Profile map[string]string
-
-// Add formats using the default formats for its operands and adds an entry for a .profile.d file. Spaces are added
-// between operands when neither is a string.
-func (p Profile) Add(name string, a ...interface{}) {
-	p[name] = fmt.Sprint(a...)
-}
-
-// Addf formats according to a format specifier and adds an entry for a .profile.d file.
-func (p Profile) Addf(name string, format string, a ...interface{}) {
-	p[name] = fmt.Sprintf(format, a...)
-}
-
-// ProcessAdd formats using the default formats for its operands and adds an entry for a .profile.d file. Spaces are
-// added between operands when neither is a string.
-func (p Profile) ProcessAdd(processType string, name string, a ...interface{}) {
-	p.Add(filepath.Join(processType, name), a...)
-}
-
-// ProcessAddf formats according to a format specifier and adds an entry for a .profile.d file.
-func (p Profile) ProcessAddf(processType string, name string, format string, a ...interface{}) {
-	p.Addf(filepath.Join(processType, name), format, a...)
 }
 
 // BOMFormat indicates the format of the SBOM entry
@@ -137,9 +112,6 @@ type Layer struct {
 	// SharedEnvironment are the environment variables set at both build and launch times.
 	SharedEnvironment Environment `toml:"-"`
 
-	// Profile is the profile.d scripts set in the layer.
-	Profile Profile `toml:"-"`
-
 	// Exec is the exec.d executables set in the layer.
 	Exec Exec `toml:"-"`
 }
@@ -154,7 +126,6 @@ func (l Layer) Reset() (Layer, error) {
 	l.SharedEnvironment = Environment{}
 	l.BuildEnvironment = Environment{}
 	l.LaunchEnvironment = Environment{}
-	l.Profile = Profile{}
 	l.Metadata = nil
 
 	err := os.RemoveAll(l.Path)
@@ -202,7 +173,6 @@ func (l *Layers) Layer(name string) (Layer, error) {
 		BuildEnvironment:  Environment{},
 		LaunchEnvironment: Environment{},
 		SharedEnvironment: Environment{},
-		Profile:           Profile{},
 		Exec:              Exec{Path: filepath.Join(l.Path, name, "exec.d")},
 	}
 
