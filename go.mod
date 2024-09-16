@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/CycloneDX/cyclonedx-go v0.9.0
+	github.com/CycloneDX/cyclonedx-go v0.9.1
 	github.com/Masterminds/semver v1.5.0
 	github.com/onsi/gomega v1.34.1
 	github.com/sclevine/spec v1.4.0
