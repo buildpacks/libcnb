@@ -32,7 +32,7 @@ type DirectoryContents struct {
 func (d DirectoryContents) Get() ([]string, error) {
 	var contents []string
 
-	if err := filepath.Walk(d.Path, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(d.Path, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
