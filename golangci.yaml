@@ -7,7 +7,7 @@ linters:
     - bodyclose
     - dogsled
     - errcheck
-    - exportloopref
+    - copyloopvar
     - gocritic
     - goimports
     - gosec
