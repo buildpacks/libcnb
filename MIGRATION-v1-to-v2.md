@@ -38,8 +38,8 @@ In libcnb v1, `BuildContext.Application.Path` points to the application source c
 
 The CNB Binding specification has long been replaced by the Service Binding Specification for Kubernetes. Support for the CNB Binding Support had remained, but it is removed in v2. This is unlikely to impact anyone.
 
-## Remove Shell-Specific Logic
+## Remove Shell-Specific Logic & Overridable Process Arguments
 
-To comply with [RFC #168](https://github.com/buildpacks/rfcs/pull/168), we remove the `Direct` field from the `Process` struct. We also change `Command` from a `string` to `string[]` on the `Process` struct.
+To comply with [RFC #168](https://github.com/buildpacks/rfcs/pull/168), we remove the `Direct` field from the `Process` struct. We also change `Command` from a `string` to `string[]` on the `Process` struct, to support overridable process arguments. Both of these require at leats API 0.9.
 
 In conjunction with this, we have also removed Profile & `profile.d` support. These should be replaced with the [Profile Buildpack](https://github.com/buildpacks/profile) and `exec.d`.
