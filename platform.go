@@ -155,9 +155,15 @@ func NewBindingsFromVcapServicesEnv(content string) (Bindings, error) {
 					return nil, err
 				}
 			}
+
+			bindingType := b.Label
+			if value, ok := secret["type"]; ok {
+				bindingType = value
+			}
+
 			bindings = append(bindings, Binding{
 				Name:     b.Name,
-				Type:     b.Label,
+				Type:     bindingType,
 				Provider: p,
 				Secret:   secret,
 			})

@@ -81,6 +81,16 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 							"password": "bar",
 						},
 					},
+					{
+						Name:     "my-custom-binding",
+						Type:     "custom-type",
+						Provider: "user-provided",
+						Secret: map[string]string{
+							"username": "foo",
+							"password": "bar",
+							"type":     "custom-type",
+						},
+					},
 				}))
 			})
 
@@ -103,7 +113,7 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 				bindings, err := libcnb.NewBindingsForLaunch()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(bindings).To(HaveLen(3))
+				Expect(bindings).To(HaveLen(4))
 				types := []string{bindings[0].Type, bindings[1].Type, bindings[2].Type}
 				Expect(types).To(ContainElements("elephantsql-type", "sendgrid-type", "postgres"))
 			})
