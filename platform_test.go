@@ -86,6 +86,16 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 						"password": "bar",
 					},
 				},
+				{
+					Name:     "my-custom-binding",
+					Type:     "custom-type",
+					Provider: "user-provided",
+					Secret: map[string]string{
+						"username": "foo",
+						"password": "bar",
+						"type":     "custom-type",
+					},
+				},
 			}))
 		})
 
