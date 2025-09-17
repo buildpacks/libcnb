@@ -98,6 +98,48 @@ func testPlatform(t *testing.T, context spec.G, it spec.S) {
 			Expect(bindings).To(HaveLen(0))
 		})
 	})
+	
+	context("Cloudfoundry VCAP_SERVICES_FILE_PATH", func() {
+		it("creates a bindings from VCAP_SERVICES_FILE_PATH", func() {
+			t.Setenv(libcnb.EnvVcapServicesFilePath, "testdata/vcap_services.json")
+
+			bindings, err := libcnb.NewBindings("")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(bindings).To(ConsistOf(libcnb.Bindings{
+				{
+					Name:     "elephantsql-binding-c6c60",
+					Type:     "elephantsql-type",
+					Provider: "elephantsql-provider",
+					Secret: map[string]string{
+						"bool": "true",
+						"int":  "1",
+						"uri":  "postgres://exampleuser:examplepass@postgres.example.com:5432/exampleuser",
+					},
+				},
+				{
+					Name:     "mysendgrid",
+					Type:     "sendgrid-type",
+					Provider: "sendgrid-provider",
+					Secret: map[string]string{
+						"username": "QvsXMbJ3rK",
+						"password": "HCHMOYluTv",
+						"hostname": "smtp.example.com",
+					},
+				},
+				{
+					Name:     "postgres",
+					Type:     "postgres",
+					Provider: "postgres",
+					Secret: map[string]string{
+						"urls":     "{\"example\":\"http://example.com\"}",
+						"username": "foo",
+						"password": "bar",
+					},
+				},
+			}))
+		})
+	})
 
 	context("Kubernetes Service Bindings", func() {
 		it.Before(func() {
