@@ -49,6 +49,9 @@ const (
 
 	// EnvVcapServices is the name of the environment variable that contains the bindings in cloudfoundry
 	EnvVcapServices = "VCAP_SERVICES"
+	
+	// EnvVcapServicesFilePath is the name of the environment variable that contains the filepath bindings in cloudfoundry
+	EnvVcapServicesFilePath = "VCAP_SERVICES_FILE_PATH"
 
 	// EnvLayersDirectory is the name of the environment variable that contains the root path to all buildpack layers
 	EnvLayersDirectory = "CNB_LAYERS_DIR"
@@ -241,9 +244,19 @@ func NewBindingsFromVcapServicesEnv(content string) (Bindings, error) {
 	return bindings, nil
 }
 
+// NewBindingsFromVcapServicesFilePathEnv creates a new instance from all the bindings given from the VCAP_SERVICE_FILE_PATH file based location.
+func NewBindingsFromVcapServicesFilePathEnv(file string) (Bindings, error) {
+	content, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	
+	return NewBindingsFromVcapServicesEnv(string(content))
+}
+
 // NewBindings creates a new bindings from all the bindings at the path defined by $SERVICE_BINDING_ROOT.
 // If that isn't defined, bindings are read from <platform>/bindings.
-// If that isn't defined, bindings are read from $VCAP_SERVICES.
+// If that isn't defined, bindings are read from $VCAP_SERVICES or $VCAP_SERVICES_FILE_PATH.
 // If that isn't defined, the specified platform path will be used
 func NewBindings(platformDir string) (Bindings, error) {
 	if path, ok := os.LookupEnv(EnvServiceBindings); ok {
@@ -256,6 +269,10 @@ func NewBindings(platformDir string) (Bindings, error) {
 
 	if content, ok := os.LookupEnv(EnvVcapServices); ok {
 		return NewBindingsFromVcapServicesEnv(content)
+	}
+	
+	if file, ok := os.LookupEnv(EnvVcapServicesFilePath); ok {
+		return NewBindingsFromVcapServicesFilePathEnv(file)
 	}
 
 	return NewBindingsFromPath(filepath.Join(platformDir, "bindings"))
