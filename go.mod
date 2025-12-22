@@ -1,11 +1,9 @@
 module github.com/buildpacks/libcnb/v2
 
-go 1.24.0
-
-toolchain go1.24.11
+go 1.25
 
 require (
-	github.com/BurntSushi/toml v1.5.0
+	github.com/BurntSushi/toml v1.6.0
 	github.com/CycloneDX/cyclonedx-go v0.9.3
 	github.com/Masterminds/semver v1.5.0
 	github.com/onsi/gomega v1.38.3
