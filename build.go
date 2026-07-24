@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/buildpacks/libcnb/v2/internal"
 	"github.com/buildpacks/libcnb/v2/log"
