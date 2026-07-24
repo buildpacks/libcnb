@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/buildpacks/libcnb/v2/internal"
 	"github.com/buildpacks/libcnb/v2/log"
@@ -31,7 +31,6 @@ import (
 
 // DetectContext contains the inputs to detection.
 type DetectContext struct {
-
 	// ApplicationPath is the location of the application source code as provided by
 	// the lifecycle.
 	ApplicationPath string
@@ -54,7 +53,6 @@ type DetectContext struct {
 
 // DetectResult contains the results of detection.
 type DetectResult struct {
-
 	// Pass indicates whether detection has passed.
 	Pass bool
 
@@ -77,7 +75,7 @@ func Detect(detect DetectFunc, config Config) {
 	)
 	ctx := DetectContext{Logger: config.logger}
 
-	var moduletype = "buildpack"
+	moduletype := "buildpack"
 	if config.extension {
 		moduletype = "extension"
 	}
